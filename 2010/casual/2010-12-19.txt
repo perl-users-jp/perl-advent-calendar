@@ -1,0 +1,131 @@
+WWW::SalesforceでChatterのタイムラインを取得する
+meta-author: piarra
+meta-tags: perl, chatter, twitter
+
+こんばんは。
+md5が暗算できる人という噂が流れている(という噂を流している)[http://twitter.com/piarrakun:title=piarra]です。
+
+東京も寒くなってきたので、少しホットなネタとして、
+今日はChatterにフォーカスしてみたいと思います。
+
+[http://www.salesforce.com/jp/chatter/:title=Chatter]はSalesforce.com社により提供されているforce.comというクラウド上で展開されているコミュニケーションツールで、簡単にいうと企業内Twitterのようなものです。
+Twitterとの違いは、
+- 企業・チーム内でのコミュニケーションのために閉じたものであること
+- ファイル等の添付とTL上でのプレビューが可能であること
+- 人だけでなく、案件やオブジェクトがフォローできること
+- 投稿の文字数制限がないこと(厳密にはデータ型の限界があるかと思います)
+などがあります。
+
+使ってみたいけれどSalesforceは有料でしょ？という質問があるかもしれませんが、
+実は、force.comのFree Editionを使えば、100名以下の組織であれば、
+無料でChatterを使うことができます。(2010年12月現在)
+
+Chatterを使ってみたいという方は、[http://www.salesforce.com/jp/platform/pricing-editions.jsp?d=70130000000FlcL&internal=true:title=こちら]よりforce.comのFree Editionにサインアップしてみてください。
+
+そんなチーム内のコミュニケーションを豊かにするChatterですが、
+少し残念なこととして、TwitterライクなAPIが用意されておらず、クライアントを作ることが困難なことが上げられます。
+
+そこで、今日はCPANモジュールWWW::Salesforceを用いて、Chatterのフィードを取得する方法をまとめてみました。
+
+以下、サンプルプログラムです。
+>|perl|
+use common::sense;
+use Data::Dumper;
+use WWW::Salesforce::Simple;
+$WWW::Salesforce::SF_PROXY = 'https://www.salesforce.com/services/Soap/u/20.0';
+
+my $userid         = '*****';
+my $password       = '*****';
+my $security_token = '***********';
+my $chatter = WWW::Salesforce::Simple->new(
+    'username' => $userid,
+    'password' => $password . $security_token,
+);
+my $query = "SELECT Id, Type, CreatedDate, CreatedById, CreatedBy.Name, 
+    ParentId, Parent.Name, FeedPostId, FeedPost.Body, 
+    FeedPost.Title, FeedPost.LinkUrl,  
+    (SELECT Id, FieldName, OldValue, NewValue FROM FeedTrackedChanges), 
+    (SELECT Id, CreatedDate, CreatedById, CreatedBy.Name, CommentBody 
+    FROM FeedComments ORDER BY CreatedDate DESC)  
+    FROM NewsFeed ORDER BY CreatedDate DESC, Id DESC LIMIT 10";
+my $res = $chatter->do_query( $query, 2000 );
+print Dumper($res);
+||<
+
+$userid, $passwordにはログインの際のIDとパスワードを指定します。
+$security_tokenにはAPI用の生キュリティトークンを指定します。
+セキュリティトークンは、force.comの設定画面でリセットすることができ、リセットするとメールでトークンが通知されます。
+
+$queryとして指定しているのはSOQLというforce.comプラットフォームでの独自のSQLの実装で、
+Chatterだけでなく、クラウド上の様々なデータを同様に抽出することができます。
+※SOQLの先頭にはスペースを含めることができませんので注意が必要です。
+
+ChatterのデータはNewsFeed, FeedCommentsというテーブル上に含まれていますので、それをSELECTしています。
+
+>|perl|
+$WWW::Salesforce::SF_PROXY = 'https://www.salesforce.com/services/Soap/u/20.0';
+||<
+この行では、APIのバージョンを指定しています。
+WWW::Salesforceのデフォルトではバージョンが古くChatterを取得できませんので、
+ここでは現時点で最新の20.0を指定しています。
+
+上記の出力結果のサンプルは以下のような形です。
+>|perl|
+$VAR1 = [
+          bless( {
+                   'FeedTrackedChanges' => undef,
+                   'Id' => [
+                           '*****',
+                           '*****'
+                         ],
+                   'CreatedBy' => bless( {
+                                         'Id' => undef,
+                                         'type' => 'Name',
+                                         'Name' => "ここに名前がはいります"
+                                       }, 'sObject' ),
+                   'Parent' => bless( {
+                                      'Id' => undef,
+                                      'type' => 'Name',
+                                      'Name' => "ここに名前がはいります"
+                                    }, 'sObject' ),
+                   'FeedComments' => undef,
+                   'FeedPost' => bless( {
+                                        'Id' => undef,
+                                        'LinkUrl' => undef,
+                                        'type' => 'FeedPost',
+                                        'Title' => undef,
+                                        'Body' => "ここに本文がはいります"
+                                      }, 'sObject' ),
+                   'Type' => 'ContentPost',
+                   'CreatedDate' => '2010-12-19T12:54:03.000Z',
+                   'CreatedById' => '*****',
+                   'FeedPostId' => '*****',
+                   'type' => 'NewsFeed',
+                   'ParentId' => '*****'
+                 }, 'sObject' ),
+          bless( ....続く
+||<
+データには様々なIDが含まれていますが、
+force.comプラットフォーム内で使用されているもので、
+それぞれのオブジェクトにユニークな形で振られているので、
+同一判定等には使えますが、フィードを読むだけであれば不要です。
+
+これによって、投稿日、ユーザー名、本文など、タイムラインの基本情報を取得することができましたので、
+- XML::RSSでRSSを生成して、RSSリーダーで読んだり
+- AnyEvent::IRCClientを使ってIRCにPostしたり
+- Growl関連のモジュールを使ってGrowlに通知したり
+と、様々な方法でChatterのタイムラインを見ることができます。
+これでブラウザを開かなくてもチームから取り残されずに済みますね。
+
+* まとめ
+Advent Calendarの前の方でGoogle SpreadSheetの紹介が出てきたので、
+もう少しニッチなツールに触れてみるのも面白いかなと思い、敢えてChatterを取り上げてみました。
+バグトラッキングツールやタスク管理ツール等をforce.comプラットフォーム内に構築することで、
+それをChatterと連携させることで、開発上のコミュニケーションが楽になるかなと想像しています。
+100人以下のチームで仕事をすることは多いと思いますが、
+その際のツールとして無料で使えるChatterを選んでみるというのも手かもしれませんね。
+
+さて、どんどんとクリスマスが近づいてきましたが、明日はyaottiさんの登場です。
+テストについて書かれるそうです。
+算数以外のテストは少し苦手なので、私も参考にしたいです。
+
