@@ -19,7 +19,7 @@ Twitterとの違いは、
 
 Chatterを使ってみたいという方は、[http://www.salesforce.com/jp/platform/pricing-editions.jsp?d=70130000000FlcL&internal=true:title=こちら]よりforce.comのFree Editionにサインアップしてみてください。
 
-そんなチーム内のコミュニケーションを豊かにするChatterですが、少し残念なこととして、TwitterライクなAPIが用意されておらず、クライアントを作ることが困難なことが上げられます。
+そんなチーム内のコミュニケーションを豊かにするChatterですが、少し残念なこととして、TwitterライクなAPIが用意されておらず、クライアントを作ることが困難なことがあげられます。
 
 そこで、今日はCPANモジュールWWW::Salesforceを用いて、Chatterのフィードを取得する方法をまとめてみました。
 
