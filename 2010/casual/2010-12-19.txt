@@ -49,7 +49,7 @@ print Dumper($res);
 ||<
 
 $userid, $passwordにはログインの際のIDとパスワードを指定します。
-$security_tokenにはAPI用の生キュリティトークンを指定します。
+$security_tokenにはAPI用のセキュリティトークンを指定します。
 セキュリティトークンは、force.comの設定画面でリセットすることができ、リセットするとメールでトークンが通知されます。
 
 $queryとして指定しているのはSOQLというforce.comプラットフォームでの独自のSQLの実装で、
