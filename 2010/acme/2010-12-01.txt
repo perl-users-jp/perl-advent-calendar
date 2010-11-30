@@ -159,7 +159,7 @@ Acme以外の方がいっぱいあるけど気にしないで！
 
 
 
-明日はYAPC Asia 2010の忍者こと、真面目なモジュール紹介で疲れたtomiruさんが登場です！
+明日はYAPC Asia 2010の忍者こと、真面目なモジュール紹介で疲れたtomi-ruさんが登場です！
 
 
 
@@ -318,5 +318,5 @@ Thanks.
 Private infomation: I join <a href="http://www.comiket.co.jp/">Comic Market</a>, 31th Dec.
 My booth : Donzoko Gakuya in East R 57a. I will write a info in <a href="http://www.donzoko.net/gakuya/">my Dojin site</a>.
 
-The tomorrow writter is YAPC Asia 2010 Ninja tomiru!!
+The tomorrow writter is YAPC Asia 2010 Ninja tomi-ru!!
 
