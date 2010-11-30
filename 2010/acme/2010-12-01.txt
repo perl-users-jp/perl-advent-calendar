@@ -3,7 +3,7 @@ Hello Acme World.
 (firstly written in Japanese, later in English)
 
 皆さんこんにちは。
-「Perlと言えばAcme。Acmeと言えばPerl」と100人中3人ぐらいは思っているんじゃないかと淡い期待を抱いて悶々とした日々を過ごしている<a href="http://www.donzoko.net/cgi-bin/diary/">makamaka</a>です。
+「Perlと言えばAcme。Acmeと言えばPerl」と100人中3人ぐらいは思っているんじゃないかと淡い期待を抱いて悶々とした日々を過ごしている<a href="http://www.donzoko.net/cgi-bin/tdiary/">makamaka</a>です。
 
 このアドベントカレンダーではAcmeに関することを取り上げます。
 
@@ -168,7 +168,7 @@ Acme以外の方がいっぱいあるけど気にしないで！
  * English version
  * ----------------------------------------------------
 
-Hello everyone. I'm makamaka, an ordinary perl user like you.
+Hello everyone. I'm <a href="http://twitter.com/maka2_donzoko">makamaka</a>, an ordinary perl user like you.
 I love Acme and you love Acme. Yes, we love Acme.
 Ok, this is the Japan Perl advent calendar for Acme. It's show time!
 
