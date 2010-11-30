@@ -1,20 +1,15 @@
-this is sample entry title
+記号プログラミングの第一歩は BrainF*ck
 
-this is sample entry.
+記号プログラミングを行えるもっとも有名な言語は <a href="http://ja.wikipedia.org/wiki/Brainfuck">BrainF*ck</a> です。
+初回の今日は、BrainF*ck を題材に記号プログラミングを楽しみましょう！
 
-you can use "hatena syntax".
-
-- aaaa
-- bbbb
-- cccc
-
-BrainF*ck での Hello, world
+まずは BrainF*ck の Hello, world です。
 >||
 +++++++++[>++++++++>+++++++++++>+++++<<<-]>.>++.+++++++..+++.>-.
 ------------.<++++++++.--------.+++.------.--------.>+.
 ||<
 
->|perl|
-use strict;
-say 'hello';
-||<
+簡単ですね。
+
+さて、本当にこれが Hello, world として動くのか確かめたいので、次に BrainF*ck インタプリタを用意することにしましょう。
+
