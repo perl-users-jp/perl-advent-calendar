@@ -1,0 +1,30 @@
+            <div id="beta"> 
+                <div class="module-feed module"> 
+                    <h2 class="module-header">Tracks</h2> 
+                    <div class="module-content"> 
+                        <ul> 
+                            [% FOR track IN tracks %]
+                                <li><a href="[% uri_for(year _ '/' _ track _ '/') %]">[% track %]</a></li>
+                            [% END %]
+                        </ul> 
+                    </div> 
+                </div> 
+ 
+                <div class="module-elsewhere module"> 
+                    <h2 class="module-header">Other Sites</h2> 
+                    <div class="module-content"> 
+                        <ul>
+                        [% FOR site IN conf.links %]
+                            <li><a href="[% site.href %]">[% site.label %]</a></li>
+                        [% END %]
+                        </ul>
+                    </div> 
+                </div> 
+                <!-- powered by --> 
+                <div class="module-powered module"> 
+                    <div class="module-content"> 
+                        Powered by <a href="https://github.com/p5-app-adventcalendar/p5-app-adventcalendar/" title="p5-app-adventcalendar">p5-app-adventclendar</a> 
+                    </div> 
+                </div> 
+ 
+            </div> 

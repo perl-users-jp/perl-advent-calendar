@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja"> 
+<head profile="http://purl.org/net/ns/metaprof"> 
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> 
+    <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" /> 
+    <title>[% conf.title or 'advent calendar ' _ year %]</title> 
+<!--
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://perl-users.jp/articles/advent-calendar/2009/index.xml" /> 
+-->
+</head> 
+<body class="layout-two-column-right"> 
+<div id="container"> 
+    <div id="container-inner" class="pkg"> 
+ 
+        <div id="banner"> 
+            <div id="banner-inner" class="pkg"> 
+                <h1 id="banner-header">[% conf.title or 'advent calendar ' _ year %]</h1> 
+                <p id="banner-description">[% conf.description %]</p> 
+            </div> 
+        </div> 
+    </div> 
+ 
+    <div id="pagebody"> 
+        <div id="pagebody-inner"> 
+            <div id="alpha"> 
+                <div id="alpha-inner"> 
+ 
+ <p>今年も JPerl Advent Calendar の季節がやってきました。</p>
+ <p>Perl に関連する tips を25本おとどけしちゃいます。</p>
+ <p>12月1日から毎日一本ずつ tips をアップしていっちゃうという企画です。</p>
+ <p>くわしくは<a href="http://d.hatena.ne.jp/tokuhirom/20081216/1229387324">このあたり</a>をみてください。</p>
+ 
+<h2>Tracks</h2> 
+ 
+<h3><a href="./hacker/">Hacker Track</a></h3> 
+<div class="description"> 
+    自分が書いたモジュールの解説や、ちょっとした tips などを紹介していきます。<br />
+    <a href="http://atnd.org/events/10336">→参加する</a>
+</div> 
+<h3><a href="./casual/">Casual Track</a></h3> 
+<div class="description"> 
+    一日一個の CPAN モジュールを紹介します。<br />
+    <a href="http://atnd.org/events/10335">→参加する</a>
+</div> 
+<h3><a href="./english/">English Track</a></h3> 
+<div class="description"> 
+    JPerlだけど英語で書きます<br />
+    <a href="http://atnd.org/events/10337">→参加する</a>
+</div> 
+<h3><a href="./acme/">Acme Track</a></h3> 
+<div class="description"> 
+    素敵なAcmeモジュールが紹介されますん<br />
+    <a href="http://atnd.org/events/10354">→参加する</a>
+</div> 
+ 
+<h3><a href="./win32/">Win32 Track</a></h3> 
+<div class="description"> 
+    Win32でけなげにも perl を動かしますん<br />
+    <a href="http://atnd.org/events/10450">→参加する</a>
+</div> 
+ 
+<h2>for writers</h2> 
+ 
+<p> 
+    <a href="[% uri_for('/help') %]">書き方はこちら</a> 
+</p> 
+ 
+<style> 
+    .description {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+</style> 
+ 
+                </div> 
+            </div> 
+        [% INCLUDE 'include/sidemenu.html' %]
+        </div> 
+    </div> 
+</div> 
+</body> 
+</html>
