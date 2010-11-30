@@ -1,22 +1,246 @@
-* テストタイトル
+* Test::Fixture::DBI で覚えるデータベーステスト
 
-とりあえずコミットテストする也。
+さて、今年も JPerl Advent Calendar の季節がやってきましたね。こんにちわこんにちわ [http://d.hatena.ne.jp/ZIGOROu/:title=zigorou] です。
+今回は拙作 [http://search.cpan.org/dist/Test-Fixture-DBI/lib/Test/Fixture/DBI.pm:title=Test::Fixture::DBI] でデータベースのテストをするお話をしますよ！
 
-** ほげほげ
+このモジュールはモバゲーオープンプラットフォームの API 開発時に必要にかられて作り、今では DeNA の社内でも普通に使われて来ているモジュールです。
+レポジトリは [http://github.com/zigorou/p5-test-fixture-dbi:title=github] です。
 
-** ひでお
+** はじめに
 
-this is sample entry title
+とりあえずはテスト用の table を用意しましょう。
 
-this is sample entry.
+>|sql|
+USE test;
 
-you can use "hatena syntax".
+DROP TABLE IF EXISTS location;
 
-- aaaa
-- bbbb
-- cccc
+CREATE TABLE location (
+  id int(10) unsigned not null,
+  user_id int(10) unsigned not null,
+  title varchar(255) not null default '',
+  latitude double not null,
+  longitude double not null,
+  created_on timestamp not null default 0,
+  primary key(id, created_on)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+PARTITION BY RANGE( UNIX_TIMESTAMP(created_on) ) (
+  PARTITION p20101201 VALUES LESS THAN ( UNIX_TIMESTAMP('2010-12-02 00:00:00') ),
+  PARTITION p20101202 VALUES LESS THAN ( UNIX_TIMESTAMP('2010-12-03 00:00:00') )
+);
+
+INSERT INTO 
+  location(id, user_id, title, longitude, latitude, created_on) 
+VALUES
+  (1, 10008, '北海道', 43.064301, 141.346874, '2010-12-01 05:30:24'), (2, 10009, '青森県', 40.824622, 140.740598, '2010-12-01 00:53:56'), 
+  (3, 10008, '岩手県', 39.7036, 141.152709, '2010-12-01 13:38:57'), (4, 10007, '宮城県', 38.268812, 140.872082, '2010-12-01 20:00:11'), 
+  (5, 10002, '秋田県', 39.718611, 140.102401, '2010-12-01 08:40:36'), (6, 10000, '山形県', 38.240422, 140.363592, '2010-12-01 00:13:53'), 
+  (7, 10000, '福島県', 37.750301, 140.467522, '2010-12-01 00:40:33'), (8, 10003, '茨城県', 36.341793, 140.446802, '2010-12-01 22:44:28'), 
+  (9, 10003, '栃木県', 36.566672, 139.883093, '2010-12-01 12:20:35'), (10, 10001, '群馬県', 36.390698, 139.060451, '2010-12-01 10:22:07'), 
+  (11, 10005, '埼玉県', 35.857431, 139.648901, '2010-12-01 10:29:20'), (12, 10006, '千葉県', 35.605045, 140.123325, '2010-12-01 16:43:53'), 
+  (13, 10005, '東京都', 35.689753, 139.691731, '2010-12-01 18:10:35'), (14, 10008, '神奈川県', 35.447495, 139.6424, '2010-12-01 10:49:16'), 
+  (15, 10003, '新潟県', 37.902419, 139.023225, '2010-12-01 22:02:12'), (16, 10003, '富山県', 36.695275, 137.211342, '2010-12-01 18:27:19'), 
+  (17, 10009, '石川県', 36.59473, 136.625582, '2010-12-01 14:23:15'), (18, 10002, '福井県', 36.065219, 136.221682, '2010-12-01 17:45:15'), 
+  (19, 10001, '山梨県', 35.664161, 138.568459, '2010-12-01 05:00:16'), (20, 10008, '長野県', 36.651296, 138.181239, '2010-12-01 22:31:42'), 
+  (21, 10004, '岐阜県', 35.391228, 136.722311, '2010-12-01 03:21:58'), (22, 10008, '静岡県', 34.976944, 138.383009, '2010-12-01 04:00:38'), 
+  (23, 10006, '愛知県', 35.180344, 136.906632, '2010-12-01 15:01:26'), (24, 10002, '三重県', 34.730272, 136.508598, '2010-12-01 10:11:43'), 
+  (25, 10006, '滋賀県', 35.004528, 135.868607, '2010-12-01 02:23:41'), (26, 10000, '京都府', 35.021393, 135.755439, '2010-12-01 13:09:18'), 
+  (27, 10008, '大阪府', 34.686555, 135.519474, '2010-12-01 08:29:07'), (28, 10007, '兵庫県', 34.691287, 135.183061, '2010-12-01 10:09:48'), 
+  (29, 10003, '奈良県', 34.685326, 135.832751, '2010-12-01 12:35:24'), (30, 10005, '和歌山県', 34.226041, 135.167504, '2010-12-01 20:18:21'), 
+  (31, 10008, '鳥取県', 35.503867, 134.237716, '2010-12-01 13:03:55'), (32, 10008, '島根県', 35.472324, 133.05052, '2010-12-01 03:41:09'), 
+  (33, 10000, '岡山県', 34.661759, 133.934399, '2010-12-01 10:01:59'), (34, 10002, '広島県', 34.396603, 132.459621, '2010-12-01 09:41:11'), 
+  (35, 10009, '山口県', 34.18613, 131.470497, '2010-12-01 12:37:49'), (36, 10004, '徳島県', 34.065756, 134.559297, '2010-12-01 15:03:21'), 
+  (37, 10001, '香川県', 34.340045, 134.043369, '2010-12-01 07:06:21'), (38, 10008, '愛媛県', 33.841669, 132.765371, '2010-12-01 17:18:46'), 
+  (39, 10000, '高知県', 33.5597, 133.531096, '2010-12-01 20:45:29'), (40, 10002, '福岡県', 33.606781, 130.418307, '2010-12-01 09:58:09'), 
+  (41, 10009, '佐賀県', 33.24957, 130.299804, '2010-12-01 22:27:48'), (42, 10006, '長崎県', 32.744814, 129.8737, '2010-12-01 07:05:18'), 
+  (43, 10004, '熊本県', 32.789816, 130.74169, '2010-12-01 16:59:12'), (44, 10005, '大分県', 33.238205, 131.612625, '2010-12-01 22:44:27'), 
+  (45, 10003, '宮崎県', 31.911058, 131.423883, '2010-12-01 22:20:10'), (46, 10009, '鹿児島県', 31.560166, 130.557994, '2010-12-01 05:38:01'), 
+  (47, 10003, '沖縄県', 26.212418, 127.680895, '2010-12-01 10:18:03');
+||<
+
+だいぶ無駄に partitioning してみましたが、partitioning する際の最近の tips としては、
+
+- 日単位未満の分割も可能な timestamp 型を用いると吉
+- timestamp 型を使うときは on update default は用いない方がいいです。
+-- timestamp 型には謎の挙動があるので
+-- ここにある default 0 と付けておくときっと幸せになれます
+
+とかとか。言いたかっただけなんです、すみませんすみません＞＜
+
+** まずはスキーマ情報の取り込み
+
+Test::Fixture::DBI は特定の ORM に依存するモジュールでは無いのでそのままではスキーマが分かりません。Test::Fixture::DBI に付属している make_database_yaml.pl コマンドを使ってスキーマ情報を取り込みましょう。
+
+>||
+$ make_database_yaml.pl -d "dbi:mysql:dbname=test" -u root -o ./t/schema.yaml
+||<
+
+コマンドの詳しい使い方は -h を実行してみて下さい。
+
+次に fixture を作ります。こちらは make_fixture_yaml.pl を実行します。
+
+>||
+$ make_fixture_yaml.pl -d "dbi:mysql:dbname=test" -u root -t location -n id -o ./t/fixture.yaml
+||<
+
+こうすると location テーブルの中身が全て YAML ファイルになります。ちなみに例えば user_id が 10008 のレコードだけを抽出したい場合は、
+
+>||
+$ make_fixture_yaml.pl -d "dbi:mysql:dbname=test" -u root -t location -n id -e "SELECT * FROM location WHERE user_id = 10008"
+||<
+
+のように SQL を直接指定して fixture を作る事が出来ます。
+
+** 早速テストを書いてみよう
+
+もういきなりサンプルから。get_user_locations() がそもそもテストしたい処理です。本来なら別のモジュールのサブルーチンなりメソッドだったりすると考えて下さい。
 
 >|perl|
 use strict;
-say 'hello';
+use warnings;
+
+use DBI;
+use Test::More;
+use Test::Exception;
+use Test::Fixture::DBI;
+use Test::mysqld;
+
+sub dbh {
+    my $mysqld = shift;
+    DBI->connect( $mysqld->dsn( dbname => 'test' ),
+        'root', '', +{ AutoCommit => 0, RaiseError => 1, } );
+}
+
+sub setup_test {
+    my $mysqld =
+      Test::mysqld->new( +{ my_cnf => +{ "skip-networking" => undef } } );
+    my $dbh = dbh($mysqld);
+
+    # ここでテーブルなどを作ります
+    construct_database(
+        dbh      => $dbh,
+        database => 't/schema.yaml',
+    );
+
+    # ここで初期データを突っ込む
+    construct_fixture(
+        dbh     => $dbh,
+        fixture => 't/fixture.yaml',
+    );
+
+    return $mysqld;
+}
+
+sub get_user_locations {
+    my ( $dbh, $user_id ) = @_;
+    return $dbh->selectall_arrayref(
+'SELECT latitude, longitude, created_on FROM location WHERE user_id = ? ORDER BY created_on DESC',
+        +{ Slice => +{} },
+        $user_id,
+    );
+}
+
+sub test_get_user_locations {
+    my %specs = @_;
+    my ( $input, $expects, $desc ) = @specs{qw/input expects desc/};
+    my ( $user_id, $dbh ) = @$input{qw/user_id dbh/};
+
+    subtest $desc => sub {
+	my $got;
+        lives_ok { $got = get_user_locations( $dbh, $user_id ); }
+        'get_user_locations() lives ok';
+	# note explain $got;
+	is_deeply( $got, $expects, 'got data' );
+        done_testing;
+    };
+}
+
+my $mysqld = setup_test;
+my $dbh = dbh($mysqld);
+
+test_get_user_locations(
+    input => +{
+	user_id => 10001,
+	dbh => $dbh,
+    },
+    expects => [
+	+{
+	    longitude => 36.390698,
+	    latitude => 139.060451,
+	    created_on => '2010-12-01 10:22:07',
+	},
+	+{
+	    longitude => 34.340045,
+	    latitude => 134.043369,
+	    created_on => '2010-12-01 07:06:21',
+	},
+	+{
+	    longitude => 35.664161,
+	    latitude => 138.568459,
+	    created_on => '2010-12-01 05:00:16',
+	},
+    ],
+    desc => 'user_id: 10001'
+);
+
+$dbh->disconnect;
+
+done_testing;
 ||<
+
+とまぁこんな風にテストが書けるようになります。一応軽く流れを確認すると、
+
+- setup_test() で table 作ったり fixture 作ったりする
+- test_get_user_locations() で実際に get_user_locations() を呼び出して、期待する結果が帰って来るかどうかテストする
+
+と言う事だけをやっています。
+
+実はデータの用意と実際のテストの骨子は大体こんなノリで書いてます。
+
+ちなみにプロダクトの開発ではきっと prove で個別のテストを書いて実行してと言う事を繰り返すと思いますが、設定した fixture の状況を mysql コマンドで確認したいなんて事もあるかもしれません。
+そういう時はテストをデバッガで立ち上げましょう。
+
+>||
+$ prove -lvc t/tomochinski.t
+||<
+
+としていたならば、
+
+>||
+$ perl -Ilib -d t/tomochinski.t
+||<
+
+のように書き換えてあげれば OK です。Test::mysqld のインスタンスが取れる適当な所にブレイクポイントを設定し、
+
+>||
+  DB<2> x $mysqld->dsn
+0  'DBI:mysql:dbname=test;mysql_socket=/var/folders/NR/NRiLzdzEH74Z8Ac-hC3B8++++TQ/-Tmp-/o6KffyN4hc/tmp/mysql.sock;user=root'
+||<
+
+などとすると mysql_socket の値が分かるので、
+
+>||
+$ mysql -uroot -S/var/folders/NR/NRiLzdzEH74Z8Ac-hC3B8++++TQ/-Tmp-/o6KffyN4hc/tmp/mysql.sock test
+||<
+
+などのようにすると mysql コマンドでテスト中のデータを覗き見る事が出来ますよ。
+
+** その他に出来る事
+
+- とりあえず MySQL と SQLite に対応しています
+-- PostgreSQL に対応してくれる人は patch welcome です^^
+- プロシージャやトリガーのテストも書けます
+-- [https://github.com/zigorou/p5-test-fixture-dbi/blob/master/t/mysql/construct_trigger.t:title=t/mysql/construct_trigger.t] を見て下さい
+
+などなど！使い方が分からなかったら [http://twitter.com/xaicron:title=@xaicron] さんがきっと教えてくれるはずです！ドキュメントはそのうち充実させます＞＜
+
+ちなみに DBIx::DBHResolver との相性も結構良いので機会があればどこかで紹介します。
+
+** まとめ
+
+- make_database_yaml.pl で schema を取り込む
+- make_fixture_yaml.pl で fixture を作る
+- テストを書く
+
+と言う順番でデータベースを使ったテストも簡単に書く事が出来ますよ。来年はデータベース絡み以外の話がしたいですね。
+さて明日は YAPC Asia 2010 でベストスピーカーに選ばれた nekokak さんです。お楽しみに！
