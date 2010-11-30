@@ -62,4 +62,8 @@ $$_+"\\"+$.__$+$.$__+$.$$$+$.__+"\\"+$.__$+$.$_$+$.___+")\\"+$.__$+$.$$_+$._$_+$
 すると、alert で Hello, world がきちんと表示され、無事 BrainF*ck の動きを確かめることができました。
 <img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/sym/bf02.png" />
 
+…というだけではさっぱり意味がわからないので、少しだけ解説すると、JavaScript による BrainF*ck インタプリタは、id:kazuho さんが<a href="http://labs.cybozu.co.jp/blog/kazuho/archives/2006/07/re_bf2js.php">以前書かれていたもの</a>を拝借しました。
+この BrainF*ck インタプリタを <a href="http://aspnet.codeplex.com/releases/view/40584">Microsoft Ajax Minifier</a> でコードを小さくし、<a href="http://utf-8.jp/public/jjencode.html">jjencode</a> で記号化したものが上に示した記号だけの BrainF*ck インタプリタのコードとなります。
+
 というわけで、初日は記号プログラミング入門ということで、駆け足で BrainF*ck の動きを確かめてみました。
+なぜこのような JavaScript が動くのかについては、回を重ねて説明したいと思いますので明日以降もお楽しみに！
