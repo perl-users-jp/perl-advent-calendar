@@ -57,9 +57,9 @@ $$_+"\\"+$.__$+$.$__+$.$$$+$.__+"\\"+$.__$+$.$_$+$.___+")\\"+$.__$+$.$$_+$._$_+$
 </textarea>
 もちろんインタープリタも記号だけで書かれています。
 これをJavaScriptとして実行すると prompt が表示されますので、さきほどの BrainF*ck の Hello, world プログラムを入力します。
-<img src="bf01.png" />
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/sym/bf01.png" />
 
 すると、alert で Hello, world がきちんと表示され、無事 BrainF*ck の動きを確かめることができました。
-<img src="bf02.png" />
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/sym/bf02.png" />
 
 というわけで、初日は記号プログラミング入門ということで、駆け足で BrainF*ck の動きを確かめてみました。
