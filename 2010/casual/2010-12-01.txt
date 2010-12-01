@@ -16,7 +16,7 @@ Windowsの場合はわかりません。きっとWin32トラックの人が書�
 
 セットアップ方法は簡単
 
-||
+>||
 $ curl -LO http://xrl.us/perlbrew
 $ perl perlbrew install
 $ rm perlbrew
@@ -28,7 +28,7 @@ $ source ~/.bashrc
 ここまでで、perlbrewを使うお膳立ては整いました。
 現時点でのPerlの最新安定版は5.12.2なので、それをインストールしてみます。
 
-||
+>||
 $ perlbrew install perl-5.12.2
 $ perlbrew switch perl-5.12.2
 $ perl -v
@@ -58,7 +58,7 @@ perlbrew installを実行すると「tail -f /home/username/perl5/perlbrew/build
 
 perlをswitchすると、付随するcpanコマンドも下記のようにperlbrewでインストールしたものが使われます。
 
-||
+>||
 $ which cpan 
 ~/perl5/perlbrew/perls/perl-5.12.2/bin/cpan
 ||<
@@ -68,7 +68,7 @@ $ which cpan
 
 インストールは簡単
 
-||
+>||
 $ curl -L http://cpanmin.us | perl - App::cpanminus
 $ which cpanm
 ~/perl5/perlbrew/perls/perl-5.12.2/bin/cpanm
@@ -77,7 +77,7 @@ $ which cpanm
 これだけで、上記のようにcpnamコマンドが入ります。
 使い方も簡単
 
-||
+>||
 $ cpanm Acme
 $ ls ~/perl5/perlbrew/perls/perl-5.12.2/lib/site_perl/5.12.2/
 Acme.pm  App  Bundle  File  HTML  HTTP  LWP  LWP.pm  Net  Spiffy.pm  URI URI.pm  WWW  lwpcook.pod  lwptut.pod  x86_64-linux
@@ -93,7 +93,7 @@ Acme.pm  App  Bundle  File  HTML  HTTP  LWP  LWP.pm  Net  Spiffy.pm  URI URI.pm 
 pm-uninstallを入れると、コマンド一発でモジュールを消せるのでとってもお手軽ですね。
 インストールはcpanmで一発
 
-||
+>||
 $ cpanm App::pmuninstall
 $ which pm-uninstall
 ~/perl5/perlbrew/perls/perl-5.12.2/bin/pm-uninstall
@@ -102,7 +102,7 @@ $ which pm-uninstall
 だけ。
 使い方も簡単。
 
-||
+>||
 $ pm-uninstall Acme
 Acme is included in the distribution Acme and contains:
 
@@ -121,7 +121,7 @@ Acmeがきれいに消えてしまいました。
 CPANモジュールは日々改善されているので、最新に簡単に追随できるようにしたいところです。
 そんなときにはcpan-outdatedを使います。
 
-||
+>||
 $ cpanm App::cpanoutdated
 $ which cpan-outdated
 ~/perl5/perlbrew/perls/perl-5.12.2/bin/cpan-outdated
@@ -129,7 +129,7 @@ $ which cpan-outdated
 
 cpan-outdatedコマンドを実行すると、新しいバージョンがあるものについて表示してくれます。
 
-||
+>||
 $ cpan-outdated
 A/AN/ANDYA/Test-Harness-3.22.tar.gz
 B/BI/BINGOS/Archive-Extract-0.46.tar.gz
@@ -141,7 +141,7 @@ B/BI/BINGOS/Archive-Tar-1.72.tar.gz
 「え、この一覧から手でcpanmしないといけないの！？」と思った人は安心してください。
 下記のようにやれば一発で全部アップデートされます。
 
-||
+>||
 $ cpan-outdated | cpanm
 ||<
 
