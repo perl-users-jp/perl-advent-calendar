@@ -3,14 +3,14 @@
 こんにちわこんにちわ！YAPC::Asia 2010でベストスピーカー賞（次点）を頂いた [http://nekokak.org/:title=nekokak] です。
 今回は拙作 [http://search.cpan.org/dist/Jonk/:title=Jonk] でオレオレJobQueueフレームワークを作るお話をします。
 
-** はじめに
+* はじめに
 
 なぜJonkをつくったのかについては、[http://blog.nekokak.org/show?guid=zuFdE9X13xGrBpcz1pTnqQ:title=JobQueueManagerについて]を
 ご覧頂ければと思います。
 簡単に言うと、やりたい事って案件によりけりだから、自分でその案件にあったJobQueueフレームワークつくれたほうがいいよね！
 です。
 
-** install
+* install
 
 >||
 $ cpanm Jonk
@@ -24,7 +24,7 @@ JobQueueを管理するためだけに、よくわからないORMがインスト
 
 Jonkが依存しているTry::TinyはPlackでも利用されている由緒正しきモジュールなのでご安心下さい。
 
-** setup
+* setup
 
 JonkはJobの管理でRDBMSを利用します。
 対応しているRDBMSはMySQL/PostgreSQL/SQLiteの３種類です。
@@ -39,7 +39,7 @@ database名などはご自由に。
 よくある単純なクローラーを作ってみます。
 超単純なので実際に作る場合は色々考えて作ってください。
 
-** fetchしてくるurlをenqueueする
+* fetchしてくるurlをenqueueする
 
 まずfetchしてくるURLを登録するクライアントを作成します。
 
@@ -63,9 +63,10 @@ $client->enqueue('MyFetcher', $url);
 $ perl ./client.pl http://example.com/
 ||<
 
-とするだけで、http://example.com/をクロール対象とするJobをenqueueすることができます。
+とするだけで、http://example.com/
+をクロール対象とするJobをenqueueすることができます。
 
-** worker起動スクリプトを作成する
+* worker起動スクリプトを作成する
 
 workerのモデルとしては、forkモデルで複数プロセスでfetchしてくる感じです。
 forkでのプロセス管理でParallel::Preforkを利用します。
