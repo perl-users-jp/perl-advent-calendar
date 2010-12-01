@@ -1,4 +1,4 @@
-* Perlの開発環境をCasualに作ろう
+Perlの開発環境をCasualに作ろう
 
 JPerl Advent Calendar Casual Track 一日目をやる myfinder です。
 去年はlocal::libがもてはやされたりしていましたが、あれから1年の間にPerlは更に手軽に使えるようになりました。
