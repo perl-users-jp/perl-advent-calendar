@@ -1,0 +1,275 @@
+Windows GUI アプリケーションでの Perl プラグインの作り方
+
+こんにちわ。Windows を殺したいほど愛している mattn です。
+Windows で Perl を日常的に使っている日本人3名の内の2人目です((要出典))。
+一般的に Perl はテキストを操作したり、Web アプリケーションフレームワークを構築する言語として有名です。しかし Perl の威力はそれだけでは止まりません。Windows で Perl をどの様に扱うかは人によって異なります。
+人によっては Windows GUIアプリケーションを拡張する為の言語として使用するかもしれませんね。
+Perl の様な柔軟な言語が GUI アプリケーションのプラグイン言語として使えたら便利だと思いませんか？
+
+作りましょう！
+
+** まずはWindows GUI アプリケーションを作ろう
+ここは Win32 SDK をどっぷり触ったオッサンなら誰でも作れますよね。
+>|C|
+#include <windows.h>
+#include "resource.h"
+
+LRESULT CALLBACK
+WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
+  HINSTANCE hInst;
+  CREATESTRUCT *lpcs;
+
+  switch (msg) {
+    case WM_CREATE:
+      lpcs = (CREATESTRUCT *)lp;
+      hInst = lpcs->hInstance;
+      hEdit = CreateWindow("EDIT", "",
+          WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_WANTRETURN | 
+          ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_HSCROLL | WS_VSCROLL,
+          0, 0, 0, 0, hWnd, (HMENU) ID_EDIT, hInst, NULL);
+      SetFocus(hEdit);
+      break;
+    case WM_SIZE:
+      MoveWindow(hEdit, 0, 0, LOWORD(lp), HIWORD(lp), TRUE);
+      break;
+    case WM_COMMAND:
+      switch (LOWORD(wp)) {
+        case IDM_EXIT:
+          SendMessage(hWnd, WM_CLOSE, 0, 0);
+          break;
+      }
+      break;
+    case WM_CLOSE:
+      DestroyWindow(hEdit);
+      DestroyWindow(hWnd);
+      break;
+    case WM_DESTROY:
+      PostQuitMessage(0);
+      break;
+    default:
+      return (DefWindowProc(hWnd, msg, wp, lp));
+  }
+  return 0;
+}
+
+
+int WINAPI
+WinMain(
+    HINSTANCE hCurInst, HINSTANCE hPrevInst,
+    LPSTR lpsCmdLine, int nCmdShow) {
+  HWND hWnd;
+  MSG msg;
+  WNDCLASSEX wc;
+
+  wc.cbSize = sizeof(WNDCLASSEX);
+  wc.style = CS_HREDRAW | CS_VREDRAW;
+  wc.lpfnWndProc = WndProc;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = 0;
+  wc.hInstance = hCurInst;
+  wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wc.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
+  wc.lpszMenuName = MAKEINTRESOURCE(ID_MENU);
+  wc.lpszClassName = "JPerlAdventCalendar";
+  wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+  RegisterClassEx(&wc);
+
+  hWnd = CreateWindow(wc.lpszClassName,
+      "Perl Plugin Example",
+      WS_OVERLAPPEDWINDOW,
+      CW_USEDEFAULT,
+      CW_USEDEFAULT,
+      CW_USEDEFAULT,
+      CW_USEDEFAULT,
+      NULL,
+      NULL,
+      NULL,
+      NULL);
+
+  ShowWindow(hWnd, nCmdShow);
+  UpdateWindow(hWnd);
+
+  while (GetMessage(&msg, NULL, 0, 0)) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+  return msg.wParam;
+}
+||<
+リソースファイルはこんなのですね
+>|C|
+#include <windows.h>
+#include "resource.h" 
+ID_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "I'm &Hungry!", IDM_HUNGRY
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", IDM_EXIT
+    END
+END
+||<
+リソースヘッダは
+>|C|
+#define ID_EDIT (10001)
+#define ID_MENU (10002)
+#define IDM_HUNGRY (WM_USER+1)
+#define IDM_EXIT   (WM_USER+2)
+||<
+最後にMakefileは
+>|C|
+PERL_CORE=c:/strawberry/perl/lib/core
+SRC=edit.c
+OBJS=$(SRC:.c=.o)
+RC=edit.rc
+RES=$(RC:.rc=.res)
+PROG=edit.exe
+CC=gcc
+CFLAGS=-Wall -O3 -I$(PERL_CORE)
+LDFLAGS=-mwindows -L$(PERL_CORE) -lperl510
+RM=del 
+
+%.o: %.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+.PHONY : all
+all: $(PROG)
+
+$(PROG): $(OBJS) $(RES)
+	$(CC) $(OBJS) $(RES) $(LDFLAGS) -o $@
+
+$(RES): $(RC) resource.h
+	windres -O omf $(RC) $(RES)
+
+wndproc.o: resource.h
+
+.PHONY : clean
+clean:
+	$(RM) $(OBJS) $(WINDRES)
+
+||<
+こうですよね。皆さんついて来てますよね！これを起動するとエディットボックスが付いた、ちょうとテキストエディタの様な物が起動します。
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-02/edit1.png" />
+
+** ここに Perl を起動するアクションを作りましょう。
+まずメニューにアイテムを追加してそのアクション関数を以下の様に書きました。
+>|C|
+static PerlInterpreter *my_perl;
+static int my_argc = 2;
+static char *my_argv[] = { "perl", "-e:0", NULL };
+static char **my_env;
+static HWND hEdit = NULL;
+
+void hungly() {
+  if (!my_perl) {
+    PERL_SYS_INIT3(&my_argc, &my_argv, &my_env);
+    my_perl = perl_alloc();
+    PL_perl_destruct_level = 1;
+    perl_construct(my_perl);
+  }
+  char path[MAX_PATH];
+  char command[1024];
+
+  GetModuleFileName(NULL, path, sizeof(path));
+  strcpy(path + strlen(path) - 4, ".pl");
+
+  PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
+  perl_parse(my_perl, NULL, my_argc, my_argv, my_env);
+  perl_run(my_perl);
+
+  snprintf(command, sizeof(command), "do q\"%s\"", path);
+  eval_pv(command, TRUE);
+}
+||<
+これでアプリケーション名と同じファイル名で拡張子が「.pl」のファイルが実行されます。
+でも Perl スクリプト内で何かやってもアプリケーション側に返事が返せないと面白くないですよね。戻り値？いやそれプラグインじゃないでしょ...って事で Perl 側に見える API を提供しましょう。
+ここで登場するのが xsub です。先ほどの関数を以下の様に書き換えます。
+>|C|
+static PerlInterpreter *my_perl;
+static int my_argc = 2;
+static char *my_argv[] = { "perl", "-e:0", NULL };
+static char **my_env;
+static HWND hEdit = NULL;
+
+extern void boot_DynaLoader (pTHX_ CV* cv);
+
+void
+XS_set_text(pTHX_ CV* cv) {
+  dXSARGS;
+  STRLEN n_a;
+  char* text = (char*) SvPV(ST(0), n_a);
+  int l = GetWindowTextLength(hEdit); 
+  SendMessage(hEdit, EM_SETSEL, (WPARAM) l, (LPARAM) l);
+  SendMessage(hEdit, EM_REPLACESEL, (WPARAM) FALSE, (LPARAM) text);
+}
+
+void
+xs_init(pTHX) {
+  newXS("DynaLoader::boot_DynaLoader", boot_DynaLoader, __FILE__);
+}
+
+void hungly() {
+  if (!my_perl) {
+    PERL_SYS_INIT3(&my_argc, &my_argv, &my_env);
+    my_perl = perl_alloc();
+    PL_perl_destruct_level = 1;
+    perl_construct(my_perl);
+  }
+  char path[MAX_PATH];
+  char command[1024];
+
+  GetModuleFileName(NULL, path, sizeof(path));
+  strcpy(path + strlen(path) - 4, ".pl");
+
+  PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
+  perl_parse(my_perl, xs_init, my_argc, my_argv, my_env);
+  perl_run(my_perl);
+
+  newXSproto("set_text", XS_set_text, __FILE__, "$");
+
+  snprintf(command, sizeof(command), "do q\"%s\"", path);
+  eval_pv(command, TRUE);
+}
+||<
+本来 newXSproto は Perl モジュールからC言語で書かれた呼び出す際に使用されますが、実際には Perl 側に見えるAPIを公開している事になるので意味としては同じです。
+今回は set_text というAPIを Perl 側に公開し、呼び出すとエディットボックスに文字列が追加されます。
+
+** さぁ！あとはスクリプト
+みんな大好き Web::Scraper を使いましょう。
+>|perl|
+use Encode;
+use URI;
+use Web::Scraper;
+
+my $menu = scraper {
+	process "ul.food-set li", "foods[]" => scraper {
+		process "img", title => '@alt';
+		process "a", link => '@href';
+	};
+};
+$menu->user_agent->env_proxy;
+
+my $res = $menu->scrape(
+	URI->new("http://www.mcdonalds.co.jp/menu/regular/index.html"));
+
+for (@{$res->{foods}}) {
+  set_text(encode('cp932', $_->{title}) . "\r\n");
+  set_text("\t" . $_->{link} . "\r\n");
+}
+||<
+マクドナルドのハンバーガーメニューをスクレイピングして set_text を呼び出しています。
+出来上がったアプリケーションのメニューから...
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-02/edit2.png" />
+えい！
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-02/edit3.png" width="400" />
+きたーーーーーー！
+
+コーディングしててお腹空いたときに超便利なプラグインが出来ました。
+これまでのソースは以下のURLに置いてあります。ぜひ他の機能も付けて楽しんで下さい。
+
+https://github.com/mattn/windows-gui-and-perl
+
+さて明日は日本人でPerlを使っているWindowsユーザ3人の内の最後、charsbarさんの登場です。
+お楽しみに！！
