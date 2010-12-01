@@ -29,7 +29,7 @@
                     <ul>
                         [% FOR entry IN entries %]
                             [% IF entry.exists %]
-                                <li><a href="[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]">[% entry.date.ymd %]</a></li>
+                                <li><a href="[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]">[% entry.date.strftime('%Y-%m-%d(%a)') %]</a></li>
                             [% ELSE %]
                                 <li>[% entry.date.ymd %]</li>
                             [% END %]
