@@ -1,6 +1,6 @@
 Japan Perl Association Wants To Work With You!
 
-<i>In today's article, I (<a href="http://twitter.com/#!/lestrrat">Daisuke Maki</a> a.k.a. lestrrat) will briefly describe about a Japanese Perl organization called Japan Perl Association</i>
+<i>In today's article, I (<a href="http://twitter.com/lestrrat">Daisuke Maki</a> a.k.a. lestrrat) will briefly describe about a Japanese Perl organization called Japan Perl Association</i>
 
 If you don't live in Japan, you may never have heard of <a href="http://japan.perlassociation.org">Japan Perl Association</a> (JPA). It is, I believe a slightly different organization compare to, say, The Perl Foundation or Enlightened Perl Organization.
 
@@ -66,5 +66,5 @@ Have fun, and enjoy the remaining days until the Holiday season.
 
 * Contact Us
 
-If you're visiting Japan, interested in joining us, or have anything else to say,  please contact us at info perlassociation.org (insert an @ mark. you know the drill), or tweet us <a href="http://twitter.com/#!/jpa_perl">@jpa_perl</a>
+If you're visiting Japan, interested in joining us, or have anything else to say,  please contact us at info perlassociation.org (insert an @ mark. you know the drill), or tweet us <a href="http://twitter.com/jpa_perl">@jpa_perl</a>
 
