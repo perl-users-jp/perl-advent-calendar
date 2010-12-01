@@ -1,0 +1,31 @@
+Acme::JavaTrace
+
+こんにちは<a href="http://e8y.net/blog/">トミール</a>です。
+
+<a href="http://search.cpan.org/perldoc?Acme::JavaTrace">Acme::JavaTrace</a>はエラーのスタックトレースをJava風の出し方で出してくれるっていうモジュールです。
+
+>||
+perl -wMAcme::JavaTrace script.pl
+||<
+
+というようにして実行すると、エラーがあった場合は
+
+>||
+Exception: event not implemented
+            at MyEvents::generic_event_handler(workshop/events.pl:26)
+            at MyEvents::__ANON__(workshop/events.pl:11)
+            at MyEvents::dispatch_event(workshop/events.pl:22)
+            at MyEvents::call_event(workshop/events.pl:17)
+            at main::(workshop/events.pl:30)
+||<
+
+とかいう感じで出るみたいです。目がJavaに慣れてる人も安心！！
+
+おもしろいのは、これに影響を受けて<a href="http://search.cpan.org/perldoc?Carp::Always">Carp::Always</a>っていうジョークじゃないモジュールができたっていうところです。嘘から出た真というか、こういうパターンもあるんですね。
+
+ちなみに利用しているモジュール内でちゃんと利用者目線のエラーについてCarpが使われている場合は、以下のように外からCarpのモードをverboseにしてやることで、carp()やcroak()をスタックトレース付きで吐かせることができます。
+
+>||
+perl -MCarp=verbose script.pl
+||<
+
