@@ -1,4 +1,4 @@
-Hello Acme World.
+Hello Acme World!
 
 (firstly written in Japanese, later in English)
 
@@ -172,7 +172,7 @@ Hello everyone. I'm <a href="http://twitter.com/maka2_donzoko">makamaka</a>, an 
 I love Acme and you love Acme. Yes, we love Acme.
 Ok, this is the Japan Perl advent calendar for Acme. It's show time!
 
-Today, the first day, I'm going to descript how we enjoy and love love love Acmes.
+Today, the first day, I'm going to describe how we enjoy and love love love Acmes.
 
 
 <h2>Lesson1 Check Acme documents and versions</h2>
@@ -207,7 +207,7 @@ THIS MODULE MAY BE MASS-EMAILED UNDER THE SAME TERMS AS PERL ITSELF.
 
 Yes happy happy. (I owe this knowledge to <a href="http://googlewhacks.blogspot.com/2007/07/yapcna3the-acme-namespace-20-minutes.html">Mint's log</a>.)
 
-Well, in this winter vacation, would you like to see Acme documents or versoins?
+Well, in this winter vacation, would you like to see Acme documents or versions?
 
 
 
@@ -278,6 +278,7 @@ What do I do?
 Ask unto Acme the things which are Acme
 <<
 
+.
 A famous word in ancient Rome.
 
 
@@ -315,7 +316,7 @@ Thanks.
 
 
 
-Private infomation: I join <a href="http://www.comiket.co.jp/">Comic Market</a>, 31th Dec.
+Private information: I join <a href="http://www.comiket.co.jp/">Comic Market</a>, 31th Dec.
 My booth : Donzoko Gakuya in East R 57a. I will write a info in <a href="http://www.donzoko.net/gakuya/">my Dojin site</a>.
 
 The tomorrow writter is YAPC Asia 2010 Ninja tomi-ru!!
