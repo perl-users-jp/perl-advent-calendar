@@ -1,14 +1,158 @@
-this is sample entry title
+* Perlの開発環境をCasualに作ろう
 
-this is sample entry.
+JPerl Advent Calendar Casual Track 一日目をやる [http://twitter.com/myfinder/:title=myfinder] です。
+去年はlocal::libがもてはやされたりしていましたが、あれから1年の間にPerlは更に手軽に使えるようになりました。
 
-you can use "hatena syntax".
+初日、最初の一歩ということで今回はPerl開発環境を簡単に作るための手順をまとめます。
+対象は基本的にLinuxで、さくらのVPSとかその辺を想定しています。
+Macでも同じようにやればできるでしょう。
+Windowsの場合はわかりません。きっとWin32トラックの人が書いてくれると思います(ぉ
 
-- aaaa
-- bbbb
-- cccc
+** perlbrew
 
->|perl|
-use strict;
-say 'hello';
+これまでは、システムの提供するPerl + local::libで環境を作っていたと思いますが、perlbrewの登場によってPerl本体すらも自分のアカウント内に置くことが簡単にできるようになりました。
+バージョンの切り替えもできるので、複数のバージョンが混在する環境でモジュールを評価したいときにも便利です。
+また、いろいろ試している途中で設定状況がよくわからなくなってしまった場合はディレクトリを丸ごと削除すればそれでなかったことにできるので、Perlの学習をするにも最適なのではと思います。
+
+セットアップ方法は簡単
+
+||
+$ curl -LO http://xrl.us/perlbrew
+$ perl perlbrew install
+$ rm perlbrew
+$ ~/perl5/perlbrew/bin/perlbrew init
+$ echo 'source ~/perl5/perlbrew/etc/bashrc' >> ~/.bashrc
+$ source ~/.bashrc
 ||<
+
+ここまでで、perlbrewを使うお膳立ては整いました。
+現時点でのPerlの最新安定版は5.12.2なので、それをインストールしてみます。
+
+||
+$ perlbrew install perl-5.12.2
+$ perlbrew switch perl-5.12.2
+$ perl -v
+
+This is perl 5, version 12, subversion 2 (v5.12.2) built for x86_64-linux
+
+Copyright 1987-2010, Larry Wall
+
+Perl may be copied only under the terms of either the Artistic License or the
+GNU General Public License, which may be found in the Perl 5 source kit.
+
+Complete documentation for Perl, including FAQ lists, should be found on
+this system using "man perl" or "perldoc perl".  If you have access to the
+Internet, point your browser at http://www.perl.org/, the Perl Home Page.
+||<
+
+perlbrew installを実行すると「tail -f /home/username/perl5/perlbrew/build.log」という表示が出ます、これはインストール経過ログを見るためのコマンドです。
+インストールの進捗が気になるときは、実行するとよいでしょう。
+または、インストールに失敗する、どこで失敗しているかが出力されるので、必要に応じて見るとよいです。
+
+ここまで出来れば、~/perl5/perlbrew/perls/ディレクトリの下にインストールされます。
+
+作業中に状況がよくわからなくなっちゃった場合は、~/perl5ごと削除して、もう一度最初からやればなかった事にできます。
+~/perl5を丸ごとsvnやgitリポジトリに突っ込んで管理するのも手でしょう。
+
+** cpanm
+
+perlをswitchすると、付随するcpanコマンドも下記のようにperlbrewでインストールしたものが使われます。
+
+||
+$ which cpan 
+~/perl5/perlbrew/perls/perl-5.12.2/bin/cpan
+||<
+
+が、貧弱なサーバ環境の場合cpanコマンドが重たすぎたり、そもそも実行が遅いなどあまりいい事がありません。
+2010年代には軽量版のcpanmがありますので、そちらを使いましょう。
+
+インストールは簡単
+
+||
+$ curl -L http://cpanmin.us | perl - App::cpanminus
+$ which cpanm
+~/perl5/perlbrew/perls/perl-5.12.2/bin/cpanm
+||<
+
+これだけで、上記のようにcpnamコマンドが入ります。
+使い方も簡単
+
+||
+$ cpanm Acme
+$ ls ~/perl5/perlbrew/perls/perl-5.12.2/lib/site_perl/5.12.2/
+Acme.pm  App  Bundle  File  HTML  HTTP  LWP  LWP.pm  Net  Spiffy.pm  URI URI.pm  WWW  lwpcook.pod  lwptut.pod  x86_64-linux
+||<
+
+これだけで、perlbrewで仕立てたperlの中にモジュールが入ってくれます。
+
+** pm-uninstall
+
+「CPANモジュールのアンインストールってどうやるんですか？」という疑問は長年の間スルーされ続けてきたトピックの一つだと思いますが、ついにその疑問に答えるものが出てきました。
+それがpm-uninstallです。
+
+pm-uninstallを入れると、コマンド一発でモジュールを消せるのでとってもお手軽ですね。
+インストールはcpanmで一発
+
+||
+$ cpanm App::pmuninstall
+$ which pm-uninstall
+~/perl5/perlbrew/perls/perl-5.12.2/bin/pm-uninstall
+||<
+
+だけ。
+使い方も簡単。
+
+||
+$ pm-uninstall Acme
+Acme is included in the distribution Acme and contains:
+
+  /home/somei/perl5/perlbrew/perls/perl-5.12.2/lib/site_perl/5.12.2/Acme.pm
+  /home/somei/perl5/perlbrew/perls/perl-5.12.2/man/man3/Acme.3
+
+Are you sure to uninstall Acme? [y] y
+$ ls ~/perl5/perlbrew/perls/perl-5.12.2/lib/site_perl/5.12.2/
+App  Bundle  CPAN  File  HTML  HTTP  LWP  LWP.pm  Net  POD2  Spiffy.pm  Test URI  URI.pm  WWW  YAML  YAML.pm  lib  local  lwpcook.pod  lwptut.pod x86_64-linux
+||<
+
+Acmeがきれいに消えてしまいました。
+
+** cpan-outdated
+
+CPANモジュールは日々改善されているので、最新に簡単に追随できるようにしたいところです。
+そんなときにはcpan-outdatedを使います。
+
+||
+$ cpanm App::cpanoutdated
+$ which cpan-outdated
+~/perl5/perlbrew/perls/perl-5.12.2/bin/cpan-outdated
+||<
+
+cpan-outdatedコマンドを実行すると、新しいバージョンがあるものについて表示してくれます。
+
+||
+$ cpan-outdated
+A/AN/ANDYA/Test-Harness-3.22.tar.gz
+B/BI/BINGOS/Archive-Extract-0.46.tar.gz
+B/BI/BINGOS/Archive-Tar-1.72.tar.gz
+.....
+||<
+
+こんな感じで。
+「え、この一覧から手でcpanmしないといけないの！？」と思った人は安心してください。
+下記のようにやれば一発で全部アップデートされます。
+
+||
+$ cpan-outdated | cpanm
+||<
+
+お手軽ですね。
+
+** まとめ
+
+- 2010年代にPerlの開発環境をCasualに作るにはperlbrewが最適
+- 作業内容がわからなくなっちゃっても~/perl5を消すだけでなかった事にできる
+- cpanmを使うと、poorな環境でもcpanmモジュールのインストールがサクサク
+- pm-uninstallを使うと、モジュールのアンインストールがラクラク
+- cpan-outdatedを使うと、最新版への追随もスイスイ
+
+明日はミスターPerlCasualこと yusukebe さんです、お楽しみに！
