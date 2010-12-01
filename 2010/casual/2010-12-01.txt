@@ -47,7 +47,7 @@ Internet, point your browser at http://www.perl.org/, the Perl Home Page.
 
 perlbrew installを実行すると「tail -f /home/username/perl5/perlbrew/build.log」という表示が出ます、これはインストール経過ログを見るためのコマンドです。
 インストールの進捗が気になるときは、実行するとよいでしょう。
-または、インストールに失敗する、どこで失敗しているかが出力されるので、必要に応じて見るとよいです。
+インストールに失敗した場合はどこで失敗しているかが出力されるので、必要に応じて見るとよいです。
 
 ここまで出来れば、~/perl5/perlbrew/perls/ディレクトリの下にインストールされます。
 
