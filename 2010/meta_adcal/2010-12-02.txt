@@ -1,0 +1,64 @@
+URLに応じたページが表示されるまで
+
+当初は3日くらいで次の人に回すつもりだったのですが、なんだかんだで機能追加してるので5日くらい書かないといけないのではないか戦々恐々としてるkanです。
+
+昨日は http://localhost:5000/ へアクセスすると「hello」と表示されるようになったので、いよいよ本格的に作っていくことにします。まず、ページの構成をどうするか考えます。最初、こんな感じに考えました
+
+- http://localhost/2010/meta/  : meta trackのエントリ(1日から25日まで)の一覧
+- http://localhost/2010/meta/1 : meta trackのエントリ(1日目)
+
+更に、複数のtrackを扱うのでtrackの一覧を出して欲しいということになり
+
+- http://localhost/2010/
+
+年/ で、その年のtrack一覧を表示するようにしました。
+
+これを実現するには、アクセス毎に処理を振り分ける必要があります。CPANにはpath routing用のモジュールが沢山ありますが、今回はシンプルに使える Router::Simple を使うことにしました。↑のルールは以下のように書けます。
+
+>|perl|
+$router->connect(
+    '/{year:\d{4}}/',
+    { controller => 'Calendar', action => 'track_list' }
+);
+$router->connect(
+    '/{year:\d{4}}/{name:[a-zA-Z0-9_-]+?}/',
+    { controller => 'Calendar', action => 'index' }
+);
+$router->connect(
+    '/{year:\d{4}}/{name:[a-zA-Z0-9_-]+?}/{day:\d{1,2}}',
+    { controller => 'Calendar', action => 'entry' }
+);
+||<
+
+「{year:\d{4}}」のように書くと「\d{4}」という正規表現にマッチした値を「year」というキーで参照できるようになります。以下のような感じです。
+
+>|perl|
+my $p = $router->match($env);
+warn $p->{year};
+||<
+
+処理を振り分けたら、画面を表示する処理を作ります。HTMLを出力する場合、perlのソース中にHTMLを埋め込んでいく手もありますが、可読性が落ちて早々にメンテが困難になるケースが多いと思います(e.g. perl4時代のCGIスクリプト)。そういった理由から個人的にはなるべく最初からテンプレートをコードと分離するようにしています。
+
+分離したテンプレートはplain textで書いて正規表現で置換、とかでも良いのですが、どうせ誰かすぐ使うだろうということで、今をときめく Text::Xslate を使ってしまうことにしました。Text::Xslate::Syntax::TTerse を使ってTT2風の構文で記述することにします。
+
+>|perl|
+my $tx = Text::Xslate->new(
+    syntax    => 'TTerse',
+    path      => ['tmpl', 'app/tmpl'],
+    cache_dir => '/tmp/app-adventcalendar',
+    cache     => 1,
+    function  => {
+        uri_for => sub {
+            my($path, $args) = @_;
+            my $uri = $base->clone;
+            $uri->path($conf->{base_path} . $uri->path . $path);
+            $uri->query_form(@$args) if $args;
+            $uri;
+        },
+    },
+);
+||<
+
+pathに↑のように複数のディレクトリを指定しておくと、基本的に app/tmpl の下にテンプレートファイルを置くけど、tmpl/ の下に置くとそっちを使うようにする、みたいなことが出来て便利ですね。
+
+シンプルなテンプレートを表示して満足したので明日に続きます。
