@@ -14,6 +14,8 @@ Perl の様な柔軟な言語が GUI アプリケーションのプラグイン�
 #include <windows.h>
 #include "resource.h"
 
+static HWND hEdit = NULL;
+
 LRESULT CALLBACK
 WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
   HINSTANCE hInst;
