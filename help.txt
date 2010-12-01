@@ -1,0 +1,53 @@
+Perl Advent Calendar 書き方 (2010年版)
+
+このドキュメントは、perl-users.jp で公開されている Advent Calendar のwriter向けに
+カレンダー記事の公開方法について説明したものです。
+
+2010年版 Advent Calendar は、一般利用者に対しては以下のURLで公開されます。
+http://perl-users.jp/articles/advent-calendar/2010/
+
+トラックは以下のものがあります。
+
+- Hacker Track
+- Casual Track
+- English Track
+- Acme Track
+- Win32 Track
+- Meta Advent Calendar Track
+- Symbolic Programing Track
+
+各トラックの内容については、上記 URL および参加者募集要項等を見てください。
+
+各トラックの記事は、GitHub 上にテキスト形式で配置します。
+https://github.com/perl-users-jp/jperl-advent-calendar-2010/tree/master/
+
+例えば、記号トラックの2010年12月5日用の記事であれば、
+https://github.com/perl-users-jp/jperl-advent-calendar-2010/tree/master/2010/sym/2010-12-05.txt
+として git push することになります。
+
+現在、上記リポジトリへの push 権は各トラックで主要な数名が保持していますので、
+1) 継続的に記事を書くのであれば tokuhirom, yappo, kan_fushihara, takesako, xaicron, hasegawayosuke, makamaka, yusukebe, kazuho, lestrrat, dankogai
+   あたりにお願いして権限を与えてもらう
+2) すでに記事を push している人(GitHub上で見えますね)にお願いして push してもらう
+という方法を採って下さい。
+git がよくわからないという方は、自分の書くトラックの誰かにメール等で記事を渡して
+もらうのが簡単だと思います(頻繁に更新する場合は権限をもらってgitを使いましょう!)。
+
+各記事をpushするタイミングは任意で行って構いません。期日になれば、perl-users.jpから
+記事へのリンクが自動的に張られます。
+期日前でも、例えば
+http://perl-users.jp/articles/advent-calendar/2010/sym/5
+のようにURLに直接アクセスすれば、該当記事(この例では12月5日の記事)を見ることができます。
+プレビューがわりに表示を確認しておきましょう。
+
+GitHub 経由やURL直接アクセスで事前に記事が見られるのがイヤだという場合は、
+公開ギリギリまで push しないようにしてください。
+
+記事は、はてな記法が使えますが、完全に互換というわけではありません。
+HTMLタグも利用可能です。
+また、記事の先頭行はタイトルとして使用されます。
+
+その他、分からないことがあれば IRC で #perl-casual@freenode.net or #jpac2010@Twitter あたりで気軽に尋ねてください。
+
+---
+hasegawayosuke 
