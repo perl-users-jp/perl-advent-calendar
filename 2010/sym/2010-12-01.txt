@@ -67,4 +67,4 @@ $$_+"\\"+$.__$+$.$__+$.$$$+$.__+"\\"+$.__$+$.$_$+$.___+")\\"+$.__$+$.$$_+$._$_+$
 この BrainF*ck インタプリタを <a href="http://aspnet.codeplex.com/releases/view/40584">Microsoft Ajax Minifier</a> でコードを小さくし、<a href="http://utf-8.jp/public/jjencode.html">jjencode</a> で記号化したものが上に示した記号だけの BrainF*ck インタプリタのコードとなります。
 
 というわけで、初日は記号プログラミング入門ということで、駆け足で BrainF*ck の動きを確かめてみました。
-なぜこのような JavaScript が動くのかについては、回を重ねて説明したいと思いますので明日以降もお楽しみに！
+なぜこのような JavaScript が動くのかについては、回を追って説明したいと思いますので明日以降もお楽しみに！
