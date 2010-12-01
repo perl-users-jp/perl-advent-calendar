@@ -1,5 +1,7 @@
 Japan Perl Association Wants To Work With You!
 
+<i>In today's article, I (<a href="http://twitter.com/#!/lestrrat">Daisuke Maki</a> a.k.a. lestrrat) will briefly describe about a Japanese Perl organization called Japan Perl Association</i>
+
 If you don't live in Japan, you may never have heard of <a href="http://japan.perlassociation.org">Japan Perl Association</a> (JPA). It is, I believe a slightly different organization compare to, say, The Perl Foundation or Enlightened Perl Organization.
 
 * Purpose
@@ -26,7 +28,7 @@ We intend to hold YAPC::Asia Tokyo 2011 again come autumn, but nothing has been 
 
 ** Promoting Cross-Polination (Individuals)
 
-There are at least 4 Perl Mongers group that are active in Japan: Shibuya.pm, Kansai.pm, Hokkaido.pm, Fukuoka.pm, and Okaya.pm. There are handful of less active groups, and groups that are currently being planned for, such as Kamakura.pm, Nagoya.pm, Sendai.pm, and Tama.pm.
+There are at least 4 Perl Mongers group that are active in Japan: <a href="http://shibuya.pm.org">Shibuya.pm</a>, <a href="http://kansai.pm.org">Kansai.pm</a>, <a href="http://hokkaido.pm.org">Hokkaido.pm</a>, <a href="http://fukuoka.pm.org">Fukuoka.pm</a>, and Okayama.pm. There are handful of less active groups, and groups that are currently being planned for, such as Kamakura.pm, Nagoya.pm, Sendai.pm, and Tama.pm.
 
 The physical distance prevents many great minds to interact with each other. JPA wants to promote this cross polination between hackers from different regions in Japan.
 
@@ -34,7 +36,7 @@ As an example, starting from Fukuoka.pm meetup this past November we're funding 
 
 ** Promoting Cross-Polination (Companies)
 
-We also hold meetups inviting our members/sponsors. This networking event is aimed at promoting joint efforts between these companies. Already a few of our sponsors such as DeNA and Mixi are holding joint tech meeeings, but We would like to see more diverse cooperation at such events.
+We also hold meetups inviting our members/sponsors. This networking event is aimed at promoting joint efforts between these companies. Already a few of our sponsors such as <a href="http://dena.jp">DeNA</a> and <a href="http://mixi.jp">Mixi</a> are holding joint tech meeeings, but We would like to see more diverse cooperation at such events.
 
 For members located at places other than greater Tokyo area, these events should be an ideal place to promote themselves and/or their products.
 
