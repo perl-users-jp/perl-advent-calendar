@@ -1,0 +1,90 @@
+Pseudo closures in XS
+
+This article describes <strong>pseudo closures in XS</strong>, a.k.a. XS code templates, which creates XSUBs dynamically without compilation. Because XSUBs are typically much faster than pure Perl subroutines, Creating XSUBs without compilation will be useful for high performance applications.
+
+This technique is already used in some CPAN modules, e.g. [http://search.cpan.org/dist/Mouse:title=Mouse].
+
+* Closure
+
+What are <em>closures</em>? A closure is a subroutine that consists of <em>data</em> and <em>code</em>, which allows us to create subroutines dynamically without compilation, used especially in class builders. The following example is a simplest closure that create a counter, which consists of <em>$i</em> and the increment operator (++):
+
+>|perl|
+my $i       = 42;           # binding data
+my $closure = sub { $i++ }; # data + code
+||<
+
+Although this is a technique to make subroutines dynamically, the dynamic part is only the binding <em>data</em>, while the code part is statically defined. Thus, this technique can be applied to XSUBs.
+
+An XSUB is a Perl subroutine which has a C function, and a subroutine is a type of SV. In Perl internal world, any SVs are able to have MAGICs, which can have other SVs. That is, we can bind SVs to XSUBs.
+
+* Implementation
+
+The actual implementation explained here is taken from Mouse, which is a Moose
+compatible class builder with an XS implementation. The accessors Mouse provides are implemented in XS with this pseudo closure technique. Its basic idea is the same as Perl's: defining XSUBs statically, then binding Perl data to these XSUBs in run-time.
+
+Take the rw accessor from <em>Mouse/xs-src/MouseAccessors.xs</em> for example:
+
+>|xs|
+/* snip */
+#define dMOUSE_self  SV* const self = mouse_accessor_get_self(aTHX_ ax, items, cv)
+/* snip */
+XS(XS_Mouse_accessor)
+{
+    /* setup XSUB args */
+    dVAR; dXSARGS;
+    dMOUSE_self; /* my $self = shift @_ */
+    MAGIC* const mg = (MAGIC*)XSANY.any_ptr; /* fetch the bound data */
+
+    SP -= items; /* PPCODE */
+    PUTBACK;
+
+    if(items == 1){ /* reader */
+        mouse_attr_get(aTHX_ self, mg);
+    }
+    else if (items == 2){ /* writer */
+        mouse_attr_set(aTHX_ self, mg, ST(1));
+    }
+    else{
+        mouse_throw_error(MOUSE_mg_attribute(mg), NULL,
+            "Expected exactly one or two argument for an accessor of %"SVf,
+            MOUSE_mg_slot(mg));
+    }
+}
+||<
+
+This is the prototype of all the rw accessor. The data part is attached as a MAGIC, but available from <em>XSANY.any_ptr</em> for convenience.
+
+The following function is an XSUB generator which creates an XSUB and bind data to the XSUB:
+>|xs|
+CV*
+mouse_accessor_generate(pTHX_ SV* const attr, XSUBADDR_t const accessor_impl){
+    AV* const xa = mouse_get_xa(aTHX_ attr);
+    CV* xsub;
+    MAGIC* mg;
+
+    xsub = newXS(NULL, accessor_impl, __FILE__);
+    sv_2mortal((SV*)xsub);
+
+    mg = sv_magicext((SV*)xsub, MOUSE_xa_slot(xa),
+        PERL_MAGIC_ext, &mouse_accessor_vtbl, (char*)xa, HEf_SVKEY);
+
+    MOUSE_mg_flags(mg) = (U16)MOUSE_xa_flags(xa);
+
+    /* NOTE:
+     * although we use MAGIC for gc, we also store mg to
+     * CvXSUBANY for efficiency (gfx)
+     */
+    CvXSUBANY(xsub).any_ptr = (void*)mg;
+
+    return xsub;
+}
+||<
+<em>XS_Mouse_accessor</em> is passed to this function as an <em>accessor_impl</em> parameter. The <em>attr</em> parameter is an instance of Mouse::Meta::Attribute. The bound data are managed in the Perl interpreter, they are released in the same way as Perl's closures.
+
+This technique might not be easy for everyone, but its power is fascinating. Enjoy!
+
+* See Also
+
+[http://search.cpan.org/dist/Mouse/:title=Mouse]
+[http://search.cpan.org/dist/Class-XSAccessor/:title=Class::XSAccessor]
+
