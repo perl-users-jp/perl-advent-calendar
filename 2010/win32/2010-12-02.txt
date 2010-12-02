@@ -121,7 +121,7 @@ END
 #define IDM_EXIT   (WM_USER+2)
 ||<
 最後にMakefileは
->|C|
+>|Makefile|
 PERL_CORE=c:/strawberry/perl/lib/core
 SRC=edit.c
 OBJS=$(SRC:.c=.o)
