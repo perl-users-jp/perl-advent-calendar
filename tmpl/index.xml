@@ -6,7 +6,7 @@
     <description>[% name %] - [% conf.title %]</description>
     [% FOR entry IN entries %]<item>
       <title>[% entry.title %]</title>
-      <pubDate>Sun, 10 Oct 2010 02:44:00 +0900</pubDate>
+      <pubDate>[% entry.pubdate %]</pubDate>
       <link>[% req.uri %]</link>
       <category>perl</category>
       <guid isPermaLink="true">[% req.uri %]</guid>
