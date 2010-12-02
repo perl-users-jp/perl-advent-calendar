@@ -5,7 +5,7 @@ This article describes <strong>pseudo closures in XS</strong>, a.k.a. XS code te
 
 * Closure
 
-What are <em>closures</em>? A closure is a subroutine that consists of <em>data</em> and <em>code</em>, which allows us to create subroutines dynamically without compilation, used especially in class builders. The following example is a simplest closure that create a counter, which consists of <em>$i</em> and the increment operator (++):
+What are <em>closures</em>? A closure is a subroutine that consists of <em>binding (or external) data</em> and <em>code</em>, which allows us to create subroutines dynamically without compilation, used especially in class builders. The following example is a simplest closure that create a counter, which consists of <em>$i</em> and the increment operator (++):
 
 >|perl|
 my $i       = 42;           # binding data
