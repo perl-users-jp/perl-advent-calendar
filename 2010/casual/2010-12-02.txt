@@ -1,0 +1,102 @@
+PODのコード部分をかっこよくHTMLでみたいよねー
+
+全裸で有名なPerlハッカーsugyanの上司に
+「ゆーすけくん、最近全然仕事してないね。ウケる！」って言われてるyusukebeです。
+今日はPerlソースコード内のPODドキュメントをHTMLで出力して、
+奇麗にみたいなーと思っていた時に考えたモジュールの組み合わせについて紹介します。
+
+** やりたいこと
+
+- Perlのソースコード内のPODをHTML化
+- さらにPOD内で書かれてるPerlコード(というかインデントされたブロック)をハイライトシンタックスしたい
+- JS使ったら負け
+
+** PODをHTML化
+
+CPANで「pod」と検索するとたくさんモジュールが出てきますが、
+今回僕が使うのは、Pod::Simple::XHTMLというモジュールです。
+XHTMLを出力してくれるので後々POD内のPerlコードの部分を指定しやすいです。
+
+>|perl|
+use Pod::Simple::XHTML;
+
+my $source = '...Perl code including POD...';
+my $parser = Pod::Simple::XHTML->new();
+my $pod;
+$parser->output_string( \$pod );
+$parser->html_header('');
+$parser->html_footer('');
+$parser->html_h_level(1);
+$parser->parse_string_document($source);
+||<
+
+$sourceにPerlソースコードが入っている前提だと、
+上記のようなコードで$podに出力されたXHTMLが代入されます。
+ただ、これだけだとPODでかかれたコード部分はただ単純なpreタグでくくられた状態になります。
+
+** preタグをハイライトシンタックスする
+
+preタグでくくられた文字列を取得して、その部分をハイライトシンタックスしていく方針でいきます。
+HTMLのパースにはHTML::TreeBuilder::XPathを使いました。XPathでpreを指定します。
+
+ハイライトシンタックスにはText::VimColorを使いました。
+このモジュールはハイライトすべき文字列にクラス属性付きのspanタグを付けて、
+CSSで色づけするという物です。
+今回はそのspanのタグ付けをとりあえずこのモジュールでやってもらっています。
+
+>|perl|
+my $tree = HTML::TreeBuilder::XPath->new;
+$tree->parse($pod);
+
+for my $code ( $tree->findnodes('//pre') ) {
+    my $code_html = $code->as_HTML;
+    my $syntax    = Text::VimColor->new(
+        string   => $code->as_text,
+        filetype => 'perl',
+    );
+    my $hilight_code = $syntax->html;
+    $pod =~ s/\Q$code_html\E/<pre>$hilight_code<\/pre>/m;
+}
+||<
+
+このように、元のPod::Simple::XHTMLで出力されたHTMLのpre部分をText::VimColorで「置換」しています。
+Text::VimColorかわいいです。まぁ普段はemacsでcperl-mode使ってるんですけどね！
+
+** CSS付きでHTMLを書き出す
+
+あとは、Text::VimColorのソースコードタグ付けに合わせてCSSを揃えてHTMLを出力するだけです。
+
+>|perl|
+my $output = <<EOH;
+<html><head>
+<style type="text/css">
+pre, pre code { font-family: "Monaco", monospace; }
+pre { border: 1px solid #ccc; background-color: #eee; border: 1px solid #888; padding: 1em; overflow:auto;}
+.synComment { color: #0000FF }
+.synConstant { color: #FF00FF }
+.synIdentifier { color: #008B8B }
+.synStatement { color: #A52A2A ; font-weight: bold }
+.synPreProc { color: #A020F0 }
+.synType { color: #2E8B57 ; font-weight: bold }
+.synSpecial { color: #6A5ACD }
+.synUnderlined { color: #000000 ; text-decoration: underline }
+.synError { color: #FFFFFF ; background: #FF0000 none }
+.synTodo { color: #0000FF ; background: #FFFF00 none }
+</style>
+</head><body>
+$pod
+</body></html>
+EOH
+print $output;
+||<
+
+この例では標準出力にHTMLを出力しています。
+ファイルに書き出して、ブラウザで確認すれば、
+POD内のインデントされている部分が色づけされていることがわかると思います。
+
+** まとめ
+これを応用すれば、
+cssとかHTMLをもっと奇麗すれば自分なりのかっこいいPODビューアーができるし、
+Plackやフレームワークなどを使ってWebアプリにするのもいいかもしれませんね！
+明日は冒頭でも紹介した全裸のsugyanさんです！
+
