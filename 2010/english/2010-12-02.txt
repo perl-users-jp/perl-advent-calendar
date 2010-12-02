@@ -1,0 +1,45 @@
+To Write Perl For The Perl Beginners.
+
+Welcome to our English track in JPerl Advent Calender 2010.
+I'm Kenji Matsumura a.k.a <a href="http://twitter.com/mazkeng">mazkeng</a>.
+For a few moment, please stay with my talk.
+
+
+* Introduction
+
+In fact, I'm be newbie, started to study and write Perl about 1 month ago.
+You will think why the newbie has written a artile of Perl, because I thought what tell my experience until start to study Perl coding as a Japanese beginner for beginners of the world. That's the most reason why had entered this track program. 
+So today's article is from a beginner's perspective.
+
+
+* A coincidental inevitability
+
+Before interested in Perl, I have been checking some alpha wise geeks. Coincidentaly, most of them are using Perl to make the service as main programing langage. so, inevitably I'm interested in Perl now.
+
+
+* YAPC::Asia 2010
+
+In this October, I joined this Perl conference the first time. The title was "Welcome Perl". In some sessions, many messages were told by major Perl hackers to the beginners . It was so nice event for the beginners as me. 
+
+I was impressed some word, especially two word. 
+
+- Perl glues people togather.
+- You don't need permission to write your code.
+
+The both were told by miyagawa in his session. When I heard the words, I could be able to recognized "Programing is fun" one more. and want to have several more conversations about Perl with the people. 
+
+
+* Ready To Write Perl
+After YAPC, I immediately bought new pc, alreay have a windows pc, but I heard that mac or linux is better to study and write Perl, so chose a mac machine. In my opinion, mac is so nice, it includes a number of tools to start coding for beginners. 
+
+
+* Why Perl ?
+
+Some people probably ask to me, "Why is Perl ?" "Why not others ?"
+The reason is so simple. I felt it fun, through the community and many hackers. Of course, we can use many excellent modules from CPAN, it's one of the reasons. However, it's most important reason for me that community and hackers are considering the enveironment for the beginners to learn Perl, already exists in Japan. ( same as Mr.Maki said last day.)
+We can join the good environment in order to study Perl in Japan right now. When you want to write, you can do this. How about your country ? Surely the same as ours.
+
+
+Thanks for reading my article.
+Let's enjoy! 
+
