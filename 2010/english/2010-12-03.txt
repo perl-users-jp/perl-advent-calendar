@@ -88,3 +88,6 @@ This technique might not be easy for everyone, but its power is fascinating. Enj
 [http://search.cpan.org/dist/Mouse/:title=Mouse]
 [http://search.cpan.org/dist/Class-XSAccessor/:title=Class::XSAccessor]
 
+* Author
+
+Fuji, Goro (gfx) - [http://search.cpan.org/~gfuji/]
