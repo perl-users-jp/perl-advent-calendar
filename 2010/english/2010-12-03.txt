@@ -1,8 +1,7 @@
 Pseudo closures in XS
 
-This article describes <strong>pseudo closures in XS</strong>, a.k.a. XS code templates, which creates XSUBs dynamically without compilation. Because XSUBs are typically much faster than pure Perl subroutines, Creating XSUBs without compilation will be useful for high performance applications.
+This article describes <strong>pseudo closures in XS</strong>, a.k.a. XS code templates, which creates XSUBs dynamically without compilation. Because XSUBs are typically much faster than pure Perl subroutines, creating XSUBs without compilation will be useful for high performance applications.
 
-This technique is already used in some CPAN modules, e.g. <a href="http://search.cpan.org/dist/Mouse">Mouse</a>.
 
 * Closure
 
@@ -15,7 +14,7 @@ my $closure = sub { $i++ }; # data + code
 
 Although this is a technique to make subroutines dynamically, the dynamic part is only the binding <em>data</em>, while the code part is statically defined. Thus, this technique can be applied to XSUBs.
 
-An XSUB is a Perl subroutine which has a C function, and a subroutine is a type of SV. In Perl internal world, any SVs are able to have MAGICs, which can have other SVs. That is, we can bind SVs to XSUBs.
+An XSUB is a Perl subroutine which has a C function, and a subroutine is a type of SV. In Perl internal world, any SVs are able to have struct MAGIC, which can have other SVs. That is, we can bind SVs to XSUBs. However, Perl API doesn't support closures directly, so I call this technique <strong>pseudo closures</strong>.
 
 * Implementation
 
@@ -53,7 +52,7 @@ XS(XS_Mouse_accessor)
 }
 ||<
 
-This is the prototype of all the rw accessor. The data part is attached as a MAGIC, but available from <em>XSANY.any_ptr</em> for convenience.
+This is the prototype of all the rw accessor (and of course, other accessors are defined in the file). The data part is attached as a MAGIC, but available from <em>XSANY.any_ptr</em> for convenience.
 
 The following function is an XSUB generator which creates an XSUB and bind data to the XSUB:
 >|xs|
@@ -80,11 +79,13 @@ mouse_accessor_generate(pTHX_ SV* const attr, XSUBADDR_t const accessor_impl){
     return xsub;
 }
 ||<
-<em>XS_Mouse_accessor</em> is passed to this function as an <em>accessor_impl</em> parameter. The <em>attr</em> parameter is an instance of Mouse::Meta::Attribute. The bound data are managed in the Perl interpreter, they are released in the same way as Perl's closures.
+<em>XS_Mouse_accessor</em> is passed to this function as an <em>accessor_impl</em> parameter. The <em>attr</em> parameter is an instance of Mouse::Meta::Attribute. The bound data are managed by the Perl interpreter, they are released in the same way as Perl's closures.
 
-This technique might not be easy for everyone, but its power is fascinating. Enjoy!
+This technique might not be easy for everyone, but its power is fascinating. Enjoy metaprogramming in XS!
 
 * See Also
+
+This technique is already used in some CPAN modules, e.g. <a href="http://search.cpan.org/dist/Mouse">Mouse</a>.
 
 [http://search.cpan.org/dist/Mouse/]
 [http://search.cpan.org/dist/Class-XSAccessor/]
