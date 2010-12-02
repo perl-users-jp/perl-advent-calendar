@@ -198,7 +198,7 @@ static HWND hEdit = NULL;
 extern void boot_DynaLoader (pTHX_ CV* cv);
 
 void
-XS_set_text(pTHX_ CV* cv) {
+XS_add_text(pTHX_ CV* cv) {
   dXSARGS;
   STRLEN n_a;
   char* text = (char*) SvPV(ST(0), n_a);
@@ -229,14 +229,14 @@ void hungry() {
   perl_parse(my_perl, xs_init, my_argc, my_argv, my_env);
   perl_run(my_perl);
 
-  newXSproto("set_text", XS_set_text, __FILE__, "$");
+  newXSproto("add_text", XS_add_text, __FILE__, "$");
 
   snprintf(command, sizeof(command), "do q\"%s\"", path);
   eval_pv(command, TRUE);
 }
 ||<
-本来 newXSproto は Perl モジュールからC言語で書かれた呼び出す際に使用されますが、実際には Perl 側に見えるAPIを公開している事になるので意味としては同じです。
-今回は set_text というAPIを Perl 側に公開し、呼び出すとエディットボックスに文字列が追加される様にしました。
+本来 newXSproto は Perl モジュールからC言語で書かれたライブラリを呼び出す際に使用されますが、実際には Perl 側に見えるAPIを公開している事になるので意味としては同じです。
+今回は add_text というAPIを Perl 側に公開し、呼び出すとエディットボックスに文字列が追加される様にしました。
 
 ** さぁ！あとはスクリプト
 みんな大好き Web::Scraper を使いましょう。
@@ -257,11 +257,11 @@ my $res = $menu->scrape(
 	URI->new("http://www.mcdonalds.co.jp/menu/regular/index.html"));
 
 for (@{$res->{foods}}) {
-  set_text(encode('cp932', $_->{title}) . "\r\n");
-  set_text("\t" . $_->{link} . "\r\n");
+  add_text(encode('cp932', $_->{title}) . "\r\n");
+  add_text("\t" . $_->{link} . "\r\n");
 }
 ||<
-マクドナルドのハンバーガーメニューをスクレイピングして set_text を呼び出しています。
+マクドナルドのハンバーガーメニューをスクレイピングして add_text を呼び出しています。
 出来上がったアプリケーションのメニューから...
 <img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-02/edit2.png" />
 えい！
