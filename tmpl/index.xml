@@ -7,9 +7,9 @@
     [% FOR entry IN entries %]<item>
       <title>[% entry.title %]</title>
       <pubDate>[% entry.pubdate %]</pubDate>
-      <link>[% req.uri %]</link>
+      <link>[% entry.link %]</link>
       <category>perl</category>
-      <guid isPermaLink="true">[% req.uri %]</guid>
+      <guid isPermaLink="true">[% entry.link %]</guid>
       <description>
       [% entry.text | unmark_raw %]
       </description>
