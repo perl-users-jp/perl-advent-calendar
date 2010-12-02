@@ -1,6 +1,6 @@
 記号プログラミングの第一歩は BrainF*ck
 
-記号プログラミングトラックへようこそ！ <a href="http://twitter.com/hasaegawayosuke/">はせがわ</a>です。
+記号プログラミングトラックへようこそ！ <a href="http://twitter.com/hasegawayosuke/">はせがわ</a>です。
 
 初回の今日は、記号プログラミングを行えるもっとも有名な言語である <a href="http://ja.wikipedia.org/wiki/Brainfuck">BrainF*ck</a> を題材に、記号プログラミングの世界にダイブする準備をしましょう！
 
