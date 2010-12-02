@@ -21,7 +21,7 @@ An XSUB is a Perl subroutine which has a C function, and a subroutine is a type 
 The actual implementation explained here is taken from Mouse, which is a Moose
 compatible class builder with an XS implementation. The accessors Mouse provides are implemented in XS with this pseudo closure technique. Its basic idea is the same as Perl's: defining XSUBs statically, then binding Perl data to these XSUBs in run-time.
 
-Take the rw accessor from <em>Mouse/xs-src/MouseAccessors.xs</em> for example:
+Take the rw accessor from <a href="http://git.shadowcat.co.uk/gitweb/gitweb.cgi?p=gitmo/Mouse.git;a=blob_plain;f=xs-src/MouseAccessor.xs;hb=master">Mouse/xs-src/MouseAccessors.xs</a> for example:
 
 >|xs|
 /* snip */
