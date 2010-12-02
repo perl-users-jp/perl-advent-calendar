@@ -2,7 +2,7 @@ Pseudo closures in XS
 
 This article describes <strong>pseudo closures in XS</strong>, a.k.a. XS code templates, which creates XSUBs dynamically without compilation. Because XSUBs are typically much faster than pure Perl subroutines, Creating XSUBs without compilation will be useful for high performance applications.
 
-This technique is already used in some CPAN modules, e.g. [http://search.cpan.org/dist/Mouse:title=Mouse].
+This technique is already used in some CPAN modules, e.g. <a href="http://search.cpan.org/dist/Mouse">Mouse</a>.
 
 * Closure
 
@@ -26,7 +26,8 @@ Take the rw accessor from <em>Mouse/xs-src/MouseAccessors.xs</em> for example:
 
 >|xs|
 /* snip */
-#define dMOUSE_self  SV* const self = mouse_accessor_get_self(aTHX_ ax, items, cv)
+#define dMOUSE_self  SV* const self = \
+        mouse_accessor_get_self(aTHX_ ax, items, cv)
 /* snip */
 XS(XS_Mouse_accessor)
 {
@@ -85,9 +86,9 @@ This technique might not be easy for everyone, but its power is fascinating. Enj
 
 * See Also
 
-[http://search.cpan.org/dist/Mouse/:title=Mouse]
-[http://search.cpan.org/dist/Class-XSAccessor/:title=Class::XSAccessor]
+[http://search.cpan.org/dist/Mouse/]
+[http://search.cpan.org/dist/Class-XSAccessor/]
 
 * Author
 
-Fuji, Goro (gfx) - [http://search.cpan.org/~gfuji/]
+Fuji, Goro (gfx) - [http://github.com/gfx/]
