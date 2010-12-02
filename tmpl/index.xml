@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>[% name %] - [% conf.title %]</title>
+    <link>http://mattn.kaoriya.net/</link>
+    <description>[% name %] - [% conf.title %]</description>
+    [% FOR entry IN entries %]<item>
+      <title>[% entry.title %]</title>
+      <pubDate>Sun, 10 Oct 2010 02:44:00 +0900</pubDate>
+      <link>[% req.uri %]</link>
+      <category>perl</category>
+      <guid isPermaLink="true">[% req.uri %]</guid>
+      <description>
+      [% entry.text | unmark_raw %]
+      </description>
+      <author></author>
+    </item>[% END %]
+  </channel>
+</rss>
