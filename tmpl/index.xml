@@ -13,7 +13,7 @@
       <description>
       [% entry.text | unmark_raw %]
       </description>
-      <author></author>
+      <author>[% entry.author %]</author>
     </item>[% END %]
   </channel>
 </rss>
