@@ -1,4 +1,5 @@
 Windows GUI アプリケーションでの Perl プラグインの作り方
+meta-author: mattn <mattn.jp@gmail.com>
 
 こんにちわ。Windows を殺したいほど愛している mattn です。
 Windows で Perl を日常的に使っている日本人3名の内の2人目です((要出典))。
@@ -268,7 +269,7 @@ for (@{$res->{foods}}) {
 <img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-02/edit2.png" />
 えい！
 <img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-02/edit3.png" width="400" />
-きたーーーーーー！
+キターーーーーー！
 
 コーディングしててお腹空いたときに超便利なプラグインが出来ました。
 これまでのソースは以下のURLに置いてあります。ぜひ他の機能も付けて楽しんで下さい。
