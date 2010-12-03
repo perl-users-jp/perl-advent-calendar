@@ -1,3 +1,5 @@
+記号だけのJavaScriptプログラミングの基本原理
+
 こんにちは。プログラマ定年を迎えたのであとは悠々自適に日々過ごそうと思ってる<a href="http://twitter.com/hasegawayosuke">はせがわ</a>です。
 
 JavaScriptで記号プログラミングを行う基本的な取り組を説明します。
