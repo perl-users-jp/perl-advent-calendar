@@ -1,0 +1,100 @@
+cmd.exe の C は……
+
+『死体の C』と答えた方はミステリ小説のファンですね。「クリスマスの C」と答えた方は、うーん、ちょっと惜しいかも。「Visual C」と答えてしまったあなたは、ぜひ次のエントリを書いてください。
+
+というわけで3日目の今日は頭文字 C の覆面ライターが Perl を使ってコマンドプロンプトをちょっとだけ使いやすくする方法を紹介します。
+
+>>
+なお、この手のハックの常として、操作を間違えたりタイプミスをしたりすると最悪Windowsの再インストールという事態に陥ることもありえます。試される方は自己責任でお願いします。
+<<
+
+* 右クリックメニューを追加する
+
+みなさんよくご存じのように、Windows ではふつうファイルのアイコンをダブルクリックすると、ファイルの拡張子に応じて登録済みのアプリケーションが実行されるようになっています。もちろん Perl もこの例外ではありません。ActivePerl や、最近では Strawberry Perl の場合でも、インストーラ経由で Perl をインストールした方は「.pl」という拡張子のファイルをダブルクリックすると、Perl がそのスクリプトを実行してくれるようになっているはずです。
+
+でも、このようにして実行したスクリプトは、ふつう処理が終わったとたんに画面が消えてしまいます。エラーが出ていようが何しようがおかまいなしです。これでは不便ですよね。
+
+そこで、ふつうは左下の「スタート」メニューから「コマンドプロンプト」というプログラム（「プログラム」メニューの「アクセサリ」のなかに入っています）を呼び出して、その昔は「DOS 窓」などと呼ばれていたウインドウのなかで Perl を使うわけですが、「スタート」メニューからコマンドプロンプトを呼び出した場合は、cd コマンドを使って、実行したいスクリプトのあるディレクトリまでいちいち手で移動しなければなりません。
+
+（ちょっとしたテストスクリプトを書きたいだけだからディレクトリの移動はいいや、なんて思って、ふとプロンプトの前に表示されているカレントディレクトリを見たら Windows のシステムディレクトリだった、なんてこともありえますから、おたがい気をつけましょう）
+
+もちろん世の中には「GUI なんて飾りです(ry」という人もいますし、そういう方は日頃から何でもコマンドプロンプトから実行できるようにさまざまな手管を弄しているのですが、どのみち日常業務では Excel や PDF ファイルを開くのにエクスプローラーを使わざるをえないのですから、Perl を実行するときだけコマンドプロンプトでディレクトリ移動するのは、控えめに言っても二度手間です。それよりはエクスプローラーの任意のディレクトリからコマンドプロンプトを開けるようにした方がよいでしょう。
+
+やり方は簡単です。お使いのテキストエディタでこのようなスクリプトを書いて、適当なディレクトリに保存したら、そのファイルをダブルクリックするだけ。エクスプローラーで適当なディレクトリを右クリックしたときに「prompt」というメニューが追加されていれば成功です。クリックしたらそのディレクトリがカレントディレクトリになっているプロンプトが開きましたね？
+
+>|perl|
+use strict;
+use warnings;
+use Win32::TieRegistry;
+
+$Registry->Delimiter('/');
+$Registry->Open('Classes/Folder/shell/')
+         ->CreateKey('prompt/command/')
+         ->SetValue('', 'cmd.exe /K cd %L');
+||<
+
+いまどきの Windows 用 Perl であればたいてい Win32::TieRegistry は標準添付されているはずですが、自分で Perl をコンパイルした方や、何かほかのプログラムについてきた Perl を使った方は、先に CPAN や PPM リポジトリからこのモジュールをインストールする必要があるかもしれません。また、できる人はわざわざスクリプトを保存しなくても、「スタート」メニューの「ファイル名を指定して実行」にこんなコマンドを入れてやればOKです。
+
+>|perl|
+perl -MWin32::TieRegistry -e "$Registry->{'Classes\\Folder\\shell\\'}->CreateKey('prompt\\command\\')->SetValue('','cmd.exe /K cd %L')"
+||<
+
+* タブ補完を有効にする
+
+いまどきの Windows であれば標準でできるという噂もありますが、いわゆる「コマンドプロンプト」のもとである cmd.exe は、そのままではファイル名やディレクトリ名の補完ができません。cmd.exe の起動時に「/f:on」というオプションをつけるとそれっぽいことはできるのですが、このとき有効になるのは Ctrl+D（ディレクトリ用）と Ctrl+F（ファイル用）というキーなので、「ディレクトリもファイルも区別せずにタブ補完したい」という用途には向きません。
+
+これも先ほどと同じような方法で解決できます。今度はこのようなスクリプトを書いて、実行しましょう。
+
+>|perl|
+use strict;
+use warnings;
+use Win32::TieRegistry;
+
+$Registry->Delimiter('/');
+my $key = $Registry->Open('CUser/Software/Microsoft/Command Processor/');
+$key->SetValue('CompletionChar',     pack('L', 9), 'REG_DWORD');
+$key->SetValue('PathCompletionChar', pack('L', 9), 'REG_DWORD');
+||<
+
+もちろんワンライナーでもOKです。ここでは二行にわけましたが、一行にまとめたければご自由にどうぞ。
+
+>|perl|
+perl -MWin32::TieRegistry -e "$Registry->{'CUser\\Software\\Microsoft\\Command Processor\\\\CompletionChar'} = [pack('L', 9), 'REG_DWORD']"
+perl -MWin32::TieRegistry -e "$Registry->{'CUser\\Software\\Microsoft\\Command Processor\\\\PathCompletionChar'} = [pack('L', 9), 'REG_DWORD']"
+||<
+
+現在のユーザだけでなく、ローカルマシン全体に適用したい場合は、「CUser」となっているところを「LMachine」に置き換えてください。
+
+* notepad.exe をふくむエントリを探す
+
+最後は応用編ということで、レジストリの値を再帰的に検索する方法も紹介しておきましょう。これは notepad.exe に関連づけられている拡張子などを検索するときによく使います。
+
+>|perl|
+use strict;
+use warnings;
+use Win32::TieRegistry;
+
+my $target = 'notepad.exe';
+
+walk($Registry->{$_}) for keys %$Registry;
+
+sub walk {
+  my $key = shift or return;
+  for my $name ($key->ValueNames) {
+    my ($value, $type) = $key->GetValue($name);
+    print $key->Path, " $name: ", $value, "\n" if $value =~ /$target/;
+  }
+  for my $name ($key->SubKeyNames) {
+    my $subkey = eval { $key->Open($name) } or next;
+    walk($subkey);
+  }
+}
+||<
+
+もちろん上と同じ理屈で検索した notepad.exe の値をお好みのテキストエディタのパスに置き換える、なんてこともできますが、うっかりミスってしまうと取り返しのつかない結果になることもありえますので、この手の自動化はくれぐれも慎重に行ってください。心臓の弱い方、締め切り仕事を抱えている方にはおすすめしません。
+
+* PowerShell?
+
+Windows 7 からは PowerShell が標準添付になっているので、cmd.exe のかわりに powershell.exe を使う、という手もあります。PowerShell を使うと / と \ の切り替えなどもよしなにしてくれますので、ふだんは *nix を使っている方なら試してみるとよいかもしれません。
+
+さて、次はどなたが書くのでしょうね。
