@@ -1,0 +1,145 @@
+Scope::Container でリソース管理を行う
+
+メリクリ！ライヨロ！YAPC::Asia 2010でベストスピーカー賞の nekokak さんの次に書かせて頂きます。kazeburo です。
+
+先月 Scope::Contaier というモジュールをリリースしましたが、[http://search.cpan.org/dist/Scope-Container/:title=CPAN]、[http://blog.nomadscafe.jp/2010/11/scopecontainer.html:title=紹介したblog]はこちら。もともとこのモジュールを書いたのはMySQLに対する接続を制御するためでした。
+
+
+某日、某サービスのMySQLのPROCESSLISTを見た時に
+
+>||
+mysql> show processlist;
++-------------+-------------+-------------------+------+---------+----------+---------------------------------+------+
+| Id          | User        | Host              | db   | Command | Time     | State                           | Info |
++-------------+-------------+-------------------+------+---------+----------+---------------------------------+------+
+|       24315 | system user |                   | NULL | Connect | 32971219 | Waiting for master to send even | NULL |
+|       24316 | system user |                   | NULL | Connect | 0        | Has read all relay log; wa...   | NULL |
+| 31604907311 | myuser      | 192.168.x.x:27858 | myDB | Sleep   | 97       |                                 | NULL |
+| 31604907421 | myuser      | 192.168.x.x:13187 | myDB | Sleep   | 54       |                                 | NULL |
+... 省略 ...
+811 rows in set (0.00 sec)
+||<
+
+このように、idle時間が長いコネクションが800件以上、大量に存在しているのを見つけました。MySQLは1つの接続で1つのスレッドを占有するので多くの接続があることでそれだけリソースが消費されてしまいます。また競合をさけるため多くのlockが必要になり性能劣化の可能性もあります。また、idleが貯まることでMySQLに設定した同時接続数(max_connections)に達し、新しい接続ができないことがでてくると思います。
+
+具体的な問題として、上記のMySQLサーバではSHOW INNODB STATUSが
+
+>||
+TRANSACTIONS
+------------
+Trx id counter 4 1686819906
+Purge done for trx's n:o < 4 1686817408 undo n:o < 0 0
+Total number of lock structs in row lock hash table 0
+LIST OF TRANSACTIONS FOR EACH SESSION:
+---TRANSACTION 4 1686819904, not started, process no 1768, OS thread id 1622055232
+MySQL thread id 31605374012, query id 140196889008 192.168.x.x myuser
+---TRANSACTION 4 1686819902, not started, process no 1768, OS thread id 1838614848
+MySQL thread id 31605374014, query id 140196888993 192.168.x.x myuser
+||<
+
+この「LIST OF TRANSACTIONS」で埋まり監視用のデータが取得できない情況になっていました。（実際はこれで気づいた）
+
+そこでアクセス元を調べるとその多くはJob Queueサーバから来ている事がわかりました。そこでDBに接続を行う箇所のソースコードを確認すると
+
+>||
+sub db {
+    my $dbh;
+    if ($ENV{'MOD_PERL'} && !$Apache::ServerStarting ) {
+        $dbh = Apache->request()->pnotes($pnotes_key);
+    }
+    if (!$dbh) {
+        my $method = ( $ENV{MOD_PERL} ) ? 'connect' : 'connect_cached';
+        $dbh = DBI->$method(@datasource, \%options);
+        $dbh->{mysql_auto_reconnect} = 0;
+        if ($ENV{'MOD_PERL'} && !$Apache::ServerStarting ) {
+            Apache->request()->pnotes($pnotes_key, $dbh);
+        }
+    }
+    return $dbh;
+}
+||<
+
+このようになっていました。
+
+pnotesはmod_perlが提供する機能でRequestが終了した時点で、自動的にそこにいれたデータを破棄してくれます。このpnotesにデータベースの接続情報をいれることで一度のリクエスト処理中に同じデータベースへの接続を１回だけにして効率をあげることができます。またpnotesはリクエストが完了したところで破棄されるので、データベースの接続もそこで終了し、コネクションが維持されたままになることもありません。
+
+上記のコードでは、mod_perlでアプリケーションの場合にpnotesを使い、そうでない場合、DBIの接続維持機能である、connect_cached を利用するようになっています。DBIのconnect_cachedは接続情報のキャッシュがDBIクラスに紐付けられるのでプロセスが終了する、あるいは明示的にdisconnectをおこなうまで接続が維持されます。プロセスが短時間で終了するcronスクリプト、あるいはCGIなどではこれでかまわない(もしくはconnectでも問題ない性能)だと思いますが、JobQueue Workerなど１つのプロセスが長時間動作するものだと接続が残り、JobQueueのプロセスが分、MySQL側での接続数が増えてしまいます。
+
+ちなみに、connect_cachedのキャッシュをクリアするには
+
+>||
+my $CachedKids_hashref = $dbh->{Driver}->{CachedKids};
+%$CachedKids_hashref = () if $CachedKids_hashref;
+||<
+
+このようにDBIのCachedKidsをクリアすれば良いそうです。
+
+Webアプリケーションでリクエストを受ける場合以外でも、MySQLへの接続を細かく管理するために、任意の範囲（スコープ）だけで接続維持を行い、スコープから外れたら自動で接続を切る事ができないかを考え、Scope::Containerを書きました。上のコードにScope::Containerを追加したの次になります
+
+>||
+sub db_Main {
+    my $dbh;
+    if ($ENV{'MOD_PERL'} && !$Apache::ServerStarting ) {
+        $dbh = Apache->request()->pnotes($pnotes_key);
+    }
+    elsif ( in_scope_container() ) {
+        $dbh = scope_container $class->pnotes_key );
+    }
+    if (!$dbh) {
+        my $method = ( $ENV{MOD_PERL} or in_scope_container() ) ? 'connect' : 'connect_cached';
+        $dbh = DBI->$method(@datasource, \%options);
+        $dbh->{mysql_auto_reconnect} = 0;
+        if ($ENV{'MOD_PERL'} && !$Apache::ServerStarting ) {
+            Apache->request()->pnotes($pnotes_key, $dbh);
+        }
+        elsif ( in_scope_container() ) {
+            scope_container( $pnotes_key, $dbh );
+        }
+    }
+    return $dbh;
+}
+||<
+
+すでに大規模サービスで超利用されている部分なのでなるべくpnotesを弄らずScope::Containerを埋め込んでいます。in_scope_container()はScope::Conitanerが有効になっているかどうか確認し、データの取得、格納はscope_container()で行います。まずmod_perlの環境かどうか確認し、そうでない場合だけScope::Containerを用います。また、Scope::Containerが有効な場合はpnotesの時と同じく、connect_cachedを使わずに、キャッシュは自前で管理します。
+
+
+この上で、JobQueue側でScope::Conitanerを有効にします。
+
+>||
+my $client = TheSchwartz->new( databases => ... );
+$client->can_do(...);
+while($cnt < $max){
+    my $sc = start_scope_container();
+    $cnt++ if $client->work_once();
+    undef $sc;
+    sleep $interval;
+}
+||<
+
+TheSchwartzでJobを実行する、work_onceの前にstart_scope_container()でScope::Conitanerを有効にします。$sc はScope::Containerオブジェクトでこれが破棄されるとそのスコープで保存されたデータも破棄されます。sleepの前に明示的に$snをundefしているのは、sleepしている時間にデータベースの接続を維持するのは無駄になるからですね。通常whileのスコープを抜けるとオブジェクトが破棄されるので明示的に何かを行う必要はないと思われます。
+
+
+もう一つ、例として、処理に長時間かかるcronスクリプトを挙げてみます。Webサービスなどで全てのユーザIDに対して何かしらの処理をしなければならない場合、WHERE句なしで全件SELECTするよりも、まずユーザIDのMAX値を調べ、1からインクリメントしながらMAXまで処理していく方が効率的な場合があります。
+
+>||
+my $max;
+{
+    my $sc = start_scope_container();
+    $max = MyService::User->get_max_id();
+}
+
+for my $id ( 1..$max ) {
+    my $sc = start_scope_container();
+    my $user =  MyService::User->find($id);
+    $user->...
+    undef $sc;
+    sleep 1 if $id % 100 == 0;
+}
+||<
+
+まず、IDの最大値を取るために、ブロックを作り、その中でScope::Containerを使います。これでget_max_idを行ったあと、DBの接続は一度破棄されてます。そのあと for ループのなかで毎回start_scope_container()します。これで1ユーザの処理で1回のデータベース接続を実現しています。あとは適度なタイミングでsleepを入れるとなんとなく安心です。本当に毎回接続をし直すのが無駄だと思う場合は、ループを2重にして、100件ごとにstart_scope_container()すれば良いと思います。
+
+Scope::Container の大きな特徴として特定のフレームワークに依存しないことが挙げられます。mod_perlのpnotesと同じくWAFでリクエスト単位のcontextを用意しているものがあります、しかしデータベースの接続などでそれを利用してしまうとリソースの管理もそのフレームワークに束縛されてしまいます。cronスクリプトやJob Queue Workerにも対応しているフレームワークが用意されていない限り、細かくリソースの制御をするが難しくなります。Scope::Containerを利用して、実行される環境とリソースを粗結合にすることで柔軟性を確保し、丁寧なリソースの管理ができるようになるんじゃないかと思います。
+
+明日のHackers TrackはWin32 Perl界のプリンス、xaicronさんです。
+
