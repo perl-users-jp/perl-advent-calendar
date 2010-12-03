@@ -1,0 +1,101 @@
+コマンドラインで使えるかもしれないツール等あれこれ
+
+鎌倉で毎日[http://bowls-cafe.jp/:title=どんぶり]食べてます、sugyanです こんにちは！
+皆さん、ターミナルやシェルは何をお使いでしょうか？僕は現在MacにてiTerm2+zshを使っています(あんまり使いこなせてませんが…)。
+プログラミングして書いたコードを実行するには、ターミナルでコマンドを打つのがほぼ必須ですよね。皆さんも毎日たくさんのコマンドをターミナルで叩いていることと思います。
+CPANで配布されているモジュールたちは、Perlスクリプト内でuseして使うためのものだけではなく、シェルから実行できるコマンドが用意されている場合もあります。[http://perl-users.jp/articles/advent-calendar/2010/casual/1:title=1日目]で紹介されたperlbrewやcpanmも、Perlで書かれたコマンドラインツールですよね。
+今回はそんなコマンドたちを紹介してみようと思います。
+
+* ■開発環境系
+- perl
+- [http://search.cpan.org/~gugod/App-perlbrew-0.14/lib/App/perlbrew.pm:title=perlbrew]
+- [http://search.cpan.org/dist/App-cpanminus/lib/App/cpanminus.pm:title=cpanm]
+- [http://search.cpan.org/dist/App-pmuninstall/lib/App/pmuninstall.pm:title=pm-uninstall]
+- [http://search.cpan.org/dist/App-cpanoutdated/bin/cpan-outdated:title=cpan-outdated]
+perlコマンドはまぁ当然ですね。知らないと話になりません。perlbrew, cpanm, pm-uninstall, cpan-outdatedに関しては[http://perl-users.jp/articles/advent-calendar/2010/casual/1:title=1日目]に書かれているのでそちらを読みましょう。perlの環境構築においてとても便利なコマンドたちで、CPANではそれぞれはApp::****というパッケージ名で配布されていますね。
+
+* ■便利系
+- [http://search.cpan.org/~petdance/ack-1.94/Ack.pm:title=ack]
+- [http://search.cpan.org/~cornelius/App-gh-0.28/lib/App/gh.pm:title=gh]
+ackは"better than grep"と謳われるソースコード検索に最適な検索コマンドです。指定ディレクトリから再帰的にファイルを検索し、パターンにマッチしたファイル、マッチ箇所をハイライトして表示してくれます。デフォルトで".svn"や".git"などvcsで使うディレクトリを無視してくれて、また使い慣れているperlの正規表現をパターンとして使うことができます。例えば
+>||
+$ ack '=\s*\d+' lib
+||<
+で、libディレクトリ以下のソースコードからマジックナンバーをハードコードしてしまっている部分を簡単に探し出せるかもしれません。その他にも多くのオプションがあり、また $HOME/.ackrcに設定を記述しておくことで自分好みにカスタマイズして使用することもできます。
+ghは[https://github.com/:title=github]を使いこなすのに便利なコマンドラインツールです。"gh search hogehoge"でgithub上で公開されているリポジトリを検索したり、"gh list hogehoge"で気になるあの人の公開リポジトリを眺めたり、また当然"gh clone"や"gh fork"などでcloneしたりforkしたりもできます。
+
+* ■web系
+- [http://search.cpan.org/~miyagawa/Plack-0.9952/scripts/plackup:title=plackup]
+- [http://search.cpan.org/~gaas/libwww-perl-5.837/bin/lwp-request:title=lwp-request]
+plackupは現在Perlでwebアプリを作る際に必須のコマンドと言えるでしょう。psgiファイルを読み込んでアプリケーションを起動します。詳しくは[http://plackperl.org/]などを参照して下さい。psgiファイルを指定せずに"-e"オプションを使用してワンライナーで実行することもでき、
+>||
+$ plackup -e 'sub { return [200, [], ["hello"]] }'
+||<
+と実行するだけで http://localhost:5000 で動くwebサーバーが出来上がります。オススメは[http://search.cpan.org/~miyagawa/Plack-0.9952/lib/Plack/App/Directory.pm:title=Plack::App::Directory]を使用したローカルディレクトリのhttp配信で、
+>||
+$ plackup -MPlack::App::Directory -e 'Plack::App::Directory->new({ root => "." })'
+||<
+とやると、カレントディレクトリをrootとしてローカルファイルをhttp経由で見ることができるようになります。ローカルにある静的コンテンツをhttp経由で確認したいときなどに重宝すると思います。
+lwp-requestはちょっとしたHTTPリクエストを送信してみるときに便利かもしれません。"lwp-request http://search.cpan.org/ "などで指定したURLのhtmlを取得できる他、標準入力から読み取ったデータをPOSTしたりなど、色々できるようです。とは言えwgetやcurlといったコマンドを既に使いこなしていれば、わざわざこれを使う必要は無いですね。
+
+* ■テキスト処理系
+- [http://search.cpan.org/dist/Text-Xslate/script/xslate:title=xslate]
+- [http://search.cpan.org/~mlehmann/JSON-XS-2.3/bin/json_xs:title=json_xs]
+xslateはテンプレートエンジン[http://search.cpan.org/dist/Text-Xslate/lib/Text/Xslate.pm:title=Text::Xslate]に付属するコマンドで、Xslateでのテキスト処理の結果をコマンドライン上で確かめることができます。これもテンプレートファイルを指定せずに"-e"オプションを使用してワンライナーで実行することもできます。
+>||
+$ cat hoge.tx
+foo: <: $foo :>
+bar: <: $bar :>
+$ xslate hoge.tx -D foo=fuga -D bar=piyo
+foo: fuga
+bar: piyo
+||<
+>||
+$ xslate -e 'baz: <: $ARGV[0] :>' hogefugapiyo
+baz: hogefugapiyo$ 
+||<
+json_xsは[http://search.cpan.org/~mlehmann/JSON-XS-2.3/XS.pm:title=JSON::XS]に付属するコマンドです。jsonの文字列を他の形式に変換したりできますが、実はjsonの文字列だけでなくyamlやperlコードで記述されたデータ構造も扱うことができる非常に便利なコマンドです。例えば[https://github.com/p5-app-adventcalendar/p5-app-adventcalendar/blob/master/config.pl.sample:title=config.pl]のような設定ファイルに対し
+>||
+$ json_xs -f eval -t yaml < config.pl.sample 2> /dev/null
+---
+assets_path: assets
+base_path: /articles/advent-calendar
+description: Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？
+links:
+  - href: http://perl-users.jp/
+    label: perl-users.jp
+  - href: http://japan.perlassociation.org/
+    label: Japan Perl Association
+title: JPerl Advent Calendar 2010
+||<
+といったperlコードからyamlへの変換ができます。json関係なくなってるけど便利ですね!
+
+* ■あわせ技
+例えば「Twitterから'#jpac2010'が含まれるtweetを検索して、呟き日時とユーザー名と内容だけを一覧して見たい!」ってときに、こんなコマンドである程度実現することができちゃいますね。わざわざコードを書く必要がありません!
+>||
+$ lwp-request 'http://search.twitter.com/search.json?q=%23jpac2010' | json_xs -t yaml 2> /dev/null | ack --nocolor '(created_at|text|from_user):.*'
+  - created_at: 'Fri, 03 Dec 2010 05:43:30 +0000'
+    from_user: riywo
+    text: 'RT @kazeburo: 書きました #jpac2010 / Scope::Container でリソース管理を行う - JPerl advent calendar 2010 hacker Track http://htn.to/qLa1KC'
+  - created_at: 'Fri, 03 Dec 2010 05:39:27 +0000'
+    from_user: kazeburo
+    text: '書きました #jpac2010 / Scope::Container でリソース管理を行う - JPerl advent calendar 2010 hacker Track http://htn.to/qLa1KC'
+  - created_at: 'Thu, 02 Dec 2010 15:37:54 +0000'
+    from_user: kyanny
+    text: 'JPerl Advent Calendar 2010 English Track に参加したよ http://d.hatena.ne.jp/a666666/20101202/1291303978 #jpac2010'
+  - created_at: 'Thu, 02 Dec 2010 11:10:33 +0000'
+    from_user: mtakahas
+    text: '素晴らしいお仕事！ RT: @hasegawayosuke: JPerl Advent Calendar 2010の、記事タイトルを一覧表示する機能つくったよ。 #jpac2010 http://utf-8.jp/public/js2010.html'
+...
+||<
+
+* ■最後に
+以上、僕が知っている限りで幾つか紹介してみました。きっとまだまだ他にも便利なコマンドラインツールがあると思います。意外と知らないうちにインストールされているコマンドなんかもあるようで、
+>||
+$ ls $HOME/perl5/perlbrew/perls/current/bin
+||<
+で見てみたら沢山コマンドがあってビックリしました。
+皆さんが普段つかっている便利コマンドで「こんなのもあるから使ってみなよ！」というのがあれば是非教えて下さい！ ＞＜
+
+
+明日はジロリアンさんです。お楽しみに!!
