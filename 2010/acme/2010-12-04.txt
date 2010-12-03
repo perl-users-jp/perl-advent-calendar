@@ -1,0 +1,96 @@
+Acme::Porn::JP
+
+こんにちはOppai-Detectプロジェクト研究室の<a href="http://yusukebe.com/">yusukebe</a>です。今日はAcme::Porn::JPというgithubに僕が置いているAcmeなモジュールについて紹介します。
+
+** インストールする
+
+>||
+$ git clone git://github.com/yusukebe/Acme-Porn-JP.git
+$ cd Acme-Porn-JP
+$ perl Makefile.PL
+$ make
+$ make install
+||<
+
+** これは何？
+
+Acme::Porn::JPはエロい日本語の単語のリストを取得するためのモジュールです。今のところAV女優のリストとAVジャンルリストの取得を行うことができます。
+
+** 使う
+
+こんな感じでリストを取得できます。
+
+>|perl|
+use Acme::Porn::JP;
+
+my $porn_jp = Acme::Porn::JP->new();
+my $actress_list = $porn_jp->actress();
+print $actress_list->[0] . "\n";
+
+my $category_list = $porn_jp->category();
+print $category_list->[10] . "\n";
+||<
+
+** 応用
+
+では、応用として登録されているAV女優のリストを使って、大量のおっぱい画像を集めてみましょう。今回は画像のURL取得にYahoo! 検索 API、画像のダウンロードにクエリー毎の並列処理を行っています。
+
+>|perl|
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Coro;
+use Coro::LWP;
+use LWP::UserAgent;
+use WebService::Simple;
+use Path::Class qw/dir file/;
+use Digest::MD5 qw/md5_hex/;
+use Acme::Porn::JP;
+use Encode;
+use utf8;
+
+my $query = 'おっぱい';
+my $dir   = './images';
+my $yahoo = WebService::Simple->new(
+    base_url => 'http://search.yahooapis.jp/ImageSearchService/V1/imageSearch',
+    param    => {
+        appid    => $ENV{YAHOO_APPID},
+        adult_ok => 1,
+        results  => 20,
+        format   => 'jpeg',
+    }
+);
+
+my $ua = LWP::UserAgent->new;
+$ua->show_progress(1);
+$ua->timeout(10);
+
+my $porn         = Acme::Porn::JP->new;
+my $actress_list = $porn->actress();
+for my $actress (@$actress_list) {
+    search( "$query $actress", 1 );
+}
+
+sub search {
+    my ( $query, $page ) = @_;
+    my $start = ( $page - 1 ) * 10 + 1;
+    my $res   = $yahoo->get( { query => $query, start => $start } );
+    my $ref   = $res->parse_response();
+    return unless ref $ref->{Result} eq 'ARRAY';
+    my @coros;
+    for my $r ( @{ $ref->{Result} } ) {
+        push @coros, async {
+            $ua->mirror( $r->{Url},
+                dir($dir)->file( md5_hex( $r->{Url} ) . '.jpg' ) );
+        };
+    }
+    $_->join for @coros;
+}
+||<
+
+たくさんおっぱい画像が取得できると思います。
+
+** まとめ
+
+Acme::Porn::JPでハッピーおっぱいライフを送って下さい。
+
