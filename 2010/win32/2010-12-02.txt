@@ -2,7 +2,7 @@ Windows GUI アプリケーションでの Perl プラグインの作り方
 meta-author: mattn <mattn.jp@gmail.com>
 meta-tags: win32, perl
 
-こんにちわ。Windows を殺したいほど愛している mattn です。
+こんにちわ。Windows を殺したいほど愛している <a href="http://twitter.com/mattn_jp">mattn</a> です。
 Windows で Perl を日常的に使っている日本人3名の内の2人目です((要出典))。
 一般的に Perl はテキストを操作したり、Web アプリケーションフレームワークを構築する言語として有名です。しかし Perl の威力はそれだけでは止まりません。Windows で Perl をどの様に扱うかは人によって異なります。
 人によっては Windows GUIアプリケーションを拡張する為の言語として使用するかもしれませんね。
