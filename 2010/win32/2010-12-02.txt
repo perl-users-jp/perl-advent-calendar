@@ -1,5 +1,6 @@
 Windows GUI アプリケーションでの Perl プラグインの作り方
 meta-author: mattn <mattn.jp@gmail.com>
+meta-tags: win32, perl
 
 こんにちわ。Windows を殺したいほど愛している mattn です。
 Windows で Perl を日常的に使っている日本人3名の内の2人目です((要出典))。

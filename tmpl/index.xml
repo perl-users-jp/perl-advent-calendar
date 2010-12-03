@@ -2,18 +2,20 @@
 <rss version="2.0">
   <channel>
     <title>[% name %] - [% conf.title %]</title>
-	<link>[% uri_for(year _ '/' _ name _ '/') %]</link>
+    <link>[% uri_for(year _ '/' _ name _ '/') %]</link>
     <description>[% name %] - [% conf.title %]</description>
     [% FOR entry IN entries %]<item>
       <title>[% entry.title %]</title>
       <pubDate>[% entry.pubdate %]</pubDate>
       <link>[% uri_for(entry.link) %]</link>
-      <category>perl</category>
+      [% FOR category IN entry.categories %]<category>[% category %]</category>
+      [% END %]
       <guid isPermaLink="true">[% uri_for(entry.link) %]</guid>
       <description>
       [% entry.text | unmark_raw %]
       </description>
       <author>[% entry.author %]</author>
-    </item>[% END %]
+    </item>
+    [% END %]
   </channel>
 </rss>
