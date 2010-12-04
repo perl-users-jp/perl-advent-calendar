@@ -1,70 +1,69 @@
-<?xml version="1.0" encoding="UTF-8"?> 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja"> 
-<head profile="http://purl.org/net/ns/metaprof"> 
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> 
-    <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" /> 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head profile="http://purl.org/net/ns/metaprof">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" />
     <title>[% title %] - [% year %] advent calendar [% name %]</title>
-</title> 
 <!--
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://perl-users.jp/articles/advent-calendar/2009/hacker/index.xml" /> 
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://perl-users.jp/articles/advent-calendar/2009/hacker/index.xml" />
 -->
-    <link rel="stylesheet" href="http://perl-users.jp/articles/advent-calendar/prettify.css" type="text/css" media="screen" /> 
-<meta http-equiv="Content-Script-Type" content="text/javascript" /> 
-<script type="text/javascript" src="http://google-code-prettify.googlecode.com/svn/trunk/src/prettify.js"></script> 
-<script type="text/javascript" src="http://perl-users.jp/articles/advent-calendar/adventcal2009.js"></script> 
-<script type="text/javascript" src="http://s.hatena.ne.jp/js/HatenaStar.js"></script> 
-<script type="text/javascript"> 
+    <link rel="stylesheet" href="http://perl-users.jp/articles/advent-calendar/prettify.css" type="text/css" media="screen" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<script type="text/javascript" src="http://google-code-prettify.googlecode.com/svn/trunk/src/prettify.js"></script>
+<script type="text/javascript" src="http://perl-users.jp/articles/advent-calendar/adventcal2009.js"></script>
+<script type="text/javascript" src="http://s.hatena.ne.jp/js/HatenaStar.js"></script>
+<script type="text/javascript">
     Hatena.Star.SiteConfig = { entryNodes: { 'div.entry': { uri: 'document.location', title: 'document.title', container: 'h1.entry-header' } } };
-</script> 
- 
-<style type="text/css"> 
+</script>
+
+<style type="text/css">
     pre {
         border-left: 2px solid #cccccc;
         padding-left: 4px;
         margin-left: 10px;
         overflow: auto;
     }
-</style> 
- 
-</head> 
-<body class="layout-two-column-right"> 
-<div id="container"> 
-    <div id="container-inner" class="pkg"> 
- 
-        <div id="banner"> 
-            <div id="banner-inner" class="pkg"> 
+</style>
+
+</head>
+<body class="layout-two-column-right">
+<div id="container">
+    <div id="container-inner" class="pkg">
+
+        <div id="banner">
+            <div id="banner-inner" class="pkg">
                 <h1 id="banner-header">[% title %] - [% year %] advent calendar [% name %]</h1>
-                <p id="banner-description">Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</p> 
-            </div> 
-        </div> 
-    </div> 
- 
-    <div id="pagebody"> 
-        <div id="pagebody-inner"> 
-            <div id="alpha"> 
-                <div id="alpha-inner"> 
- 
- 
-<div class="entry"> 
-    <h1 class="entry-header">[% title %]<a href="http://b.hatena.ne.jp/entry/[% uri_for(req.path_info) %]"><img src="http://b.hatena.ne.jp/entry/image/[% uri_for(req.path_info) %]" alt="B!" /></a></h1> 
- 
-    <div class="entry-content"> 
+                <p id="banner-description">Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="pagebody">
+        <div id="pagebody-inner">
+            <div id="alpha">
+                <div id="alpha-inner">
+
+
+<div class="entry">
+    <h1 class="entry-header">[% title %]<a href="http://b.hatena.ne.jp/entry/[% uri_for(req.path_info) %]"><img src="http://b.hatena.ne.jp/entry/image/[% uri_for(req.path_info) %]" alt="B!" /></a></h1>
+
+    <div class="entry-content">
       [% text %]
-    </div> 
-    <div class="entry-meta"> 
-        <a rel="bookmark" href="[% req.uri | uri %]">[% update_at %]</a> 
+    </div>
+    <div class="entry-meta">
+        <a rel="bookmark" href="[% req.uri | uri %]">[% update_at %]</a>
         &nbsp;|&nbsp;
-        <a href="[% uri_for(year _ '/' _ name _ '/') %]">Index</a> 
-    </div> 
-</div> 
- 
- 
-                </div> 
-            </div> 
-        </div> 
+        <a href="[% uri_for(year _ '/' _ name _ '/') %]">Index</a>
+    </div>
+</div>
+
+
+                </div>
+            </div>
+        </div>
         [% INCLUDE 'include/sidemenu.html' %]
-    </div> 
-</div> 
-</body> 
+    </div>
+</div>
+</body>
 </html>
