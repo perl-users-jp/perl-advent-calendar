@@ -85,7 +85,7 @@ sub utf8_byte_size {
 }
 ||<
 
-この関数を先ほどの「è」に使うと、結果がおかしくなります。
+utf8_byte_sizeは、UTF-8でエンコーディングすると何バイトが必要となるかを求める関数ですが、この関数を先ほどの「è」に使うと結果がおかしくなります。
 
 >|perl|
 use utf8;
@@ -153,3 +153,36 @@ Perlで文字列を操作するときには、<span style="font-weight:bold;">UT
 
 
 さーて、明日のエントリに登場するはジロリアンさんかな？ mattnさんかな？？ 明日もまた見て下さいね！
+
+**追記(12/4)
+
+<a href="http://twitter.com/punytan/status/11006591151120384">@punytanさんよりアドバイスをもらった</a>ので追記します。内部表現がLatin-1かUTF-8かって話は、Devel::Peek使った方がはっきりしますね。
+
+>|perl|
+use utf8;
+use Devel::Peek;
+
+my $utf8flagged = 'è';
+my $latin1      = "\x{00E8}";
+
+print Dump($utf8flagged);
+print Dump($latin1);
+
+__END__
+
+《結果》
+SV = PV(0x100801068) at 0x100827f80
+  REFCNT = 1
+  FLAGS = (PADMY,POK,pPOK,UTF8)
+  PV = 0x100201b60 "\303\250"\0 [UTF8 "\x{e8}"]
+  CUR = 2
+  LEN = 16
+SV = PV(0x1008010f8) at 0x100827fc8
+  REFCNT = 1
+  FLAGS = (PADMY,POK,pPOK)
+  PV = 0x1002112f0 "\350"\0
+  CUR = 1
+  LEN = 16
+||<
+
+後、<a href="http://twitter.com/punytan/status/11006891211624448">説明が不十分だった点</a>も追記しておきました。
