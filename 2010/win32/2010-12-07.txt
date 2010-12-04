@@ -67,7 +67,7 @@ my $round_min = 15;    # 時刻を丸める単位
 # システムログを使う
 my $syslog = Win32::EventLog->new("System");
 
-# シーケンシャルに読まないといけないので最初のレコード番号をレコード数を
+# シーケンシャルに読まないといけないので最初のレコード番号とレコード数を
 # 取得する。
 my ( $recs, $base, $ev, $n ) = ( 0, 0, undef, 0 );
 $syslog->GetNumber($recs);
