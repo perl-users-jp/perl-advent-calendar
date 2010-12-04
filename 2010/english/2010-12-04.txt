@@ -59,4 +59,11 @@ sub run_worker {
 }
 ||<
 
-So that's all. Happy Holidays!
+So that's all.  For more information please see my slides at YAPC::Asia 2010 (<a href="http://developer.cybozu.co.jp/kazuho/2010/10/my-slides-at-ya.html">Kazuho@Cybozu Labs: My Slides at YAPC::Asia 2010 (Writing Prefork Servers / Workers, Unix Programming with Perl)</a>.  Happy Holidays!
+
+* Author
+
+Kazuho Oku (kazuho)
+[http://blog.kazuhooku.com/]
+[http://developer.cybozu.co.jp/kazuho/]
+[http://search.cpan.org/~kazuho/]
