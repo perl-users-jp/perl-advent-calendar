@@ -1,11 +1,148 @@
 CPANモジュールをWindowsのみで作成する方法
 
-こんにちは<a href="http://twitter.com/songmu">Songmu</a>です。
+こんにちは今年CPAN Authorの端くれになった<a href="http://twitter.com/songmu">Songmu</a>です。私みたいなヤツがCPANにモジュールを上げてしまってDisられないかビクビクしております。
+
+CPANモジュールをWindows上で作っていたら色々無駄に苦労してしまったので、その辺の話を、Windows上でPerl開発する上でのTipsも含めて書いてみたいと思います。
 
 - Cygwinは甘ぇ
 - VMは邪道
-
-コマンドプロンプトとGUIで頑張るのが真のWin32 Perl使いです。(ごめんなさいごめんなさい)
+- コマンドプロンプトとGUIで頑張るのが真のWin32Perl使い
+- (ごめんなさいごめんなさい)
 
 では行ってみたいと思います。
 
+** 改行コード編
+
+ソースコードの改行コードは基本的にはLFに揃えたいところです。ただ、Windowsには様々なところでCRLFがついてまわりますが、
+
+注意。いきなりバッドノウハウです。
+
+ActivePerlでは、標準の改行コードがCRLFになっています。また、読み込んだファイルの改行コードがCRLFでもLFでもよろしく計らってくれるようになっています。
+
+<strong>そして文字列中の"\n"を勝手にCRLFに変換して出力してしまいます</strong>(binmode ':raw'にしてから出力すれば良いんですが)
+
+実際module-setup等のコード自動出力系のモジュールを使うと困ってしまいます。
+
+その妙な気遣いが空回りしている辺り、Perlが変なWindowsの毒気に中てられてしまっていてよろしくありません。全部LFに統一してしまいましょう。
+
+方法は簡単です。環境変数PERLIOに":unix:perlio"を指定します。
+
+>||
+C:\>set PERLIO=:unix:perlio
+||<
+
+
+*** 軽く解説
+
+PERLIOはデフォルトのPerlIOを指定できる環境変数です。PerlIOとは
+
+>||
+open $fh,'<:encoding(***)','file';
+||<
+
+で"***"の部分に指定するやつです。(正確には違いますが)
+
+UNIXでは:unix:perlioまたは:stdioがデフォルト、Win32では:unix:crlfがデフォルトで将来的には:win32がデフォルトになる予定のようです。
+
+参考URL  
+http://perldoc.perl.org/PerlIO.html  
+http://d.hatena.ne.jp/pasela/20090909/perlio  
+http://d.hatena.ne.jp/gfx/20080723/1216782993  
+
+
+*** 注意
+
+かなりバッドノウハウに近い方法なので、場合によってはモジュールのテストが通らなくなったり(テスト内で改行コードを含んだ文字列を比較しているような場合等)、動きがおかしくなったりするかもしれません。
+
+ちなみにchompで\nしか撥ねてくれなくなるので注意。改行コードがCRLFのファイルを読み込んでchompすると、行の末尾に"\r"が残ってしまいます。
+
+*** gitの改行コード問題
+
+なんかWindowsのgitにも勝手に、改行コードをLFからCRLFに変えてしまうような設定があり、それがデフォルトだったりするのでそんなものはoffにしてしまいましょう。
+
+>||
+git config --global core.autoCRLF false
+||<
+
+
+** モジュールの雛形の作成
+
+モジュールの雛形はModule::Setupで作っています。なんか多分環境変数をいじったせいで、生成されたファイルの中に生のCRが残ってしまうことなんかがありましたが、その辺は適宜手で修正しました。
+
+また、Makeが必要なので、NMAKE.exeを導入しておきましょう。
+
+** モジュールを書く
+
+省略
+
+** ShipIt! (?)
+
+ごめんなさい。ShipIt使ったことありません。
+
+さぁ、make distしたモジュールをCPANにすぐにアップロード！…してはいけません。
+
+意気揚々とCPANにモジュールをアップロードすると、すぐにこんなメールが自動送信されてきます。
+
+>>
+Subject: Failed: PAUSE indexer report SONGMU/Math-CheckDigits-0.01.tar.gz
+
+The following report has been written by the PAUSE namespace indexer.
+Please contact modules@perl.org if there are any open questions.
+ Id
+
+    (..省略..)
+
+The distribution contains the following world writable directories or
+files and is therefore considered a security breach and as such not
+being indexed: Math-CheckDigits-0.01/ Math-CheckDigits-0.01/inc/Module/
+    (..省略..)
+Math-CheckDigits-0.01/xt/03_pod.t Math-CheckDigits-0.01/xt/perlcriticrc
+. See also http://use.perl.org/~bart/journal/38127
+
+
+For your convenience PAUSE has tried to write a new tarball with all the
+world-writable bits removed. The file is available for a *very* short
+period at
+'ftp://pause.perl.org/incoming/Math-CheckDigits-0.01-withoutworldwriteables.tar.gz'.
+In case you use this file, please verify carefully whether it is a
+suitable replacement.
+
+
+__END__
+<<
+
+超訳：
+
+<<
+書き込み権限が付与されているファイルを送ってくるんじゃねーよ。http://use.perl.org/~bart/journal/38127 をみて勉強しな。
+
+書き込み権限落としたtar.gzを  
+　ftp://pause.perl.org/incoming/***-withoutworldwriteables.tar.gz  
+に置いておいてあげたから、使いたかったら気をつけて使ってね。ちょっとの間だけだけどね。べっ、別にあなたのためじゃないんだからね！
+>>
+
+つまり、Windowsにはパーミッションの考え方がなく、作成したファイルはパーミッションが0777扱いになってしまうんですね。
+
+書き込み権限を落としたtar.gzを自動で生成してくれるようですが、それを毎回わざわざ使うのもかっこ悪いしマナーとしても良くなさそうなので、ローカルで何とかしたいところです。
+
+で、メールに記載されている http://use.perl.org/~bart/journal/38127 を見に行くと、詳しい説明が書いてあります。以下のように記述されているところがあり、hereにリンクが張ってあります。
+
+>>
+And that's what I did here. I've used Archive::Tar,
+<<
+
+リンク先のURLは以下で、そこになんとtar.gzの書き込み権限を落としてくれるスクリプトのコードが置かれています。
+
+http://perlmonks.org/index.pl?node_id=731935
+
+私はこれを、tarfix4cpan.pl という名前で保存して、以下のようにして、tar.gzの書き込み権限をクリアしています。
+
+>||
+tarfix4cpan.pl -i ***.tar.gz
+||<
+
+このメールが自動で送られてくるのには感動しました。エラーに対して自動で解決方法が送られるようになってるってのが凄い、CPAN凄い。まあ、同じ過ちを犯した人も多かったんでしょうね。
+
+てことで、Windows上でCPANモジュールを作った流れをざっくり書いてみましたが、多分こんなに頑張らずにVMWareとかMacとかを使うのが良いと思います。
+
+さて、明日はどなたが書くのでしょうか。
