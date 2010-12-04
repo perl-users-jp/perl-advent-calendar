@@ -1,7 +1,8 @@
 To Write Perl For The Perl Beginners.
+meta-author: Kenji Matsumura <mazkeng@gmail.com>
+meta-tag: perl, english
 
 Welcome to our English track in JPerl Advent Calender 2010.
-I'm Kenji Matsumura a.k.a <a href="http://twitter.com/mazkeng">mazkeng</a>.
 For a few moment, please stay with my talk.
 
 
@@ -30,16 +31,20 @@ The both were told by miyagawa in his session. When I heard the words, I could b
 
 
 * Ready To Write Perl
-After YAPC, I immediately bought new pc, alreay have a windows pc, but I heard that mac or linux is better to study and write Perl, so chose a mac machine. In my opinion, mac is so nice, it includes a number of tools to start coding for beginners. 
+After YAPC, I immediately bought new pc, alreay have a windows pc, but I heard that mac or linux is better to study and write Perl, so chose a mac machine. In my opinion, mac is so nice, it includes a number of tools to start coding for beginners. Then, to setup the environment to write and run, I installed some tools. ( perlbrew, cpanminus, CPAN::Mini, cpan-outdated, pm-uninstall and homebrew ) You can easily and simply use them, and they surport you too powerful to write the code.
 
 
 * Why Perl ?
 
 Some people probably ask to me, "Why is Perl ?" "Why not others ?"
 The reason is so simple. I felt it fun, through the community and many hackers. Of course, we can use many excellent modules from CPAN, it's one of the reasons. However, it's most important reason for me that community and hackers are considering the enveironment for the beginners to learn Perl, already exists in Japan. ( same as Mr.Maki said last day.)
-We can join the good environment in order to study Perl in Japan right now. When you want to write, you can do this. How about your country ? Surely the same as ours.
+We can join the good environment in order to study Perl in Japan right now. When you want to write, you can do this if don't understand yet. How about your country ? Surely the same as ours.
 
 
 Thanks for reading my article.
 Let's enjoy! 
 
+
+* Autoher
+
+Kenji Matsumura (<a href="http://twitter.com/mazkeng">mazkeng</a>)

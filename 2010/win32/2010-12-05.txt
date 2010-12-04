@@ -1,19 +1,18 @@
-お仕事では、100% Windowsなtechno_nekoデス。
+オススメしないperlの実行方法
+meta-author: techno-cat
+meta-tags: perl, win32
 
-今回は、オススメしないperlの実行方法を紹介します。
+お仕事では、100% Windowsなtechno-cat(@techno_neko)デス。
+
+* 今回は、オススメしないperlの実行方法を紹介します。
 
 みなさんは、wsfをご存知でしょうか？
->>
-Windows スクリプト (*.wsf) ファイルは、XML (Extensible Markup Language) コードを含むテキスト ドキュメントです。
-Windows スクリプト ファイルでは、スクリプトの柔軟性を向上するいくつかの機能がサポートされています。
-Windows スクリプト ファイルはエンジンに依存しないので、
-Windows スクリプト互換の任意のスクリプト エンジンで作成したスクリプトを Windows スクリプト ファイルに含めることができます。
-Windows スクリプト ファイルは、一種のコンテナとして機能します。
-
-http://msdn.microsoft.com/ja-jp/library/cc392507.aspx より引用
+>http://msdn.microsoft.com/ja-jp/library/cc392507.aspx>
+Windows スクリプト (*.wsf) ファイルは、XML (Extensible Markup Language) コードを含むテキスト ドキュメントです。Windows スクリプト ファイルでは、スクリプトの柔軟性を向上するいくつかの機能がサポートされています。Windows スクリプト ファイルはエンジンに依存しないので、Windows スクリプト互換の任意のスクリプト エンジンで作成したスクリプトを Windows スクリプト ファイルに含めることができます。Windows スクリプト ファイルは、一種のコンテナとして機能します。
 <<
 
 だそうなので、さっそくperlをスクリプト エンジンとしたwsfを書いちゃいましょう。
+
 
 まずは、いつもの。
 >||
@@ -25,46 +24,57 @@ $WScript->Echo("hello world.");
 </script>
 </job>
 ||<
+これをテキストエディタにコピペして、"hello.wsf"というファイル名で保存してみましょう。
+見慣れないアイコンが表示されるはずです。
+ダブルクリックすると、スクリプトが実行されて、メッセージボックスが表示されます。
 
-これを応用して、ファイルをドラッグ＆ドロップして、
-処理する場合はこんな感じ。
+<br />
+さらに、複数のファイルをドラッグ＆ドロップして処理する場合はこんな感じ。
 >||
 <job>
 <script language="PerlScript">
 
 my $args = $WScript->Arguments;
-if ( 0 < $args->Count ) {
-	$WScript->Echo( $args->Item(0) );
+for (my $i=0; $i<$args->Count; $i++) {
+	foo( $args->Item(0) );
+}
+
+sub foo {
+	my $arg = shift;
+	# $WScript->Echo( $arg );
 }
 </script>
 </job>
 ||<
+一度に複数のファイルを処理したい場合や、
+BATファイル(*.bat)を書くまでもない場合は非常に便利です。
+こんな簡単にperlを実行できるなんて、夢が広がりますね！
 
-もちろん、渡されたパスからのファイルを読み込んで、
-何か処理をして、その結果を出力することも出来ますが、
-次はオススメしない理由です。
 
-結論から言うと、日本語のコメントを入れると、
-意味不明なエラーが出ます。
+
+* ですが、次はオススメしない理由です。
+
+結論から言うと、日本語のコメントを入れると、意味不明なエラーが出ます。
 >||
 <job>
 <script language="PerlScript">
 
-my $args = $WScript->Arguments;
-if ( 0 < $args->Count ) {
-	# ドラッグ＆ドロップで受け取った最初のパスをメッセージボックスで表示！
-	$WScript->Echo( $args->Item(0) );
-}
+# メッセージボックスを表示！
+$WScript->Echo("hello world.");
+
 </script>
 </job>
 ||<
 
+<br />
+こんな感じで、ファイルの先頭で文字コード指定したり、
 >||
 <?XML version="1.0" standalone="yes" encoding="euc-jp" ?>
 ||<
-こんな感じで、ファイルの先頭で文字コード指定したり、
 可能な限りいろいろ試してもダメでした。
-なので、今はJScriptから呼び出すようにしています。
+これが許容できるなら使えそうなもんですが、私はperlスクリプトファイル(*.pl)をJScriptファイル(*.js)から呼び出す方法をオススメしています。
+理由は、コマンド プロンプトから呼び出してデバッグが出来るからです。
 
 という訳で、オススメしないよ！っていうMSWin32Tipsでした！！
-次は、どなたでしょうか？？
+
+次は、 @songmu さんデス！
