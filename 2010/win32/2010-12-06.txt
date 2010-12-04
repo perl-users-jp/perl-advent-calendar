@@ -1,0 +1,11 @@
+CPANモジュールをWindowsのみで作成する方法
+
+こんにちは<a href="http://twitter.com/songmu">Songmu</a>です。
+
+- Cygwinは甘ぇ
+- VMは邪道
+
+コマンドプロンプトとGUIで頑張るのが真のWin32 Perl使いです。(ごめんなさいごめんなさい)
+
+では行ってみたいと思います。
+

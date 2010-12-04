@@ -1,0 +1,95 @@
+Module::Install::TestTarget で let's `make love`
+meta-author: xaicron
+meta-tags: perl, hacker, love+
+
+Win32 の プリンスキー((プリンが大好きな人のこと)) として知る人ぞ知るところの [http://blog.livedoor.jp/xaicron/:title=xaicron] です。
+ラブプラスのクリスマスパーティーのチケットが当たるかどうかで僕の今年の運勢が決まります。
+
+さて、クリスマスも近いということで、みなさんも make love したいところだと思います。
+しかし、自力で Makefile をいじるのも大変です。
+「愛のためにはその程度の障害はむしろご褒美だ！」という人もいるかもしれませんが、僕は昨今話題の草植、もとい草食男子ですので、そんな面倒なことはできません。
+ここでは、perl で簡単に `make love` をするために書いたという経緯がある Module::Install::TestTarget を紹介します。
+
+嘘です。本当は、make test を簡単にいろいろと hook するためのモジュールです。でも make love も出来るのでリア充も安心！！
+
+** 使い方
+
+インストールすると、Module::Install ベースの Makefile.PL で test_target と default_test_target という二つの関数が使えるようになります。
+たとえば、新しい テストのターゲット 「test_sl」 を定義すると以下のようになります。
+
+>|perl|
+use inc::Module::Install;
+name 'Love-Plus';
+all_from 'lib/Love/Plus.pm';
+
+requires 'Acme::EyeDrops';
+
+test_requires 'Test::More', 0.96;
+test_requires 'Test::Requires';
+
+tests 't/*.t t/*/*.t';
+author_tests 'xt';
+
+test_target test_sl => (
+    insert_on_prepare  => sub { system 'sl' },
+    insert_on_finalize => sub { system qw/sl -aF/ },
+);
+
+auto_include;
+auto_set_repository;
+
+WriteAll;
+||<
+
+こうすると、`make test_sl` したときに、sl コマンドが走り、その後何事もなかったかのように test が走り、test が終わるとすかさず、助けを求めながら飛んでいく機関車が走ります。
+「俺らはいつだって走り続ける、一秒だって止まってられねェンだ！」って感じでかっこいいですね！
+また、このケースでは sl コマンドが入っている必要がありますが、基本的にはインストール済みなはずなので特に問題ないでしょう。
+
+** 説明
+
+Module::Install::TestTarget では以下のパラメーターが使えます。
+
+>|perl|
+test_target foo => (
+    includes           => ["$ENV{HOME}/perl5/lib"],
+    load_modules       => [qw/Foo Bar/],
+    run_on_prepare     => [qw/before.pl/],
+    run_on_finalize    => [qw/after.pl/],
+    insert_on_prepare  => ['print "start -> ", scalar localtime, "\n"'],
+    insert_on_finalize => ['print "end   -> ", scalar localtime, "\n"'],
+    tests              => ['t/baz/*t'],
+    env                => { PERL_ONLY => 1 },
+    alias              => 'testall', # make testall is run the make foo
+    alias_for_author   => 'testauthor',
+);
+||<
+
+みたかんじで大体分かると思います。
+'includes' は perl -Ilib と同等です。t/lib とかは割と指定しそうです。
+'load_modules' は perl -MFoo と同等です。あらかじめ読み込んでおきたいモジュールを指定しておくとよいですね。
+'run_on_*' は perl script を do 'file.pl' として実行します。テストの開始時に memcached や MySQL を起動したり、後処理としてテンポラリーファイルをお掃除したりするような処理を書くことがありそうな感じです。
+'insert_on_*' は onliner 的な感じでちょろっとした処理を書けるようになっています。
+'tests' は 実行したい test ファイルです。デフォルトでは Makefile.PL の tests の値になります。
+'env' は $ENV{HOGE} = 'FUGA' です。env によって処理をわけることはよくあるので、簡単に書けるようになってます。
+'alias' は target の別名です。複数の test target を作った時に、同じ alias を指定しておけば、`make testall` のような感じですべて実行されます。
+`alias_for_author` は author mode の時にしか実行できない alias です。
+
+という感じで、make test 時にあれこれしたいことが大体出来るようになっていて、結構便利です。
+pp と xs のテストの切り分けや、[http://twitter.com/#!/lestrrat/status/28395488984:title=インテグレーションテストツール]的な使われ方もしているようです！
+
+また、default_test_target では make test 事態を書き換えることができるので、プロジェクトなどで単一のテストの時にいろいろフックしたい場合は、こっちを使うとよいです。
+
+** まとめ
+
+テストの時にいろいろとフックしたいお！という要望から生まれたモジュールですが、なかなか重宝しています。
+本来であれば、ExtUtils::MakeMaker のさまざまな部分にフック機構があればいいのでしょうが、はてさて。
+
+明日は YAPC::Asia 2010 で MacBook をかっさらって「重いこれ！」って叫んでいた perl 界の麒麟児 tokuhirom さんです！超お楽しみに！！
+
+>|perl|
+test_target love => (
+    insert_on_prepare => 'die "Love was not found\n"',
+);
+||<
+
+:p
