@@ -56,7 +56,7 @@ http://d.hatena.ne.jp/gfx/20080723/1216782993
 
 ちなみにchompで\nしか撥ねてくれなくなるので注意。改行コードがCRLFのファイルを読み込んでchompすると、行の末尾に"\r"が残ってしまいます。
 
-*** gitの改行コード問題
+** gitの改行コード問題
 
 なんかWindowsのgitにも勝手に、改行コードをLFからCRLFに変えてしまうような設定があり、それがデフォルトだったりするのでそんなものはoffにしてしまいましょう。
 
@@ -65,17 +65,17 @@ git config --global core.autoCRLF false
 ||<
 
 
-** モジュールの雛形の作成
+* モジュールの雛形の作成
 
 モジュールの雛形はModule::Setupで作っています。なんか多分環境変数をいじったせいで、生成されたファイルの中に生のCRが残ってしまうことなんかがありましたが、その辺は適宜手で修正しました。
 
 また、Makeが必要なので、NMAKE.exeを導入しておきましょう。
 
-** モジュールを書く
+* モジュールを書く
 
 省略
 
-** ShipIt! (?)
+* ShipIt! (?)
 
 ごめんなさい。ShipIt使ったことありません。
 
@@ -83,7 +83,8 @@ git config --global core.autoCRLF false
 
 意気揚々とCPANにモジュールをアップロードすると、すぐにこんなメールが自動送信されてきます。
 
-<pre><blockquote>Subject: Failed: PAUSE indexer report SONGMU/Math-CheckDigits-0.01.tar.gz
+>>
+Subject: Failed: PAUSE indexer report SONGMU/Math-CheckDigits-0.01.tar.gz
 
 The following report has been written by the PAUSE namespace indexer.
 Please contact modules@perl.org if there are any open questions.
@@ -107,7 +108,8 @@ In case you use this file, please verify carefully whether it is a
 suitable replacement.
 
 
-__END__</pre></blockquote>
+__END__
+<<
 
 超訳：
 
