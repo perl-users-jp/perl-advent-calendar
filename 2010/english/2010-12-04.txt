@@ -1,0 +1,62 @@
+Writing a prefork server / daemon using Parallel::Prefork
+
+<a href="http://search.cpan.org/dist/Parallel-Prefork/">Parallel::Prefork</a> is a module I wrote back in the year 2008, which is basically an imitation of the excellent <a href="http://search.cpan.org/dist/Parallel-ForkManager/">Parallel::ForkManager</a> but with support for signal handling, an indispensable feature if you want to write a network server or a daemon program with features like graceful shutdown or runtime reconfiguration.
+
+The code below illustrates the basic usage of Parallel::Prefork.  Upon the intantiation of the object, the relationships are specified between what signal the manager process should receive and what signal should be sent to the worker processes when the manager receives such signals.
+
+All the handling of the signals within the manager process is handled by the module and is hidden from the user's code.  The last signal received by the manager process can be observed by calling $pm->signal_received (the information is reset each time $pm->start is being called).  The code snippet uses the function to loop until it receives a SIGTERM.
+
+When the manager process receives SIGHUP it automatically sends SIGHUP to all the worker process (as specified in the constructor), causing them to eventually shutdown.  The code then reloads the configuration file, and spawns new worker processes by calling $pm->start.
+
+>|perl|
+my $pm = Parallel::Prefork->new(
+    max_workers => 10,
+    trap_signals => {
+        TERM => 'TERM', # send TERM to workers when manager receives TERM
+        HUP  => 'TERM', # send TERM to workers when manager receives HUP
+    },
+);
+
+my $config = load_config();
+
+while ($pm->signal_received ne 'TERM') {
+
+    # reload configuration file on SIGHUP
+    if ($pm->signal_received eq 'HUP') {
+        $config = load_config();
+    }
+    $pm->start and next;
+
+    # now in child (worker) process, run it
+    run_worker($config);
+
+    $pm->finish;
+}
+
+$pm->finish;
+||<
+
+The next code snippet is an example of a worker process implementation as a Gearman::Worker.  It sets up the worker instance and runs forever and exits gracefully when receiving SIGTERM from the manager process.  As can be seen the code is not at all dependent to Parallel::Prefork so it is possible to write and test your daemon code in single process and then wrap it using Parallel::Prefork to make it run in parallel.
+
+>|perl|
+sub run_worker {
+    my $config = shift;
+   
+    # setup the worker
+    my $worker = Gearman::Worker->new();
+    $worker->job_servers('127.0.0.1');
+    $worker->register_function(
+        handle_task => sub {
+            ...
+        },
+    );
+
+    # run until the worker receives SIGTERM
+    my $got_term;
+    local $SIG{TERM} = sub { $got_term++ };
+    $worker->work(stop_if => { $got_term })
+        until $got_term;
+}
+||<
+
+So that's all. Happy Holidays!
