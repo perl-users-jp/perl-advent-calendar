@@ -51,7 +51,7 @@ mp3 と ogg だけ検索してますが、もっと探したい人は弄って�
 Perl で DBus を扱うには <a href="http://search.cpan.org/dist/Net-DBus/">Net::DBus</a> を使用します。
 
 >|perl|
-use Net::DBus qw/ dbus_string dbus_boolean/;
+use Net::DBus;
 
 my $bus = Net::DBus->find;
 my $rhythmbox = $bus->get_service("org.gnome.Rhythmbox");
@@ -137,7 +137,7 @@ if ($toggle) {
 }
 ||<
 
-簡単ですね。「-s URL」の引数で再生(ローカルファイルの場合は file:)、「-t」で再生停止トグルとなります。
+簡単ですね。「-p URL」の引数で再生(ローカルファイルの場合は file:)、「-t」で再生停止トグルとなります。
 あとはこれを Vim から呼び出す様に Unite ソースを作成します。
 
 >|vim|
