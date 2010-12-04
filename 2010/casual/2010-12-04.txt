@@ -1,0 +1,155 @@
+続・Encodeでラクラク日本語処理
+meta-author: hiratara <hiratara@cpan.org>
+meta-tags: perl, charset, encoding
+
+こんばんわ。現在ユクモ村にて療養中の<a href="http://d.hatena.ne.jp/hiratara/">id:hiratara</a>です。ATNDにて予定していた順番と多少入れ変わっての登場ですが、よろしくお願いします。
+
+去年のAdvent Calendarでは、xaicronさんが<a href="http://perl-users.jp/articles/advent-calendar/2009/casual/10.html">Encodeでラクラク日本語処理</a>というわかりやすいエントリを書いていて、これを読めばEncode.pmの使い方はばっちりわかります。ところが、先日miyagawaさんより、文字コードの扱いについて以下のような気になる指摘がありました。
+
+>>
+Never use the term "utf8 flagged strings"
+
+<a href="http://twitter.com/miyagawa/statuses/5190479125676032">@miyagawa</a>
+<<
+
+ということで、今日はPerlの文字列のモデルについてもう一度見直した上で、正しい文字列の扱い方について考えてみます。ちなみに、自分もこの辺の事情を知ったのは今年になってからです＞＜
+
+なお、このエントリは「なんでUTF-8フラグって言っちゃ駄目なの？」って人のための内容ですので、「UTF-8フラグなんて言葉聞いたことないよ？」って方はこのエントリを読む必要はありません。そういう方は、今日のところは<a href="http://d.hatena.ne.jp/perlcodesample/20091118/1246679588">perlcodesampleさんのEncode.pmに関するエントリ</a>を代わりに読んで、後は狩りにでも出かけて明日のエントリが公開されるまでお待ち下さい！
+
+**「文字列とはUTF-8フラグがついているもの」という誤解
+ 
+「UTF-8フラグがついていれば文字列、無ければバイナリ列(=バイト列)」という解説記事を目にしたことがある方もいるかと思いますが、<span style="font-weight:bold;">この考え方は間違えています</span>。以下の表のように、「UTF-8フラグがついていない、Latin-1エンコーディングにて格納されたスカラ値も文字列と見なせる(バイナリ列とも見なせる)」というのが正しい考え方です。
+
+<table border=1>
+<tr>
+  <th colspan="2" style="background: #FCC;">文字列(Text strings)</td>
+  <th style="background: #CCF;" rowspan="2">バイナリ列(Binary strings)</td>
+</tr>
+<tr>
+  <td style="background: #FCC;">内部表現がUTF-8</td>
+  <td style="background: #FCC;">内部表現がLatin-1</td>
+</tr>
+<tr>
+  <td style="background: #CFC;">UTF-8フラグ有</td>
+  <td  style="background: #FFC;" colspan="2">UTF-8フラグ無</td>
+</tr>
+</table>
+
+この考え方が本当に正しいかを確かめるために、UnicodeのコードポイントがU+00E8である「è」という文字を使って試してみましょう。
+
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use Encode qw/is_utf8 encode_utf8/;
+
+sub disp_hex($) {
+    use bytes;
+    join ' ', map {sprintf '0x%X', ord($_)} split //, $_[0];
+}
+
+my $utf8flagged = 'è';        # 内部表現がUTF-8の「è」
+my $latin1      = "\x{00E8}"; # 内部表現がLatin-1の「è」
+
+for ($utf8flagged, $latin1) {
+    print "Dump: ", disp_hex($_), "\n";
+    print "UTF-8 flag: ", is_utf8($_) ? "ON" : "OFF", "\n";
+    print "Dump(UTF-8 encoding): ", disp_hex(encode_utf8 $_), "\n";
+}
+
+__END__
+
+《結果》
+Dump: 0xC3 0xA8
+UTF-8 flag: ON
+Dump(UTF-8 encoding): 0xC3 0xA8
+Dump: 0xE8
+UTF-8 flag: OFF
+Dump(UTF-8 encoding): 0xC3 0xA8
+||<
+
+$latin1に格納された「è」はUTF-8フラグがついていませんが、encode_utf8経由で出力するときちんと「è」のUTF-8での表現である0xC3 0xA8が得られます。このことから、<span style="font-weight:bold;">UTF-8フラグがついていなくても、Perlはこれを文字列として扱っている</span>ことがわかります。
+
+**誤解から生まれる不具合
+
+先のような誤解をしていると、以下のように「文字列、または、UTF-8でエンコードされたバイナリ列、を受け取る関数」を書いてしまうかもしれませんが、これは誤りです。
+
+>|perl|
+# !!!! こんな風に書いちゃ駄目 !!!!
+use Encode qw/is_utf8 encode_utf8/;
+
+sub utf8_byte_size {
+    my $utf8_bytes = shift;
+    $utf8_bytes = encode_utf8($utf8_bytes) if is_utf8($utf8_bytes);
+    return length $utf8_bytes;
+}
+||<
+
+この関数を先ほどの「è」に使うと、結果がおかしくなります。
+
+>|perl|
+use utf8;
+my $utf8flagged = 'è';
+my $latin1      = "\x{00E8}";
+
+print "UTF-8 flagged: ", utf8_byte_size($utf8flagged), "\n";
+print "Latin-1: ", utf8_byte_size($latin1), "\n";
+
+__END__
+
+《結果》
+UTF-8 flagged: 2
+Latin-1: 1
+||<
+
+UTF-8だと「è」は2byteなのに、内部表現がLatin-1の「è」では1が返ってきてしまいます。これを正しく実装するには、文字列だけを受け取るという仕様に変更した上で、以下のようにします。
+
+>|perl|
+# 正しい実装 (ただし、入力は文字列のみで、バイナリ列は受け取らないものとする)
+sub utf8_byte_size {
+    my $utf8_bytes = encode_utf8(shift);
+    return length $utf8_bytes;
+}
+||<
+
+**use feature "unicode_strings" について
+
+おまけで一つ紹介します。現在のPerlの文字列の扱いでは、Latin-1エンコーディングで0x80以上の範囲にある「è」のような文字について、直感的でない動作をすることがあります。例えば以下のコードを実行すると、文字列「è」に対するuc(Upper Case)の結果が「È」となる場合とならない場合があります。
+
+>|perl|
+use utf8;
+my $utf8flagged = 'è';
+my $latin1      = "\x{00E8}";
+print "UTF-8 flagged: ", encode_utf8(uc $utf8flagged), "\n";
+print "Latin-1      : ", encode_utf8(uc $latin1     ), "\n";
+
+__END__
+
+《結果》
+UTF-8 flagged: È
+Latin-1      : è
+||<
+
+この動作を直そうというのが、"unicode_strings"の目標です。5.12では大文字と小文字の正しい取り扱いが実装されているため、上のコードの先頭に以下の1行を付け足すと、内部表現がLatin-1でも「È」が出力されるようになります。
+
+>|perl|
+use feature "unicode_strings";
+||<
+
+**まとめ
+
+Perlで文字列を操作するときには、<span style="font-weight:bold;">UTF-8フラグのことはきれいさっぱり忘れましょう</span>。「Unicode文字列」という表現も<a href="https://github.com/mirrors/perl/commit/80008eb3e450496f17610b8bfc820f627a758a13">今年になってperlunitutから消された</a>ので、推奨されない用語であると言えるでしょう。
+
+自分が扱っている値が文字列なのかバイナリ列なのかをきちんと意識し、適切にEncode::encodeやEncode::decodeなどを使うことで、UTF-8フラグがついている文字列もついてない文字列も正しく扱うことができます。
+
+
+**参考文献
+
+-http://d.hatena.ne.jp/dayflower/20080219/1203493616
+-http://search.cpan.org/~jesse/perl/pod/perlunitut.pod
+-http://search.cpan.org/~jesse/perl/pod/perluniintro.pod
+-http://search.cpan.org/~jesse/perl/pod/perlunifaq.pod
+-http://search.cpan.org/~jesse/perl/pod/perlunicode.pod
+
+
+さーて、明日のエントリに登場するはジロリアンさんかな？ mattnさんかな？？ 明日もまた見て下さいね！
