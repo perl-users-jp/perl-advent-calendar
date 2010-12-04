@@ -178,7 +178,7 @@ function! s:source.gather_candidates(args, context)
 endfunction
 
 function! unite#sources#rhythmbox#define()
-  return has('perl') ? [s:source] : []
+  return executable('perl') ? [s:source] : []
 endfunction
 
 let &cpo = s:save_cpo
