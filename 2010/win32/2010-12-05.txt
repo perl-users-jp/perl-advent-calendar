@@ -3,8 +3,8 @@ meta-author: techno-cat
 meta-tags: perl, win32
 
 お仕事では、100% Windowsなtechno-cat(@techno_neko)デス。
-今回は、オススメしないperlの実行方法を紹介します。
 
+* 今回は、オススメしないperlの実行方法を紹介します。
 
 みなさんは、wsfをご存知でしょうか？
 >http://msdn.microsoft.com/ja-jp/library/cc392507.aspx>
@@ -59,6 +59,7 @@ if ( 0 < $args->Count ) {
 </script>
 </job>
 ||<
+
 
 
 こんな感じで、ファイルの先頭で文字コード指定したり、
