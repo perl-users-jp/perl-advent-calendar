@@ -24,50 +24,56 @@ $WScript->Echo("hello world.");
 </script>
 </job>
 ||<
+これを"hello.wsf"というファイルにコピペして、保存してみましょう。
+いつもと違うアイコンに変わるはずです。
+ダブルクリックすると、スクリプトが実行されて、メッセージボックスが表示されます。
 
-これを応用して、ファイルをドラッグ＆ドロップして、
-処理する場合はこんな感じ。
+<br />
+さらに、ファイルをドラッグ＆ドロップして処理する場合はこんな感じ。
 >||
 <job>
 <script language="PerlScript">
 
 my $args = $WScript->Arguments;
-if ( 0 < $args->Count ) {
-	$WScript->Echo( $args->Item(0) );
+for (my $i=0; $i<$args->Count; $i++) {
+	foo( $args->Item(0) );
+}
+
+sub foo {
+	my $arg = shift;
+	# $WScript->Echo( $arg );
 }
 </script>
 </job>
 ||<
+複数のファイルを一括で処理したい場合や、BATファイル(*.bat)を書くまでもない場合は非常に便利です。
+こんな簡単にperlを実行できるなんて、夢が広がりますね！
 
 
-もちろん、渡されたパスからファイルを読み込んで、
-何か処理をして、その結果を出力することも出来ますが、
-次はオススメしない理由です。
-
+* ですが、次はオススメしない理由です。
 
 結論から言うと、日本語のコメントを入れると、意味不明なエラーが出ます。
 >||
 <job>
 <script language="PerlScript">
 
-my $args = $WScript->Arguments;
-if ( 0 < $args->Count ) {
-	# ドラッグ＆ドロップで受け取った最初のパスを
-	# メッセージボックスで表示！
-	$WScript->Echo( $args->Item(0) );
-}
+# メッセージボックスを表示！
+$WScript->Echo("hello world.");
+
 </script>
 </job>
 ||<
 
-
-
+<br />
 こんな感じで、ファイルの先頭で文字コード指定したり、
 >||
 <?XML version="1.0" standalone="yes" encoding="euc-jp" ?>
 ||<
 可能な限りいろいろ試してもダメでした。
-なので、今はJScriptから呼び出すようにしています。
+
+
+これが許容できるなら使えそうですが、私はperlスクリプトファイル(*.pl)をJScriptファイル(*.js)から呼び出す方法をオススメしています。
+理由は、コマンド プロンプトから呼び出してデバッグが出来るからです。
 
 
 という訳で、オススメしないよ！っていうMSWin32Tipsでした！！
