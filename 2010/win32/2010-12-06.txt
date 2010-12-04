@@ -11,7 +11,7 @@ CPANモジュールをWindows上で作っていたら色々無駄に苦労して
 
 では行ってみたいと思います。
 
-** 改行コード編
+* 改行コード編
 
 ソースコードの改行コードは基本的にはLFに揃えたいところです。ただ、Windowsには様々なところでCRLFがついてまわりますが、
 
@@ -50,7 +50,7 @@ http://d.hatena.ne.jp/pasela/20090909/perlio
 http://d.hatena.ne.jp/gfx/20080723/1216782993  
 
 
-*** 注意
+** 注意
 
 かなりバッドノウハウに近い方法なので、場合によってはモジュールのテストが通らなくなったり(テスト内で改行コードを含んだ文字列を比較しているような場合等)、動きがおかしくなったりするかもしれません。
 
@@ -83,8 +83,7 @@ git config --global core.autoCRLF false
 
 意気揚々とCPANにモジュールをアップロードすると、すぐにこんなメールが自動送信されてきます。
 
->>
-Subject: Failed: PAUSE indexer report SONGMU/Math-CheckDigits-0.01.tar.gz
+<pre><blockquote>Subject: Failed: PAUSE indexer report SONGMU/Math-CheckDigits-0.01.tar.gz
 
 The following report has been written by the PAUSE namespace indexer.
 Please contact modules@perl.org if there are any open questions.
@@ -108,8 +107,7 @@ In case you use this file, please verify carefully whether it is a
 suitable replacement.
 
 
-__END__
-<<
+__END__</pre></blockquote>
 
 超訳：
 
