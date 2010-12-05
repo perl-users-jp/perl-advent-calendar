@@ -11,7 +11,7 @@ my $xatena = Text::Xatena->new();
 my $formatted_body = $xatena->format($body);
 ||<
 
-基本的にはこうするだけで、$formatted_bodyには変換されたHTMLが入ります。1つ注意が必要なのは、Text::Xslateは標準で変数展開をエスケープするため、そのまま使うと「<div>.....</div>」のようにHTMLが出力されてしまいます。Text::Xslate::mark_rawで値にフラグをつけておくとエスケープされなくなるので、そのように対処しておきます。
+基本的にはこうするだけで、$formatted_bodyには変換されたHTMLが入ります。1つ注意が必要なのは、Text::Xslateは標準で変数展開をエスケープするため、そのまま使うと「&lt;div&gt;.....&lt;/div&gt;」のようにHTMLが出力されてしまいます。Text::Xslate::mark_rawで値にフラグをつけておくとエスケープされなくなるので、そのように対処しておきます。
 
 >|perl|
 Text::Xslate::mark_raw($formatted_body);
