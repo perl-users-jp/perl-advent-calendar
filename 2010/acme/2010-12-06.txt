@@ -1,6 +1,6 @@
 Acme::PrettyCure
 
-こんにちは、MHP3を買ったものの諸般の事情でキャラ作っただけの[kan:title=http://fushihara.net/]です。来年になったら誰か狩りに行きませんか。
+こんにちは、MHP3を買ったものの諸般の事情でキャラ作っただけの[http://fushihara.net/:title=kan]です。来年になったら誰か狩りに行きませんか。
 
 さて、[http://search.cpan.org/dist/Acme-MorningMusume/:title=Acme::MorningMusume]というモジュールをご存知でしょうか? モーニング娘。のメンバー情報を細かに取得できる素晴らしく実用的なAcmeモジュールです。いわゆるプロフィールはもちろんのこと、Googleの画像検索等を利用してイメージまで引っ張ってくることが出来ます。
 
