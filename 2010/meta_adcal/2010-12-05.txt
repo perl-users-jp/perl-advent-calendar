@@ -1,0 +1,111 @@
+Text::Xatena - はてな記法のような記法フォーマットパーサー
+meta-author: cho45
+
+こんにちは、<a href="http://www.lowreal.net">cho45</a>です。
+
+今回この  advent calendar に拙作 Text-Xatena が使われたということで、ちょいと Xatena フォーマットの話でも書こうと思います。
+
+* Text::Xatena の位置づけ
+
+みなさんご存知かもしれませんが、既に CPAN には Text::Hatena というモジュールがあります。ではなぜ今また、似たようなフォーマットの別のモジュールを書く必要があったのでしょうか。これには以下のような理由があります。
+
+- Text::Hatena は実のところあまり Hatena::Diary と互換がない
+- Text::Hatena は非常に遅い
+- Text::Hatena ははてなに依存した記法がいくつか存在する (id 記法など)
+
+これらのことを解決するために、Text::Xatena は作られました。
+
+** Text::Xatena はブロックレベルの互換性が Hatena::Diary と高い
+
+はてな記法は割と複雑で、スーパープレ記法やコメント記法をうまくとりあつかうためにいくらか苦労をしょいこまなければなりません。
+
+Text::Xatena はそれらの挙動を執拗にテストしているので、よりはてな記法に近い挙動をします。これらのテストは、世界一はてな記法に詳しいことで知られる id:onishi さんによる指摘で入っているものもあり、大変安心できます。
+
+ちなみに誤解があるといけないので言っておきますが、Text::Hatena は、はてなダイアリーで使われている記法フォーマットモジュールとは異なります。
+
+** Text::Xatena は一般的なフォーマット系モジュールと同じぐらいの早さ
+
+<a href="https://github.com/cho45/Text-Xatena/blob/master/benchmark/benchmark.pl">ベンチマーク</a>によると、他の似たようなフォーマットモジュールと同じぐらいの速度です。
+
+>||
+Rate   Hatena  Textile Markdown   Xatena
+Hatena   26.8/s       --     -84%     -86%     -89%
+Textile   171/s     537%       --      -8%     -27%
+Markdown  186/s     594%       9%       --     -20%
+Xatena    233/s     770%      37%      25%       --
+||<
+
+** Text::Xatena は特定サービスに依存した独自の記法に対応しない
+
+例えば id: や google: wikipedia: など、はてな記法には多くの特定サービス依存の記法が存在します。これらを Xatena では基本的には実装していません (よりはてな記法と互換性の高い Inline モジュールを作るかもしれませんが)。
+
+また、はてな記法におけるいくつかの不便な点を変えた状態をデフォルトにしています。例えば、はてな記法では改行1つで p タグ自動挿入になりますが、Xatena では改行1つでは単に br の挿入になります。大変普通の挙動です。
+
+* Text::Xatena の使いかた
+
+簡易的には単に以下の通りに使えます。
+
+>|perl|
+my $thx = Text::Xatena->new;
+$thx->format($string);
+||<
+
+Inline フォーマットは独立しており、別に指定することができます。デフォルトの Inline フォーマッタは http://...:title というタイトルを自動的にとってくる記法に対応していませんが、以下のようにするとそれが有効になります (cache は実際には Cache::File などにすべきでしょう)。
+
+>|perl|
+my $thx = Text::Xatena->new;
+$thx->format($string,
+	inline => Text::Xatena::Inline::Aggressive->new(cache => Cache::MemoryCache->new)
+);
+||<
+
+さらに、いくつかデフォルトの挙動がはてな記法と異る部分については、hatena_compatible オプションを渡すと、はてなダイアリーの記法により近くなります。すなわち、改行1つで p が挿入されるようになり、見出し記法は構造化されず全部フラットになります。
+
+>|perl|
+my $thx = Text::Xatena->new(hatena_compatible => 1);;
+$thx->format($string,
+	inline => Text::Xatena::Inline::Aggressive->new(cache => Cache::MemoryCache->new)
+);
+||<
+
+
+ちなみに format メソッドが返す値は本文の部分のHTMLだけです。どういうことかというと、脚注記法 ((これのことです)) の内容は含まれません。脚注記法の結果を取得して表示するには以下のようにします。
+
+>|perl|
+my $thx = Text::Xatena->new;
+my $inline = Text::Xatena::Inline->new;
+my $formatted = $thx->format('aaa((foobar)) bbb((barbaz))', inline => $inline);
+my $out = '';
+$out .= '<div class="body">';
+$out .= $formatted;
+$out .= '</div>';
+$out .= '<div class="notes">';
+for my $footnote (@{ $inline->footnotes }) {
+ $out .= sprintf('<div class="footnote" id="#fn%d">*%d: %s</div>',
+   $footnote->{number},
+   $footnote->{number},
+   $footnote->{note}, ### HTML を含む
+ );
+}
+$out .= '</div>';
+||<
+
+ちなみに脚注記法は若干実装が面倒で、まぁ以上に書いたように本文の要素とは別のものを扱うという点でも面倒ですが、俗にgkbr対応とか言われるのがあります。どういうことかというと以下の通りです。
+
+(((；゜Д゜))))ガクブル を書けるようにするために
+
+>||
+(((foobar))) は脚注にしない。((foobar)) は脚注。)((foobar))( は ((foobar)) となり、脚注にならない。
+||<
+
+とかいうルールがあり、割と面倒です。
+
+
+* まとめ
+
+Text::Hatena ははてな記法との互換性もいまいちですし、遅いのであまりオススメできませんが、Text::Xatena を使うとお手軽にはてな記法のような記法に対応できます。
+
+ダイアリー完全互換な実装セットも作りたいなあとは思っていますが、自分が全く使わない記法は挙動をよく知らないので割と困ってます。「こういう記法に対応して欲しい!」ということがあれば、ご意見をいただければ実装するかもしれません。あるいはパッチを頂ければなんとかします。
+
+ということで、Text::Xatena で快適なブロッギングライフを送りましょう! それでは!
+
