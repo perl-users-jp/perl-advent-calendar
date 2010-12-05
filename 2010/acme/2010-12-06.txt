@@ -1,0 +1,43 @@
+Acme::PrettyCure
+
+こんにちは、MHP3を買ったものの諸般の事情でキャラ作っただけの[kan:title=http://fushihara.net/]です。来年になったら誰か狩りに行きませんか。
+
+さて、[http://search.cpan.org/dist/Acme-MorningMusume/:title=Acme::MorningMusume]というモジュールをご存知でしょうか? モーニング娘。のメンバー情報を細かに取得できる素晴らしく実用的なAcmeモジュールです。いわゆるプロフィールはもちろんのこと、Googleの画像検索等を利用してイメージまで引っ張ってくることが出来ます。
+
+今日紹介するのは、このモジュールに影響を受けて制作した拙作「Acme::PrettyCure」です。
+
+>|perl|
+my @precure = Acme::PrettyCure->now;
+||<
+
+上記のように実行すると、現在放映中の「ハートキャッチプリキュア」のメンバーオブジェクトを取得することが出来ます。各プリキュアの情報はAcme::MorningMusumeと比べると簡単なものしか取得できませんが、プリキュアらしい仕掛けがしてあります。
+
+>|perl|
+my ($nozomi,) = Acme::PrettyCure->members('Five');
+
+say $nozomi->name; # => 夢原のぞみ
+
+$nozomi->transform;
+
+say $nozomi->name; # => キュアドリーム !?
+||<
+
+上記の通り、変身します。現状は全てtransformメソッドになっていますが、それぞれの変身に合わせたメソッド名にaliasを張る予定です。また、初代とSplashStar組は相方を引数に取らないと変身できない(本編通りの)仕様になっています。
+
+更に、transformメソッドを実行すると<em>問答無用</em>で変身時の口上を標準出力にprintします。これも仕様なので仕方ないですね。
+
+>|perl|
+my ($nagisa, $honoka) = Acme::PrettyCure->members;
+
+$nagisa->transform($honoka); # 出力結果はお手元でご確認下さい
+
+my ($nozomi, @others) = Acme::PrettyCure->members('Five');
+
+$nozomi->transform(@others); # 出力結果は(ry
+||<
+
+他にも細かいネタを仕込んであるので、暇な人はソースを読んでみると良い感じに脱力できるかもしれません。多分最初にツッコむのは「なんでAny::Moose useしてるんだよw」ではないかと思います。
+
+とりあえず、来年の新プリキュア放映までのあいだに各プリキュアの必殺技を取得、発動(!?)出来るようにしたり、CVなどもう少し詳細なプロフィールを取得できるようにしつつ、Acme::MorningMusumeのように画像も取ってこられるようにしたいかなあ等、色々夢は広がります。パッチは大歓迎なので、是非[https://github.com/kan/p5-acme-prettycure:title=github上のリポジトリ]をcloneしてみてください。
+
+明日は、hide-kさんのAcme::AKB48です
