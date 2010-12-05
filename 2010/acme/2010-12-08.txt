@@ -27,6 +27,8 @@ print "Hello world\n";
 これでどうなるかというと、Acme::Tsuをuseしたスクリプトがアクメツになります。
 こんな感じです↓
 >|perl|
+$ perl helloworld.pl
+$ cat helloworld.pl
 use Acme::Tsu;
 
   (                                                          (  
@@ -67,6 +69,13 @@ use Acme::Tsu;
                                '`'                              
                                 )                               
                                 )                                
+||<
+
+ これを再び実行すると、以下のようになります。
+
+>|perl|
+$ perl helloworld.pl
+Hello world
 ||<
 
 Acmeモジュールに造詣の深い諸兄ならばお分かりになると思いますが、これは[http://search.cpan.org/dist/Acme-EyeDrops/lib/Acme/EyeDrops.pm:title=Acme::EyeDrops]と[http://search.cpan.org/~dconway/Acme-Bleach-1.12/lib/Acme/Bleach.pm:title=Acme::Bleach]に代表されるソース書き換えテクニックの合せ技です。
