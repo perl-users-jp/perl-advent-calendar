@@ -1,0 +1,61 @@
+Acme::Code::Police vs Acme::Code::FreedomFighter
+
+こんにちはこんにちは！
+「x日目」と変換しようとすると「xに痴目」とか出てきてたいへんAcmeな感じの<a href="http://twitter.com/myfinder/">myfinder</a>です。
+今回はmakamakaさんのAcme大全を読んでて面白かった Acme::Code::Police と Acme::Code::FreedomFighter というモジュールについて紹介します。
+
+* インストールする
+
+どちらもCPANにあがっているので、cpanmで一発です。
+
+>||
+$ cpanm Acme::Code::Police
+$ cpanm Acme::Code::FreedomFighter
+||<
+
+* どういうモジュールなのか
+
+** Acme::Code::Police
+
+Acme::Code::Police は、useしたモジュールが use strict していない場合そのファイルを unlink するというモジュールです。恐ろしいですね。
+
+>|perl|
+$ vim acme.pl 
+use Acme::Code::Police;
+print "no Acme, no Life.\n";
+$ ls
+acme.pl
+$ perl acme.pl 
+no Acme, no Life.
+$ ls
+  # ファイルが消えてる！
+||<
+
+こんな感じに、Acmeを叫ぼうとするとポリスが飛んできて逮捕(unlink)されてしまいます。このままでは自由にAcmeを叫ぶ事もできません。
+
+** Acme::Code::FreedomFighter
+
+そんな恐ろしいモジュールに敢然と立ち向かう戦士が Acme::Code::FreedomFighter です。
+どんなモジュールかは<a href="http://cpansearch.perl.org/src/GMCCAR/Acme-Code-FreedomFighter-3.1416/FreedomFighter.pm">ソース</a>を見ればわかると思います。
+
+このモジュールをuseすると、 Acme::Code::Police がファイルを unlink しようとしたときに現れ、逆に Acme::Code::Police を unlink しようとします。
+
+>|perl|
+$ vim acme.pl
+use Acme::Code::Police;
+use Acme::Code::FreedomFighter;
+print "no Acme, no Life.\n";
+$ ls
+acme.pl
+$ perl acme.pl
+no Acme, no Life.
+$ ls
+acme.pl # ファイルが残ってる
+||<
+
+ありがとう<a href="http://cpansearch.perl.org/src/GMCCAR/Acme-Code-FreedomFighter-3.1416/FreedomFighter.pm">ゲバラ</a>、これでポリスに取り締まられる事もなく自由にAcmeを叫ぶ事ができるようになりました。
+
+* まとめ
+
+ふつうに use strict すれば何文字もタイプしたり、ファイルが消える恐怖におびえる事もないので、ちゃんと use strict しましょうね、というお話でした。
+明日は kan さんの Acme::PrettyCuer です、おたのしみに！
