@@ -1,0 +1,116 @@
+meta-author: mattn <mattn.jp@gmail.com>
+meta-tags: perl
+
+こんにちわ。Perl 界の桜井章一と呼ばれている <a href="http://mattn.kaoriya.net/">mattn</a> です。キメゼリフは「あんた、コードが煤けてるぜ」です((要出典))。
+今回初めて JPerl Advent Calendar に参加しましたが、この Advent Calendar を動かしてるサーバアプリのソースをガチャガチャと触っている、とてもしつけのなっていない大人です。
+
+このサーバアプリで今回私が手を入れたのは、RSS の出力部分ですが今日はどの様に対応したかを説明します。どちらかというと作業ログです。
+
+<a href="https://github.com/p5-app-adventcalendar/p5-app-adventcalendar">App::AdventCalendar</a> は kan さんがこの JPerl Advent Calendar の為に書いたサーバアプリで、テキストファイルを食わしてブログ形式に仕上げる代物です。中身は PSGI 形式のリクエスト handler と、Text::Xatena を使った整形、Router::Simple を使ったルーティング、Text::Xslate をテンプレートエンジンに使っています。結構人気のある物を集めた作りだと思います。
+非常に分かりやすく作ってあると思うので、ぜひ参考にソースを見ると勉強になるかと思います。ちなみに私が確認しているので Windows 上での動作は保障します。
+RSS 対応するにあたり、まずルーティングしている部分を触りました。通常の記事をサーブしているハンドラは以下の部分です。
+
+>|perl|
+$router->connect(
+    '/{year:\d{4}}/{name:[a-zA-Z0-9_-]+?}/',
+    {
+        tmpl => 'index.html',
+        act  => sub {
+            # snip
+        },
+    }
+);
+||<
+
+この URL の後ろに rss を付けて RSS を出力する様にしたいので、この部分をコピペして以下を追加。
+
+>|perl|
+$router->connect(
+    '/{year:\d{4}}/{name:[a-zA-Z0-9_-]+?}/rss',
+    {
+        content_type => 'application/xml',
+        tmpl         => 'index.xml',
+        act          => sub {
+            # snip
+        },
+    }
+);
+||<
+
+各ハンドラに共通的に設定されている content_type を "application/xml" に、tmpl を "index.xml" に変更しました。ハンドラの中身は通常のHTML版と変わりませんが、RSS を配信するには幾らか情報が足りません。link、category、author に設定する内容です。
+link は HTML 版のリンクを指せば良いのでカテゴリと日付番号を足して設定。残る category と author については記事を書いた本人が設定すべきものなので、メタ情報を吸い上げる仕組みを別途実装しました。
+どんな風に記述するかは、<a href="http://mattn.kaoriya.net/software/lang/perl/20101204012213.htm">先日書いた記事</a>を見て頂く事とします。
+
+RSS 出力対応を行った際、通常 HTML 版と共通するテキストファイル解析処理を parse_entry とるサブルーチンにまとめましたが、そこに処理を追加しました。テキストを読み込んでいる部分を見ると
+
+>|perl|
+my $text = $file->slurp( iomode => '<:utf8' );
+my ( $title, $body ) = split( "\n\n", $text, 2 );
+||<
+
+テキストと本文は最初の空行で区切られるので、上記リンク先で説明している記述方法の場合、タイトル側にメタ情報が含まれれますね。
+
+>|perl|
+my ( $tmp, %meta ) = ( '', () );
+for ( split /\n/, $title ) {
+    if ($tmp) {
+        my ( $key, $value ) = m{^meta-(\w+):\s*(.+)$};
+        if ($key) {
+            $meta{$key} = $value;
+        }
+    } else {
+        $tmp = $_;
+    }
+}
+$title = $tmp;
+||<
+
+こんな感じにタイトル部から「meta-XXX」となっている部分を拾い上げ、タイトルを再設定します。また parse_entry が返すハッシュリファレンスに対して以下の様にメタ情報をマージしました。
+
+>|perl|
+return {
+    title     => $title,
+    text      => $text,
+    update_at => $ftime->strftime( '%c' ),
+    pubdate   => $ftime->strftime( '%Y-%m-%dT%H:%M:%S' ),
+    footnotes => $inline->can('footnotes') ? $inline->footnotes : {},
+    %meta, <em>ここ</em>
+};
+||<
+
+これで RSS テンプレートで entry.author という変数が参照出来る様になります。
+さて最後に、category です。meta-tags というメタ情報から複数の category ノードを作る必要があります。meta-tags で記事の著者に設定してもらったカンマセパレート文字列を配列に乗せ変えます。
+メタ情報の吸い上げは汎用的に作ったので簡単ですね。
+
+>|perl|
+my @tags = split /,\s*/, $entry->{tags} || '';
+$entry->{categories} = \@tags;
+||<
+
+あとはテンプレートで entry.categories をループで回してあげればok。
+
+>|xml|
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>[% name %] - [% conf.title %]</title>
+    <link>[% uri_for(year _ '/' _ name _ '/') %]</link>
+    <description>[% name %] - [% conf.title %]</description>
+    [% FOR entry IN entries %]<item>
+      <title>[% entry.title %]</title>
+      <pubDate>[% entry.pubdate %]</pubDate>
+      <link>[% uri_for(entry.link) %]</link>
+      [% FOR category IN entry.categories %]<category>[% category %]</category>
+      [% END %]
+      <guid isPermaLink="true">[% uri_for(entry.link) %]</guid>
+      <description>
+      [% entry.text | unmark_raw %]
+      </description>
+      <author>[% entry.author %]</author>
+    </item>
+    [% END %]
+  </channel>
+</rss>
+||<
+
+簡単ですね。
