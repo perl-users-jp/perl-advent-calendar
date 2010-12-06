@@ -13,7 +13,8 @@
       <guid isPermaLink="true">[% uri_for(entry.link) %]</guid>
       <description>
       [% entry.text | unmark_raw %]
-      [% FOR note IN entry.footnotes %]&lt;div class=&quot;note&quot; id=&quot;fn[% note.number %]&quot;&gt;
+	  [% FOR note IN entry.footnotes %]
+      &lt;div class=&quot;note&quot; id=&quot;fn[% note.number %]&quot;&gt;
           *[% note.number %]:
           [% note.note | unmark_raw %]
       &lt;/div&gt;
