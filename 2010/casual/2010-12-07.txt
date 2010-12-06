@@ -1,0 +1,341 @@
+アクセスログの解析時のDateTimeによる日付処理
+meta-author: ジロリアン <http://twitter.com/lhideki>
+meta-tags: perl, accesslog
+
+** はじめに
+
+皆様こんにちは。初めて投稿させて頂<a href="http://twitter.com/lhideki">id:lhideki</a>と申します。
+
+私がPerlを利用するシーンは、アクセスログの解析等の大量のテキスト処理を行う時が多く、ほとんどが書き捨ての簡単なスクリプトです。
+動作させる環境を選べない事も多く、このためあまり標準添付以外のモジュールを利用する事がありません。
+
+とは言っても、タイムゾーンを意識した日付処理を自分で記述するのはとても大変ですので、必要に応じて日付関連のモジュールを利用する事があります。
+
+そこで、面倒な日付処理の面倒を見てくれるDateTimeというモジュールをご紹介しようと思うのですが、同モジュールの解説はたくさんありますので、アクセスログを解析するというシーン限定での記事とさせて頂ければと思います。
+
+ここを購読されている皆様にとっては当たり前の内容だと思いますが、突然ユーザからアクセスログの解析を依頼されて、途方に暮れて検索エンジンから辿り着いたような初級サーバ管理者の方のお役に立てるような内容であれば幸いです。
+
+** DateTimeモジュール
+
+DateTimeモジュールのインストールについては、CPANから導入するのであれば特に難しい事が無いので割愛します。
+
+それではさっそくWebサーバのアクセスログ(<a href="http://www.microsoft.com/japan/windowsserver2003/iis/default.mspx">IIS</a>のデフォルト設定の状態を想定しています)からDateTimeモジュールにより"GMT"で記録された時間を日本時間に変換するサンプルをご紹介します。
+
+>|perl|
+use strict;
+use DateTime;
+
+my $filename = shift;
+open(FILE, $filename) or die("Cannot open the file($filename).");
+foreach my $line (<FILE>) {
+    chomp($line);
+    next if ($line =~ /^#.*/);
+
+    my @data = split(" ", $line);
+    my $date = $data[0];
+    my $time = $data[1];
+    $date =~ /(\d{4,4})\-(\d{2,2})\-(\d{2,2})/;
+    my $year = $1;
+    my $mon = $2;
+    my $day = $3;
+    $time =~ /(\d{2,2})\:(\d{2,2})\:(\d{2,2})/;
+    my $hour = $1;
+    my $min = $2;
+    my $sec = $3;
+    my $local_date = DateTime->new(
+        time_zone => 'GMT',
+        year => $year,
+        month => $mon,
+        day => $day,
+        hour => $hour,
+        minute => $min,
+        second => $sec
+    );
+    $local_date->set_time_zone('Asia/Tokyo');
+}
+close(FILE);
+||<
+
+まず最初にアクセスログのフォーマットに合わせて日付部分を抽出します。年、月、日、時、分、秒を特定出来たら、それらの情報を基にDateTimeオブジェクトを生成します。
+この際にアクセスログ出力時に使用されているタイムゾーンを指定する必要があります。解析対象のアクセスログは"GMT"で記録されているので、そのまま"GMT"と指定しています。
+
+DateTimeオブジェクトを生成したら、タイムゾーンの変換はset_time_zone関数で変換先のタイムゾーンを指定します。日本時間であれば"Asia/Tokyo"です。
+
+これでタイムゾーンを考慮した状態になっているので、後は必要な情報を取得するだけです。
+
+>|perl|
+printf("%d年%d月%d日 %d時%d分%d秒\n", $local_date->year, $local_date->month, $local_date->day, $local_date->hour, $local_date->minute, $local_date->second);
+||<
+
+** アクセスログの解析
+
+これでDateTimeモジュールの出番は終わりなのですが、続いてアクセスログの解析を行う処理をご紹介したいと思います。
+一言でアクセスログの解析といっても色々な手法がありますが、一般的には時系列でのアクセス数の変化を見たいという要求が多いと思います。
+そこで、アクセスログに記録されている何らかの情報毎のアクセス数を集計するという処理を考えてみます。
+
+まずはアクセスログをパースする処理です(前例と同じ様に<a href="http://www.microsoft.com/japan/windowsserver2003/iis/default.mspx">IIS</a>のデフォルト設定を想定しています)。
+
+>|perl|
+my @data = split(" ", $line);
+my $date = $data[0];
+my $time = $data[1];
+my $method = $data[4];
+my $ip_address = $data[9];
+my $agent = $data[10];
+my $status = $data[11];
+$date =~ /(\d{4,4})\-(\d{2,2})\-(\d{2,2})/;
+my $year = $1;
+my $mon = $2;
+my $day = $3;
+$time =~ /(\d{2,2})\:(\d{2,2})\:(\d{2,2})/;
+my $hour = $1;
+my $min = $2;
+my $sec = $3;
+my $local_date = DateTime->new(
+    time_zone => 'GMT',
+    year => $year,
+    month => $mon,
+    day => $day,
+    hour => $hour,
+    minute => $min,
+    second => $sec
+);
+$local_date->set_time_zone('Asia/Tokyo');
+||<
+
+最初のサンプルと流れは同じで、日付以外の情報に名前を付けただけです。ファイルのオープン等の処理は省略しています。
+
+この情報を元に、メソッド別(GETやPOST等)で集計を行ってみます。
+
+>|perl|
+++$method_data{$local_date->year}->{$local_date->month}->{$local_date->day}->{$local_date->hour}->{$local_date->minute}->{$method}
+||<
+
+"$method_data"には、分単位でのメソッド別のアクセス数が記録される事になります。
+このように集計した情報は、以下の様にしてCSV形式で出力します。
+
+>|perl|
+foreach my $year (sort keys %method_data) {
+    foreach my $mon (sort keys %{$method_data{$year}}) {
+        foreach my $day (sort keys %{$method_data{$year}->{$mon}}) {
+            foreach my $hour (sort keys %{$method_data{$year}->{$mon}->{$day}}) {
+                foreach my $min (sort keys %{$method_data{$year}->{$mon}->{$day}->{$hour}}) {
+                    foreach my $method (sort keys %{$method_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}}) {
+                        my $count = $method_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}->{$method};
+                        my $out = sprintf("method,%s,%s,%s,%s,%s,%s,%s,%d", 
+                            $year, $mon, $day,
+                            $hour, $min,
+                            $server,
+                            $method,
+                            $count
+                        );
+                        print $out, "\n";
+                    }
+                }
+            }
+        }
+    }
+}
+||<
+
+この結果は以下の様な出力になります。
+
+>||
+Type    Year    Mon    Day    Hour    Min    Data    Count
+method    2010    12    6    10    0    GET    95
+method    2010    12    6    10    0    OPTIONS    39
+method    2010    12    6    10    0    GET    241
+method    2010    12    6    10    0    OPTIONS    33
+method    2010    12    6    10    0    POST    2
+method    2010    12    6    10    0    GET    75
+method    2010    12    6    10    0    OPTIONS    84
+method    2010    12    6    10    0    POST    7
+method    2010    12    6    10    1    GET    79
+method    2010    12    6    10    1    OPTIONS    57
+method    2010    12    6    10    1    GET    197
+||<
+
+後は、Excel等を利用してグラフ化してみると、それっぽい表示になると思います。また、Excelを利用するのであればピボットテーブルで処理すると、わざわざスクリプトを変更しなくても、時間別、日付別等の集計を行えるので便利です。
+
+出力量が多すぎてExcelで処理出来ない場合は、出力単位を時間毎にしてみるといいかもしれません。
+
+なお、上記はメソッド別の集計のみ行っていますが、他に接続元IPアドレス別、ユーザエージェント別、ステータスコード別等の集計も同時に行っておくと用途が広がります。
+
+** その他のWebサーバのアクセスログ
+
+<a href="http://www.microsoft.com/japan/windowsserver2003/iis/default.mspx">IIS</a>のログに対してという事で説明しましたが、当然<a href="http://httpd.apache.org/">Apache</a>のアクセスログについても同じ様な加工をする事が出来ます。
+<a href="http://httpd.apache.org/">Apache</a>のアクセスログ解析についてのモジュールもあるのですが、私は以下の様な処理でパースする事が多いです。
+
+>|perl|
+print STDERR "Cannot parse log format. Data is '$line.'\n", next if (!($line =~ /^(.*) (.*) (.*) \[(.*)\] "(.*)" (.*) (.*) "(.*)" "(.*)"$/));
+my $date_time = $4;
+my @tmp = split(/ /, $5);
+my $method = $tmp[0];
+my $ip_address = $1;
+my $agent = $9;
+my $status = $6;
+die("Cannot parse date format. Data is '$date_time'") if (!($date_time =~ /(\d{2,2})\/(.+)\/(\d{4,4}):(\d{2,2}):(\d{2,2}):(\d{2,2}) \+0900/));
+my $year = $3;
+my $mon = $2;
+my $day = $1;
+my $hour = $4;
+my $min = $5;
+my $sec = $6
+||<
+
+ちなみに上記はあまり正確ではありません(確かユーザエージェント部分のパースに失敗する事があったはずです)。また、当然アクセスログの出力フォーマットにも依存するので万能ではありません。
+エラーが出る事もあるのですが、私の場合は大体の傾向が見られれば良いことが多いため、この程度で十分間に合っています。
+
+** さいごに
+
+初めての参加過ぎて関係者の方にはご迷惑をおかけしました。申し訳ございません。
+汚名卍解(?!)すべく頑張らせて頂きました。次回も参加の機会がある事を願い、来年のネタを今から探しておきます。
+
+それでは、明日はsfujiwaraさん宜しくお願い致します。
+
+** サンプルコード
+
+最後におまけとして、記事の中でご紹介したソースコードの完動版を記載します。
+
+*** 利用方法・前提条件
+
+アクセスログが保存されているディレクトリを引数に指定して実行します。
+指定したディレクトリはさらにサーバ名を表すサブディレクトリを保持している事を前提しています。
+
+>||
+├ [引数で指定するディレクトリ]
+│   ├ [サーバ名を表すディレクトリ]
+│   │   ├ [IISのアクセスログ]
+│   │   ├ [IISのアクセスログ]
+│   │   ├ [IISのアクセスログ]
+│   ├ [サーバ名を表すディレクトリ]
+│   │   ├ [IISのアクセスログ]
+│   │   ├ [IISのアクセスログ]
+             ・
+             ・
+             ・
+||<
+
+集計結果は標準出力に出力されるので、リダイレクトして保存して下さい。
+
+>|perl|
+#!/usr/bin/perl -w
+use strict;
+use DateTime;
+
+my $dir = shift;
+
+opendir(DIR, $dir);
+my @dirs = readdir(DIR);
+
+my %method_data;
+my %ip_data;
+my %agent_data;
+my %status_data;
+foreach my $e (@dirs) {
+    next if ($e =~ /^\.+$/);
+    my $iis_log_dir = $dir . "/" . $e;
+    opendir(SUB, $iis_log_dir);
+    my @subdirs = readdir(SUB);
+    foreach my $s (@subdirs) {
+        next if ($s =~ /^\.+$/);
+        next if (!($s =~ /^ex.*/));
+        my $log_file = $iis_log_dir . "/" . $s;
+        open(FILE, $log_file);
+        foreach my $line (<FILE>) {
+            chomp($line);
+            next if ($line =~ /^#.*/);
+
+            my @data = split(" ", $line);
+            my $date = $data[0];
+            my $time = $data[1];
+            my $method = $data[4];
+            my $ip_address = $data[9];
+            my $agent = $data[10];
+            my $status = $data[11];
+            $date =~ /(\d{4,4})\-(\d{2,2})\-(\d{2,2})/;
+            my $year = $1;
+            my $mon = $2;
+            my $day = $3;
+            $time =~ /(\d{2,2})\:(\d{2,2})\:(\d{2,2})/;
+            my $hour = $1;
+            my $min = $2;
+            my $sec = $3;
+            my $local_date = DateTime->new(
+                time_zone => 'GMT',
+                year => $year,
+                month => $mon,
+                day => $day,
+                hour => $hour,
+                minute => $min,
+                second => $sec
+            );
+            $local_date->set_time_zone('Asia/Tokyo');
+
+            ++$method_data{$local_date->year}->{$local_date->month}->{$local_date->day}->{$local_date->hour}->{$local_date->minute}->{$e}->{$method};
+            ++$ip_data{$local_date->year}->{$local_date->month}->{$local_date->day}->{$local_date->hour}->{$local_date->minute}->{$e}->{$ip_address};
+            ++$agent_data{$local_date->year}->{$local_date->month}->{$local_date->day}->{$local_date->hour}->{$local_date->minute}->{$e}->{$agent};
+            ++$status_data{$local_date->year}->{$local_date->month}->{$local_date->day}->{$local_date->hour}->{$local_date->minute}->{$e}->{$status};
+        }
+        close(FILE);
+    }
+    closedir(SUB);
+}
+
+foreach my $year (sort keys %method_data) {
+    foreach my $mon (sort keys %{$method_data{$year}}) {
+        foreach my $day (sort keys %{$method_data{$year}->{$mon}}) {
+            foreach my $hour (sort keys %{$method_data{$year}->{$mon}->{$day}}) {
+                foreach my $min (sort keys %{$method_data{$year}->{$mon}->{$day}->{$hour}}) {
+                    foreach my $server (sort keys %{$method_data{$year}->{$mon}->{$day}->{$hour}->{$min}}) {
+                        foreach my $method (sort keys %{$method_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}}) {
+                            my $count = $method_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}->{$method};
+                            my $out = sprintf("method,%s,%s,%s,%s,%s,%s,%s,%d", 
+                                        $year, $mon, $day,
+                                        $hour, $min,
+                                        $server,
+                                        $method,
+                                        $count
+                                    );
+                                print $out, "\n";
+                        }
+                        foreach my $ip_address (sort keys %{$ip_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}}) {
+                            my $count = $ip_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}->{$ip_address};
+                            my $out = sprintf("ip_address,%s,%s,%s,%s,%s,%s,%s,%d", 
+                                        $year, $mon, $day,
+                                        $hour, $min,
+                                        $server,
+                                        $ip_address,
+                                        $count
+                                    );
+                                print $out, "\n";
+                        }
+                        foreach my $agent (sort keys %{$agent_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}}) {
+                            my $count = $agent_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}->{$agent};
+                            my $out = sprintf("agent,%s,%s,%s,%s,%s,%s,%s,%d", 
+                                        $year, $mon, $day,
+                                        $hour, $min,
+                                        $server,
+                                        $agent,
+                                        $count
+                                    );
+                            print $out, "\n";
+                        }
+                        foreach my $status (sort keys %{$status_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}}) {
+                            my $count = $status_data{$year}->{$mon}->{$day}->{$hour}->{$min}->{$server}->{$status};
+                            my $out = sprintf("status,%s,%s,%s,%s,%s,%s,%s,%d", 
+                                        $year, $mon, $day,
+                                        $hour, $min,
+                                        $server,
+                                        $status,
+                                        $count
+                                    );
+                            print $out, "\n";
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+||<
