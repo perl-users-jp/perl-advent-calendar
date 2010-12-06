@@ -58,4 +58,4 @@ acme.pl # ファイルが残ってる
 * まとめ
 
 ふつうに use strict すれば何文字もタイプしたり、ファイルが消える恐怖におびえる事もないので、ちゃんと use strict しましょうね、というお話でした。
-明日は kan さんの Acme::PrettyCuer です、おたのしみに！
+明日は kan さんの Acme::PrettyCure です、おたのしみに！

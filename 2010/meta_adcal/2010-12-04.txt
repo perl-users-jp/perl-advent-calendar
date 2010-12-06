@@ -1,0 +1,42 @@
+見た目重要
+
+いい加減ネタ切れなので、そろそろ次の人に書いて欲しいkanです。
+
+昨日までで本当に最低限の機能を持ったカレンダーアプリが出来ました。しかし、このままだといかにも寂しいです。せめて、突貫工事で作られた[http://perl-users.jp/articles/advent-calendar/2009/:title=去年のカレンダー]と同じ程度にはしたいところ。
+
+まずは、本文を装飾できるように、何らかの記法が使えるようにします。去年のカレンダーでもはてな記法が使えたので、今回も使えるようにしてみます。perlではてな記法と言えば Text::Hatena がありますが、今回は cho45さんの Text::Xatena を使ってみます。きっと後に使い方の不味いところを直してくれることでしょう。
+
+>|perl|
+my $xatena = Text::Xatena->new();
+my $formatted_body = $xatena->format($body);
+||<
+
+基本的にはこうするだけで、$formatted_bodyには変換されたHTMLが入ります。1つ注意が必要なのは、Text::Xslateは標準で変数展開をエスケープするため、そのまま使うと「&lt;div&gt;.....&lt;/div&gt;」のようにHTMLが出力されてしまいます。Text::Xslate::mark_rawで値にフラグをつけておくとエスケープされなくなるので、そのように対処しておきます。
+
+>|perl|
+Text::Xslate::mark_raw($formatted_body);
+||<
+
+記事本文がなんとかなったところで、ページ全体の見た目をなんとかしようと思います。cssファイルやjsファイル、画像ファイルなどを読み出せるようにします。
+
+>|perl|
+use Plack::Builder;
+
+builder {
+    enable 'Static', path => qr{^/(?:img|css|js)/}, root => "$conf->{assets_path}/htdocs/";
+    enable 'ContentLength';
+    enable 'Lint';
+    $app;
+};
+||<
+
+app.psgiファイルを↑のように変更してみました。enable 'Static' (ry で有効にしている Plack::Middleware::Static モジュールを使うと、特定パスへのアクセスをローカルファイルへの参照として扱って処理してくれます。ついでに説明しておくと、ContentLengthモジュールはContent-Lengthヘッダを、contentの長さから自動的につけてくれるモジュールで、Lintモジュールは出力が正しい形式かどうかチェックしてくれるモジュールです。
+
+余談ですが、Staticモジュールを設定したものの、そのあとコピーしてきた2009年のカレンダーのテンプレートでは全て外部のCSS,JSを参照していたため、この機能が使われることはありませんでした……。
+
+これで、名実ともにアドベントカレンダーアプリが出来ました。非効率なところや、足りてない機能もありますが、それは今後他の人が追加してくれるはずです(実際、もりもりと現在のApp::AdventCalendarには機能が追加されていっています)。
+
+興味のある人は、githubの p5-app-adventcalendar プロジェクトをチェックしてみて下さい。機能修正、追加をしてみたい場合は、irc.freenode.org の #perl-casual で kan_fushihara, tokuhirom, yappoあたりに声をかけてもらえれば、commit権を設定します。
+
+それでは、私以外の誰かが書く5日目をお楽しみに。
+

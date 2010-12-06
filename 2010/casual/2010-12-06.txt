@@ -1,0 +1,140 @@
+MySQL と SQLite に対応した DBIx なモジュールを PostgreSQL に対応させる Tips いくつか
+meta-author: fujiwara <fujiwara@cpan.org>
+meta-tags: perl, postgresql, mysql, sqlite, dbi
+
+こんにちは。PostgreSQL をよく使っている <a href="http://d.hatena.ne.jp/sfujiwara/">id:sfujiwara</a> (<a href="http://twitter.com/fujiwara">@fujiwara</a>) です。
+
+世間では MySQL のほうが PostgreSQL より人気のようですね (特に Web 業界では)。なので、DBIx な便利なモジュールも開発当初は MySQL と SQLite でしか動かなかったりして悲しい思いをすることがあり、こちゃこちゃ patch を書いたりしておりました。
+
+そこで溜まったいくつかの Tips をここで公開したいと思います。
+
+**1. auto increment の扱い
+まず、いわゆる自動発番なカラムの扱いについて。MySQL ではカラム定義で AUTO_INCREMENT 指定、SQLite では最初のカラムの型を INTEGER にして PRIMARY KEY 指定、でできるやつですね。PostgreSQL では SERIAL 型を使用して定義します。
+>|sql|
+CREATE TABLE foo (
+    id SERIAL PRIMARY KEY,
+    bar TEXT
+);
+||<
+ただし実際の型として SERIAL があるわけではなく、以下のような定義へ翻訳される sugar 的な構文となっています。(細部はバージョンによって異なります)
+>|sql|
+CREATE SEQUENCE foo_id_seq;
+CREATE TABLE foo (
+    id INTEGER not null default nextval('foo_id_seq'::regclass),
+    bar TEXT
+);
+||<
+-[テーブル名]_[カラム名]_seq という名前のシーケンスを作成
+-デフォルト値として、そのシーケンスから発番される値を割り当て
+という意味ですね。
+ここで MySQL / SQLite と異なるポイントは、「自動発番させたくて NULL を投入しようとするとエラーになる」ことです。つまり
+>|sql|
+INSERT INTO foo (id, bar) VALUES(NULL, 'BAR');  　-- ERROR
+||<
+は動作しません。「NOT NULL」なカラムに NULL を入れようとしているので、当然といえば当然ですが、デフォルト値を使わせるためには、NULL を入れるのではなく、カラム自体を省略する必要があります。
+>|sql|
+INSERT INTO foo (bar) VALUES('BAR'); -- id はシーケンスから発番される
+||<
+
+また、自動発番された id を Perl から得るには last_insert_id() を使用します。
+>|perl|
+$dbh->last_insert_id(undef, $schema, $table, undef, { sequence => $seq_name }); # PostgreSQL
+$dbh->mysql_insert_id;           # MySQL
+$dbh->func('last_insert_rowid'); # SQLite
+||<
+他の DBD と異なり、
+-schema 名(undef ならば 'main' なので省略可)
+-テーブル名
+-シーケンス名 (1テーブルにシーケンスがひとつしかなければ undef で省略可)
+が必要です。つまり、最低限テーブル名は指定する必要があります。
+面倒なようですが、一つのテーブルに複数のカラムでシーケンスによる自動発番を行うことも可能なため、指定が必要なんですね。
+
+さらに注意点として、「自動発番のカラムにシーケンスを使用しない値を指定した場合は last_insert_id() で値が取得できない」というのがあります。
+そもそも、「デフォルト値としてシーケンスから発番した値を使用する」という仕組み上、関係ない値を入れられることが防げないため (カラムに制約をつければ可能かも……)、必ず自動発番させるようなクエリを発行しないとトラブルの原因になりますので注意してください。
+
+MySQL のように、auto_increment なカラムに自分で 10 を入れたら次の発番は 11 になる、というような仕組みではないので、仮に
+-現在のシーケンス値: 10
+-明示的に 11 を INSERT
+ということをすると、次にシーケンスから 11 が発番された時に一意制約違反になってしまいます。
+
+**2. 識別子の quote
+予約語をカラム名など識別子に使用したい場合、quote する必要があります。MySQL では ` (バッククォート) ですが、SQLite と PostgreSQL では " (ダブルクォート) で行います。
+DBI には quote_identifier という関数があり、DBD ごとの違いを吸収してくれるので、これを使いましょう。
+>|perl|
+$dbh->quote_identifier( $name );
+$dbh->quote_identifier( $catalog, $schema, $table, \%attr );
+||<
+>|perl|
+$dbh->quote_identifier('foo');  #= "foo" (PostgreSQL)
+$dbh->quote_identifier('foo');  #= `foo` (MySQL)
+$dbh->quote_identifier('foo');  #= "foo" (SQLite)
+||<
+
+**3. LIMIT OFFSET
+確か大昔 (3.23時代?) は MySQL の LIMIT 構文は
+>|SQL|
+LIMIT 5,10
+||<
+の形式のみだったと思いますが、最近は PostgreSQL と同じ OFFSET を使用した構文もサポートされています。
+>|SQL|
+LIMIT 5 OFFSET 5
+||<
+SQLite も同様の構文でいけますので、LIMIT OFFSET 形式を使用すれば 3者で問題なく使用できるでしょう。
+
+**4. テストについて
+MySQL には <a href="http://search.cpan.org/dist/Test-mysqld/">Test::mysqld</a>、PostgreSQL には <a href="http://search.cpan.org/dist/Test-postgresql/">Test::postgresql</a> という、どちらも kazuho さんの書かれたテスト用モジュールがあります。
+使いかたはどちらも同様で、
+>|perl|
+$mysql = Test::mysqld->new;
+$dbh = DBI->connect( $mysql->dsn );
+
+$pgsql = Test::postgresql->new;
+$dbh = DBI->connect( $pgsql->dsn );
+||<
+これだけで、テスト用の MySQL / PostgreSQL インスタンスを起動し、接続することができます。素晴らしいですね！
+
+ところで PostgreSQL を使っている人にはよく知られている話ですが、OS の共有メモリの設定によっては PostgreSQL を起動できないことがあります。
+公式ドキュメントでは <a href="http://www.postgresql.jp/document/9.0/html/kernel-resources.html">PostgreSQL 9.0.1文書 / 17章サーバの準備と運用 / 17.4. カーネルリソースの管理</a> に記述がありますが、たいていの場合問題が起きるのは SHMMAX と SHMALL だと思います。
+Test::postgresql は自身のインストール時のテストで 2インスタンスの起動を行うため、「自分でコマンドラインから initdb すれば動くのに Test::postgresql はコケる！」という、知らないと訳の分からない現象に悩まされるかもしれません。
+
+その場合は、OSX なら
+>||
+$ sysctl kern.sysv.shmmax
+$ sysctl kern.sysv.shmall
+||<
+Linux なら
+>||
+$ cat /proc/sys/kernel/shmmax
+$ cat /proc/sys/kernel/shmall
+||<
+を実行し、現在の設定を確認の上、問題がないサイズまで設定を増やしてあげる必要があります。
+詳細は上記の公式ドキュメントを参照して頂きたいのですが、面倒だというかたはとりあえず shmmax に実メモリの半分(または 1GB) ぐらい、shmall をその 1/4096 に設定するといいんじゃないでしょうか。
+
+OSX ならば /etc/sysctl.conf に
+>||
+kern.sysv.shmmax=1073741824
+kern.sysv.shmall=262144
+||<
+と記述して reboot するか、コマンドラインから以下のように設定 (sysctl.conf に指定しないと再起動時に反映されません)。
+>||
+# sysctl -w kern.sysv.shmmax=1073741824
+# sysctl -w kern.sysv.shmall=262144
+||<
+Linux ならば /etc/sysctl.conf に以下のように記述して reboot するか、
+>||
+kernel.shmmax = 1073741824
+kernel.shmmax = 262144
+||<
+同様に再起動時には反映されませんがコマンドラインから
+>||
+# echo 1073741824 > /proc/sys/kernel/shmmax
+# echo 262144     > /proc/sys/kernel/shmall
+||<
+とすることで共有メモリの設定を変更できます。
+
+**まとめ
+DBI は RDBMS の差異の多くを隠蔽してくれますし、<a href="http://perl-users.jp/articles/advent-calendar/2010/hacker/5">DBIx::Inspector</a> のような抽象部分を切り出したモジュールができてきたりして、普段モジュールを使うだけならあまり気にする必要がないと思います。
+が、モジュールを書く上ではどうしても差異を扱わなければならない場面に出くわすこともあるでしょうし、もし PostgreSQL 対応でハマったりしたらこのエントリを思い出していただければと思います。
+
+明日はジロリアンさんです。お楽しみに！
+
