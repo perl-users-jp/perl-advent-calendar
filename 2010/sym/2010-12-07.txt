@@ -1,0 +1,389 @@
+86バイナリでも記号プログラミング！
+
+こんにちは、<a href="http://twitter.com/hasegawayosuke">はせがわ</a>です。
+
+「記号プログラミングなんてLLだけの世界なので、バイナリアンな俺様には関係ない」なんて思っていませんか？
+今日はそんな硬派なあなたに贈る、8086記号バイナリプログラムの話です。
+
+早速ですが、まずは以下のコードを test.com という名前でファイルに保存してください。
+>||
+%@"%"@,~,%,!`_^[^_^]-;>`_^[^_^]%"!,^,:`_^[^_^]-@{-`{-?:`_[^_^]_-``-``-@@`_^[^_^]-`~-``-@$`_^[^_^]-``-``-@@`_^[^_^]-`~-``-@#`_^[^_^]-+~-/~-?;`_^[^_^]%!~-;-,;`_^[^_^]-"$-@~-@``_^[^_^]-{[-);-@:`_^[^_^]-/*,%`_^[^_^]`_^[^_^]`_^[^_^]`_^[^_^]%@$-@;-?;`_^[^_^]-/~-`&,#`_^[^_^]-`~-`{,*`_^[^_^]-@@-$!`_^[^_^]-:$,[,<`_^[^_^]-!|-.),!`_^[^_^]-@{-@`-/(`_^[^_^]`_^[^_^]`_^[^_^]`_^[^_^]-{!-{.,.`_^[^_^]-~/-/``_^[^_^]%""-}@$"`_^[^_^]%@@-!/,!`_^[^_^]-:*-=%`[[[[[[[[`^^^^^-%+)@@^^^!;@@_!,((,.((-$+)@*+@!!@-,!"(+@@,$-,!"($%&,&,&_&,"@"'%_&"',&$&-@*@$"
+||<
+そして、コマンドプロンプトから実行してみましょう。
+>||
+C:\>test.com
+Hello, World
+||<
+はい、さっぱり意味がわかりませんが、顔文字っぽい記号だけのコードをふつうにバイナリとして実行できましたね。
+
+というわけで詳しく説明していきます。
+
+実はこのバイナリは、JavaScript で書かれたアセンブラ <a href="http://utf-8.jp/public/sas/">Symbolic Assembler</a> で生成されたものです。
+このアセンブラでは、任意のアセンブラプログラム(といってもサポートしている命令はほとんどありませんが…)をアセンブルし、以下のような手順で記号だけの MS-DOS COM 形式のバイナリを生成します。
++ 入力されたプログラムを通常通りアセンブル
++ アセンブルしたバイナリを記号だけにエンコード
++ デコーダ展開コード(記号だけで構成されている)を CS:0100 番地に配置
++ デコーダ展開コードの後にエンコードされたバイナリ(ペイロード)を配置
+アーキテクチャとして 8086 の MS-DOS COM 形式を選んでいるのは、この形式はヘッダ等を持たず、実行可能ファイルとしてもっとも簡単なフォーマットだからです。
+
+実行時には、以下のように動作します。
++ デコーダ展開コードは、デコーダとして動作するバイナリコードをスタック上に展開
++ 展開が完了するとスタック上のデコーダのコードにジャンプ
++ スタック上のデコーダコードは、ペイロードを CS:0x0100 番地以降にデコードして配置
++ CS:0x0100 番地へジャンプ
+
+キモとなるのは、「デコーダ展開コード」になります。これさえ記号で書くことができれば、あとは簡単なはずです。
+記号プログラミングで使用可能なバイナリ値は、0x21-0x2F、0x3A-0x3F、0x5B-0x60、0x7B-0x7Eまでの32種類です。
+さて、この32種類の記号では、どのような命令が使用できるのでしょうか。各バイト値を逆アセンブルしてみると、以下の311命令が得られます。
+<div style="height: 20em; width: 80%; overflow:scroll">
+>||
+0x21 0x21 : AND  [ BX + DI ], SP
+0x21 0x22 : AND  [ BP + SI ], SP
+0x21 0x23 : AND  [ BP + DI ], SP
+0x21 0x24 : AND  [ SI ], SP
+0x21 0x25 : AND  [ DI ], SP
+0x21 0x26 : AND  [ addr16 ], SP
+0x21 0x27 : AND  [ BX ], SP
+0x21 0x28 : AND  [ BX + SI ], BP
+0x21 0x29 : AND  [ BX + DI ], BP
+0x21 0x2A : AND  [ BP + SI ], BP
+0x21 0x2B : AND  [ BP + DI ], BP
+0x21 0x2C : AND  [ SI ], BP
+0x21 0x2D : AND  [ DI ], BP
+0x21 0x2E : AND  [ addr16 ], BP
+0x21 0x2F : AND  [ BX ], BP
+0x21 0x3A : AND  [ BP + SI ], DI
+0x21 0x3B : AND  [ BP + DI ], DI
+0x21 0x3C : AND  [ SI ], DI
+0x21 0x3D : AND  [ DI ], DI
+0x21 0x3E : AND  [ addr16 ], DI
+0x21 0x3F : AND  [ BX ], DI
+0x21 0x40 : AND  [ BX + SI + addr8 ], AX
+0x21 0x5B : AND  [ BP + DI + addr8 ], BX
+0x21 0x5C : AND  [ SI + addr8 ], BX
+0x21 0x5D : AND  [ DI + addr8 ], BX
+0x21 0x5E : AND  [ BP + addr8 ], BX
+0x21 0x5F : AND  [ BX + addr8 ], BX
+0x21 0x60 : AND  [ BX + SI + addr8 ], SP
+0x21 0x7B : AND  [ BP + DI + addr8 ], DI
+0x21 0x7C : AND  [ SI + addr8 ], DI
+0x21 0x7D : AND  [ DI + addr8 ], DI
+0x21 0x7E : AND  [ BP + addr8 ], DI
+0x22 0x21 : AND  AH, [ BX + DI ]
+0x22 0x22 : AND  AH, [ BP + SI ]
+0x22 0x23 : AND  AH, [ BP + DI ]
+0x22 0x24 : AND  AH, [ SI ]
+0x22 0x25 : AND  AH, [ DI ]
+0x22 0x26 : AND  AH, [ addr16 ]
+0x22 0x27 : AND  AH, [ BX ]
+0x22 0x28 : AND  CH, [ BX + SI ]
+0x22 0x29 : AND  CH, [ BX + DI ]
+0x22 0x2A : AND  CH, [ BP + SI ]
+0x22 0x2B : AND  CH, [ BP + DI ]
+0x22 0x2C : AND  CH, [ SI ]
+0x22 0x2D : AND  CH, [ DI ]
+0x22 0x2E : AND  CH, [ addr16 ]
+0x22 0x2F : AND  CH, [ BX ]
+0x22 0x3A : AND  BH, [ BP + SI ]
+0x22 0x3B : AND  BH, [ BP + DI ]
+0x22 0x3C : AND  BH, [ SI ]
+0x22 0x3D : AND  BH, [ DI ]
+0x22 0x3E : AND  BH, [ addr16 ]
+0x22 0x3F : AND  BH, [ BX ]
+0x22 0x40 : AND  AL, [ BX + SI + addr8 ]
+0x22 0x5B : AND  BL, [ BP + DI + addr8 ]
+0x22 0x5C : AND  BL, [ SI + addr8 ]
+0x22 0x5D : AND  BL, [ DI + addr8 ]
+0x22 0x5E : AND  BL, [ BP + addr8 ]
+0x22 0x5F : AND  BL, [ BX + addr8 ]
+0x22 0x60 : AND  AH, [ BX + SI + addr8 ]
+0x22 0x7B : AND  BH, [ BP + DI + addr8 ]
+0x22 0x7C : AND  BH, [ SI + addr8 ]
+0x22 0x7D : AND  BH, [ DI + addr8 ]
+0x22 0x7E : AND  BH, [ BP + addr8 ]
+0x23 0x21 : AND  SP, [ BX + DI ]
+0x23 0x22 : AND  SP, [ BP + SI ]
+0x23 0x23 : AND  SP, [ BP + DI ]
+0x23 0x24 : AND  SP, [ SI ]
+0x23 0x25 : AND  SP, [ DI ]
+0x23 0x26 : AND  SP, [ addr16 ]
+0x23 0x27 : AND  SP, [ BX ]
+0x23 0x28 : AND  BP, [ BX + SI ]
+0x23 0x29 : AND  BP, [ BX + DI ]
+0x23 0x2A : AND  BP, [ BP + SI ]
+0x23 0x2B : AND  BP, [ BP + DI ]
+0x23 0x2C : AND  BP, [ SI ]
+0x23 0x2D : AND  BP, [ DI ]
+0x23 0x2E : AND  BP, [ addr16 ]
+0x23 0x2F : AND  BP, [ BX ]
+0x23 0x3A : AND  DI, [ BP + SI ]
+0x23 0x3B : AND  DI, [ BP + DI ]
+0x23 0x3C : AND  DI, [ SI ]
+0x23 0x3D : AND  DI, [ DI ]
+0x23 0x3E : AND  DI, [ addr16 ]
+0x23 0x3F : AND  DI, [ BX ]
+0x23 0x40 : AND  AX, [ BX + SI + addr8 ]
+0x23 0x5B : AND  BX, [ BP + DI + addr8 ]
+0x23 0x5C : AND  BX, [ SI + addr8 ]
+0x23 0x5D : AND  BX, [ DI + addr8 ]
+0x23 0x5E : AND  BX, [ BP + addr8 ]
+0x23 0x5F : AND  BX, [ BX + addr8 ]
+0x23 0x60 : AND  SP, [ BX + SI + addr8 ]
+0x23 0x7B : AND  DI, [ BP + DI + addr8 ]
+0x23 0x7C : AND  DI, [ SI + addr8 ]
+0x23 0x7D : AND  DI, [ DI + addr8 ]
+0x23 0x7E : AND  DI, [ BP + addr8 ]
+0x24      : AND    AL, %u8
+0x25      : AND    AX, addr16
+0x26      : ES:
+0x27      : DAA
+0x28 0x21 : SUB  [ BX + DI ], AH
+0x28 0x22 : SUB  [ BP + SI ], AH
+0x28 0x23 : SUB  [ BP + DI ], AH
+0x28 0x24 : SUB  [ SI ], AH
+0x28 0x25 : SUB  [ DI ], AH
+0x28 0x26 : SUB  [ addr16 ], AH
+0x28 0x27 : SUB  [ BX ], AH
+0x28 0x28 : SUB  [ BX + SI ], CH
+0x28 0x29 : SUB  [ BX + DI ], CH
+0x28 0x2A : SUB  [ BP + SI ], CH
+0x28 0x2B : SUB  [ BP + DI ], CH
+0x28 0x2C : SUB  [ SI ], CH
+0x28 0x2D : SUB  [ DI ], CH
+0x28 0x2E : SUB  [ addr16 ], CH
+0x28 0x2F : SUB  [ BX ], CH
+0x28 0x3A : SUB  [ BP + SI ], BH
+0x28 0x3B : SUB  [ BP + DI ], BH
+0x28 0x3C : SUB  [ SI ], BH
+0x28 0x3D : SUB  [ DI ], BH
+0x28 0x3E : SUB  [ addr16 ], BH
+0x28 0x3F : SUB  [ BX ], BH
+0x28 0x40 : SUB  [ BX + SI + addr8 ], AL
+0x28 0x5B : SUB  [ BP + DI + addr8 ], BL
+0x28 0x5C : SUB  [ SI + addr8 ], BL
+0x28 0x5D : SUB  [ DI + addr8 ], BL
+0x28 0x5E : SUB  [ BP + addr8 ], BL
+0x28 0x5F : SUB  [ BX + addr8 ], BL
+0x28 0x60 : SUB  [ BX + SI + addr8 ], AH
+0x28 0x7B : SUB  [ BP + DI + addr8 ], BH
+0x28 0x7C : SUB  [ SI + addr8 ], BH
+0x28 0x7D : SUB  [ DI + addr8 ], BH
+0x28 0x7E : SUB  [ BP + addr8 ], BH
+0x29 0x21 : SUB  [ BX + DI ], SP
+0x29 0x22 : SUB  [ BP + SI ], SP
+0x29 0x23 : SUB  [ BP + DI ], SP
+0x29 0x24 : SUB  [ SI ], SP
+0x29 0x25 : SUB  [ DI ], SP
+0x29 0x26 : SUB  [ addr16 ], SP
+0x29 0x27 : SUB  [ BX ], SP
+0x29 0x28 : SUB  [ BX + SI ], BP
+0x29 0x29 : SUB  [ BX + DI ], BP
+0x29 0x2A : SUB  [ BP + SI ], BP
+0x29 0x2B : SUB  [ BP + DI ], BP
+0x29 0x2C : SUB  [ SI ], BP
+0x29 0x2D : SUB  [ DI ], BP
+0x29 0x2E : SUB  [ addr16 ], BP
+0x29 0x2F : SUB  [ BX ], BP
+0x29 0x3A : SUB  [ BP + SI ], DI
+0x29 0x3B : SUB  [ BP + DI ], DI
+0x29 0x3C : SUB  [ SI ], DI
+0x29 0x3D : SUB  [ DI ], DI
+0x29 0x3E : SUB  [ addr16 ], DI
+0x29 0x3F : SUB  [ BX ], DI
+0x29 0x40 : SUB  [ BX + SI + addr8 ], AX
+0x29 0x5B : SUB  [ BP + DI + addr8 ], BX
+0x29 0x5C : SUB  [ SI + addr8 ], BX
+0x29 0x5D : SUB  [ DI + addr8 ], BX
+0x29 0x5E : SUB  [ BP + addr8 ], BX
+0x29 0x5F : SUB  [ BX + addr8 ], BX
+0x29 0x60 : SUB  [ BX + SI + addr8 ], SP
+0x29 0x7B : SUB  [ BP + DI + addr8 ], DI
+0x29 0x7C : SUB  [ SI + addr8 ], DI
+0x29 0x7D : SUB  [ DI + addr8 ], DI
+0x29 0x7E : SUB  [ BP + addr8 ], DI
+0x2A 0x21 : SUB  AH, [ BX + DI ]
+0x2A 0x22 : SUB  AH, [ BP + SI ]
+0x2A 0x23 : SUB  AH, [ BP + DI ]
+0x2A 0x24 : SUB  AH, [ SI ]
+0x2A 0x25 : SUB  AH, [ DI ]
+0x2A 0x26 : SUB  AH, [ addr16 ]
+0x2A 0x27 : SUB  AH, [ BX ]
+0x2A 0x28 : SUB  CH, [ BX + SI ]
+0x2A 0x29 : SUB  CH, [ BX + DI ]
+0x2A 0x2A : SUB  CH, [ BP + SI ]
+0x2A 0x2B : SUB  CH, [ BP + DI ]
+0x2A 0x2C : SUB  CH, [ SI ]
+0x2A 0x2D : SUB  CH, [ DI ]
+0x2A 0x2E : SUB  CH, [ addr16 ]
+0x2A 0x2F : SUB  CH, [ BX ]
+0x2A 0x3A : SUB  BH, [ BP + SI ]
+0x2A 0x3B : SUB  BH, [ BP + DI ]
+0x2A 0x3C : SUB  BH, [ SI ]
+0x2A 0x3D : SUB  BH, [ DI ]
+0x2A 0x3E : SUB  BH, [ addr16 ]
+0x2A 0x3F : SUB  BH, [ BX ]
+0x2A 0x40 : SUB  AL, [ BX + SI + addr8 ]
+0x2A 0x5B : SUB  BL, [ BP + DI + addr8 ]
+0x2A 0x5C : SUB  BL, [ SI + addr8 ]
+0x2A 0x5D : SUB  BL, [ DI + addr8 ]
+0x2A 0x5E : SUB  BL, [ BP + addr8 ]
+0x2A 0x5F : SUB  BL, [ BX + addr8 ]
+0x2A 0x60 : SUB  AH, [ BX + SI + addr8 ]
+0x2A 0x7B : SUB  BH, [ BP + DI + addr8 ]
+0x2A 0x7C : SUB  BH, [ SI + addr8 ]
+0x2A 0x7D : SUB  BH, [ DI + addr8 ]
+0x2A 0x7E : SUB  BH, [ BP + addr8 ]
+0x2B 0x21 : SUB  SP, [ BX + DI ]
+0x2B 0x22 : SUB  SP, [ BP + SI ]
+0x2B 0x23 : SUB  SP, [ BP + DI ]
+0x2B 0x24 : SUB  SP, [ SI ]
+0x2B 0x25 : SUB  SP, [ DI ]
+0x2B 0x26 : SUB  SP, [ addr16 ]
+0x2B 0x27 : SUB  SP, [ BX ]
+0x2B 0x28 : SUB  BP, [ BX + SI ]
+0x2B 0x29 : SUB  BP, [ BX + DI ]
+0x2B 0x2A : SUB  BP, [ BP + SI ]
+0x2B 0x2B : SUB  BP, [ BP + DI ]
+0x2B 0x2C : SUB  BP, [ SI ]
+0x2B 0x2D : SUB  BP, [ DI ]
+0x2B 0x2E : SUB  BP, [ addr16 ]
+0x2B 0x2F : SUB  BP, [ BX ]
+0x2B 0x3A : SUB  DI, [ BP + SI ]
+0x2B 0x3B : SUB  DI, [ BP + DI ]
+0x2B 0x3C : SUB  DI, [ SI ]
+0x2B 0x3D : SUB  DI, [ DI ]
+0x2B 0x3E : SUB  DI, [ addr16 ]
+0x2B 0x3F : SUB  DI, [ BX ]
+0x2B 0x40 : SUB  AX, [ BX + SI + addr8 ]
+0x2B 0x5B : SUB  BX, [ BP + DI + addr8 ]
+0x2B 0x5C : SUB  BX, [ SI + addr8 ]
+0x2B 0x5D : SUB  BX, [ DI + addr8 ]
+0x2B 0x5E : SUB  BX, [ BP + addr8 ]
+0x2B 0x5F : SUB  BX, [ BX + addr8 ]
+0x2B 0x60 : SUB  SP, [ BX + SI + addr8 ]
+0x2B 0x7B : SUB  DI, [ BP + DI + addr8 ]
+0x2B 0x7C : SUB  DI, [ SI + addr8 ]
+0x2B 0x7D : SUB  DI, [ DI + addr8 ]
+0x2B 0x7E : SUB  DI, [ BP + addr8 ]
+0x2C      : SUB    AL, %u8
+0x2D      : SUB    AX, addr16
+0x2E      : CS:
+0x2F      : DAS
+0x3A 0x21 : CMP  AH, [ BX + DI ]
+0x3A 0x22 : CMP  AH, [ BP + SI ]
+0x3A 0x23 : CMP  AH, [ BP + DI ]
+0x3A 0x24 : CMP  AH, [ SI ]
+0x3A 0x25 : CMP  AH, [ DI ]
+0x3A 0x26 : CMP  AH, [ addr16 ]
+0x3A 0x27 : CMP  AH, [ BX ]
+0x3A 0x28 : CMP  CH, [ BX + SI ]
+0x3A 0x29 : CMP  CH, [ BX + DI ]
+0x3A 0x2A : CMP  CH, [ BP + SI ]
+0x3A 0x2B : CMP  CH, [ BP + DI ]
+0x3A 0x2C : CMP  CH, [ SI ]
+0x3A 0x2D : CMP  CH, [ DI ]
+0x3A 0x2E : CMP  CH, [ addr16 ]
+0x3A 0x2F : CMP  CH, [ BX ]
+0x3A 0x3A : CMP  BH, [ BP + SI ]
+0x3A 0x3B : CMP  BH, [ BP + DI ]
+0x3A 0x3C : CMP  BH, [ SI ]
+0x3A 0x3D : CMP  BH, [ DI ]
+0x3A 0x3E : CMP  BH, [ addr16 ]
+0x3A 0x3F : CMP  BH, [ BX ]
+0x3A 0x40 : CMP  AL, [ BX + SI + addr8 ]
+0x3A 0x5B : CMP  BL, [ BP + DI + addr8 ]
+0x3A 0x5C : CMP  BL, [ SI + addr8 ]
+0x3A 0x5D : CMP  BL, [ DI + addr8 ]
+0x3A 0x5E : CMP  BL, [ BP + addr8 ]
+0x3A 0x5F : CMP  BL, [ BX + addr8 ]
+0x3A 0x60 : CMP  AH, [ BX + SI + addr8 ]
+0x3A 0x7B : CMP  BH, [ BP + DI + addr8 ]
+0x3A 0x7C : CMP  BH, [ SI + addr8 ]
+0x3A 0x7D : CMP  BH, [ DI + addr8 ]
+0x3A 0x7E : CMP  BH, [ BP + addr8 ]
+0x3B 0x21 : CMP  SP, [ BX + DI ]
+0x3B 0x22 : CMP  SP, [ BP + SI ]
+0x3B 0x23 : CMP  SP, [ BP + DI ]
+0x3B 0x24 : CMP  SP, [ SI ]
+0x3B 0x25 : CMP  SP, [ DI ]
+0x3B 0x26 : CMP  SP, [ addr16 ]
+0x3B 0x27 : CMP  SP, [ BX ]
+0x3B 0x28 : CMP  BP, [ BX + SI ]
+0x3B 0x29 : CMP  BP, [ BX + DI ]
+0x3B 0x2A : CMP  BP, [ BP + SI ]
+0x3B 0x2B : CMP  BP, [ BP + DI ]
+0x3B 0x2C : CMP  BP, [ SI ]
+0x3B 0x2D : CMP  BP, [ DI ]
+0x3B 0x2E : CMP  BP, [ addr16 ]
+0x3B 0x2F : CMP  BP, [ BX ]
+0x3B 0x3A : CMP  DI, [ BP + SI ]
+0x3B 0x3B : CMP  DI, [ BP + DI ]
+0x3B 0x3C : CMP  DI, [ SI ]
+0x3B 0x3D : CMP  DI, [ DI ]
+0x3B 0x3E : CMP  DI, [ addr16 ]
+0x3B 0x3F : CMP  DI, [ BX ]
+0x3B 0x40 : CMP  AX, [ BX + SI + addr8 ]
+0x3B 0x5B : CMP  BX, [ BP + DI + addr8 ]
+0x3B 0x5C : CMP  BX, [ SI + addr8 ]
+0x3B 0x5D : CMP  BX, [ DI + addr8 ]
+0x3B 0x5E : CMP  BX, [ BP + addr8 ]
+0x3B 0x5F : CMP  BX, [ BX + addr8 ]
+0x3B 0x60 : CMP  SP, [ BX + SI + addr8 ]
+0x3B 0x7B : CMP  DI, [ BP + DI + addr8 ]
+0x3B 0x7C : CMP  DI, [ SI + addr8 ]
+0x3B 0x7D : CMP  DI, [ DI + addr8 ]
+0x3B 0x7E : CMP  DI, [ BP + addr8 ]
+0x3C      : CMP    AL, %u8
+0x3D      : CMP    AX, addr16
+0x3E      : DS:
+0x3F      : AAS
+0x40      : INC    AX
+0x5B      : POP    BX
+0x5C      : POP    SP
+0x5D      : POP    BP
+0x5E      : POP    SI
+0x5F      : POP    DI
+0x60      : PUSHA
+0x7B      : JPO    $ + 2 + addr8
+0x7C      : JL $ + 2 + addr8
+0x7D      : JGE    $ + 2 + addr8
+0x7E      : JLE    $ + 2 + addr8
+||<
+</div>
+この311命令が使用可能な命令ですが、よく見てみると、MOV は使えませんし、演算命令も AND と SUB の一部だけです。
+これらの命令を使って、任意のコードを書いてみましょう。
+まずは AX を 0 にする、XOR AX, AX の代替コードです。
+>||
+0x25 0x40 0x22 : XOR  AX, 2240   ; %@"
+0x25 0x40 0x22 : XOR  AX, 4022   ; %"@
+||<
+0x2240 と 0x4022、それぞれと AND をとることで、AX レジスタの初期値に依存することなく AX レジスタを 0 にできました。
+次に、SUB 命令を使って AX レジスタの値を適切に設定します。
+>||
+0x2C 0x7E      : SUB  AL, 7E     ; ,~
+0x2C 0x25      : SUB  AL, 7E     ; ,%
+0x2C 0x21      : SUB  AL, 7E     ; ,!
+||<
+これで AX レジスタは 0x003C となりました。唯一利用可能なデータ転送命令である PUSHA を使用して、AX を含む全レジスタをスタック上に置きます。
+>||
+0x60           : PUSHA           ; `
+||<
+これで、AX,CX,DX,BX,SP,BP,SI,DIの順に各レジスタがスタック上にpushされました。引き続き POP 命令を利用して、AX以外の値をスタック上から削除します。
+>||
+0x5F           : POP    DI       ; _
+0x5E           : POP    SI       ; ^
+0x5B           : POP    BX       ; [
+0x5E           : POP    SI       ; ^
+0x5F           : POP    DI       ; _
+0x5E           : POP    SI       ; ^
+0x5D           : POP    BP       ; ]
+||<
+このように、7回POP命令を呼ぶことで、スタック上にはAXレジスタの値である 0x3C 0x00 という値のみが残りました(エンディアンに注意)。
+(余談ですが、POP命令は、上記に挙げた命令であればどのレジスタを対象にしてもよいのですが、生成されるバイナリが顔文字っぽくなるということから、上のようなレジスタを選定しています。)
+
+このように、SUB命令でAXレジスタに任意の値を生成、PUSHA でスタックに全レジスタの値を配置、POP×7でAX以外の値をスタックから削除、という手順を繰り返し、スタック上にデコーダのコードを生成、
+デコーダのコードがスタック上に配置できればあとはスタックにジャンプし、無事コードが実行される、という仕組みになっています。
+
+より複雑な記号バイナリプログラムについても、後日 id:TAKESAKO さんから<a href="http://perl-users.jp/articles/advent-calendar/2010/sym/">このトラック</a>で説明があると思いますのでお楽しみに！
+
+
