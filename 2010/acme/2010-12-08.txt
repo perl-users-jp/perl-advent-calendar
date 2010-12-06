@@ -73,7 +73,7 @@ use Acme::Tsu;
 
  これを再び実行すると、以下のようになります。
 
->|perl|
+>||
 $ perl helloworld.pl
 Hello world
 ||<
