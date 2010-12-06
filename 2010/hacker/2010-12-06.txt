@@ -1,0 +1,130 @@
+変態的正規表現モジュールを支える Regexp::Assemble::Compressed
+meta-author: nipotan
+meta-tags: perl, hacker, regexp
+
+<a href="http://perl-users.jp/articles/advent-calendar/2008/">2 年前の JPerl Advent Calendar</a> では<a href="http://perl-users.jp/articles/advent-calendar/2008/16.html">風邪でブッチ</a>した前科を持つ <a href="http://blog.livedoor.jp/nipotan/">nipotan</a> です。今回、<a href="http://perl-users.jp/articles/advent-calendar/2010/casual/">Casual Track</a> に申し込んだとついさっきまで思い込んでて、うっかり今年もやらかすところでした。
+
+Hacker Track は自分のモジュール紹介ということなので、今まで一度も紹介していない、結構軽いノリのやつでいかせてもらいます。
+
+私が Perl をはじめた頃、「ばよえ～ん警報発令!?」でお馴染みの大崎さんによる「<a href="http://www.din.or.jp/~ohzaki/perl.htm">Perl メモ</a>」をよく見ては、様々な Tips を参考にさせていただいてました。
+「ここの Tips のほとんど正規表現ソリューションじゃん！」とか驚愕しつ、正規表現のパワーに魅せられた私は、「それ正規表現じゃなくてもできるよ」ということを、無理矢理正規表現で実現しようとしたりする、今にして考えると、とてもひねくれた育ち方をした時代がありました。
+
+大崎さんは、RFC に記載されている BNF に基き「正規表現ハンドアセンブル」をして、完成したとてつもなく巨大な正規表現を「以下のようになりました」とかサラッと掲載していて、変態的な正規表現愛を感じます。
+まるで、バカリズムがさも当たり前のように「持つとしたらこうです」とか言っていて、周りはなんだかちょっと釈然としていないみたいな空気すら漂っていますね。
+
+かくいう私は、以前勤務していた名もなき中小企業で、電話番号の validation をうまいことやるようサラッと求められたことがあり、総務省の Web サイトに通信事業者に割り当てられた電話番号の一覧テーブルがあったことから、それを大崎さんのように「正規表現ハンドアセンブル」して、今から 7 年半ほど前、<a href="http://search.cpan.org/dist/Number-Phone-JP/">Number::Phone::JP</a> というモジュールを公開しました。
+
+しかし、当時は通信事業は言わば過渡期。あのタイミングでこんなものを作ってしまったせいで、時が経つにつれ validation の正確さは失なわれていき、面倒臭がって 4 年ぐらい放置したら頻繁にクレームが来てしまう始末。
+
+「どうしてこんな high-maintenance なもの作っちゃったかなぁ…」
+
+後悔の日々を過していた、あの頃、CPAN を彷徨っている頃に偶然出会ったのが <a href="http://search.cpan.org/dist/Regexp-Assemble/">Regexp::Assemble</a> というモジュール。
+Regexp::Assemble は、今でこそ、皆さんご存知のモジュールだと思いますが、かつてはこの素晴しいモジュールはマイナーな存在でした。
+大崎さんの「以下のようになりました」、バカリズムの「持つとしたらこうです」のようなノリで、かつて私がサラッと<a href="http://blog.livedoor.jp/nipotan/archives/17526053.html">電話番号の正規表現</a>を公開し、Regexp::Assemble すげぇよ！と焚き付けたところに miyagawa さんが<a href="http://blog.bulknews.net/mt/archives/001617.html">一気に爆発させた</a>ことから、今ではお馴染みになりました。
+そして、このモジュールの発見以降、逆に Number::Phone::JP は Regexp::Assemble を使って正規表現テーブルを作ることをはじめ、high-maintenance な「正規表現ハンドアセンブル」時代から一転、「正規表現自動生成」時代に突入したのです。
+
+しかしこの Regexp::Assemble ですが、条件によってはちょっと残念な結果になってしまうことがあります
+>|perl|
+use strict;
+use warnings;
+use Regexp::Assemble;
+
+my $ra = Regexp::Assemble->new;
+for my $num (0 .. 9) {
+    $ra->add($num);
+}
+print $ra->re;
+||<
+これを実行した場合の出力結果はこうなります
+>||
+(?-xism:\d)
+||<
+想定通り。
+
+では、この数値のループをこのように
+
+>|perl|
+use strict;
+use warnings;
+use Regexp::Assemble;
+
+my $ra = Regexp::Assemble->new;
+for my $num (1 .. 9) {
+    $ra->add($num);
+}
+print $ra->re;
+||<
+1 から 9 までにした場合、どういう結果になるかと言うと
+>||
+(?-xism:[123456789])
+||<
+間違ってはいないのですが、実に残念というか、惜しいというか何というか。
+この気持ちわかりますかねぇ。
+>|perl|
+use strict;
+use warnings;
+use Regexp::Assemble;
+
+my $ra = Regexp::Assemble->new;
+for my $char ('a' .. 'z') {
+    $ra->add($char);
+}
+print $ra->re;
+||<
+アルファベットなんか、もっと残念です。
+>||
+(?-xism:[abcdefghijklmnopqrstuvwxyz])
+||<
+いや、間違ってはいないのでいいんですが、何というか、もうちょっとどうにかなって欲しいというか。
+
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use Regexp::Assemble;
+
+my $ra = Regexp::Assemble->new;
+for my $char (qw(な に ぬ ね の)) {
+    $ra->add($char);
+}
+print $ra->re;
+||<
+日本語とかでも
+>||
+(?-xism:[なにぬねの])
+||<
+
+うーむ。
+
+で、この結果にもどかしさを感じる人向けに作ったのが、<a href="http://search.cpan.org/dist/Regexp-Assemble-Compressed/">Regexp::Assemble::Compressed</a> です。
+
+かつて Number::Phone::JP では、数字しか扱っていないとはいうものの、<code>[123456789]</code> のように冗長な文字クラスが大量に出現していて、それを更に正規表現を使ってコンパクトにまとめる処理を、テーブルを更新してモジュールをリリースするたび毎回のように行なっていました。
+ただでさえ high-maintenance なモジュールが、この「コンパクトにまとめる処理」を加えることによって、それ自体が煩わしくなるのはよくないなと思い、Regexp::Assemble の出力する結果に対して、私が考えるより良い正規表現道エッセンスを加えたものが、この Regexp::Assemble::Compressed なのです。
+
+では実際に見てみましょう。
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use Regexp::Assemble::Compressed;
+
+my $rac = Regexp::Assemble::Compressed->new;
+for my $char (1 .. 9, 'a' .. 'z', qw(な に ぬ ね の)) {
+    $rac->add($char);
+}
+print $rac->re;
+||<
+Regexp::Assemble::Compressed を使用した結果、この正規表現は以下のようになりました．
+>||
+(?-xism:[1-9a-zな-の])
+||<
+ほら、どうですか。私の言いたかったことがわかりますよね。
+これでなんだかモヤモヤしてた言いたいこともようやく言えるようになったよ！
+
+ポイズン！
+
+ちなみに、Regexp::Assemble::Compressed は、あくまで Regexp::Assemble の子クラスであり、ポイズンだなんだとRegexp::Assemble の威光を傘に着ているわけではありません。
+Regexp::Assemble という偉大なモジュールに感謝しつつ、「持つとしたらこうです」という新たなスタイルを提案してみました。
+この冬、あなたの正規表現をよりコンパクトに、よりエレガントにまとめてみませんか。
+
+明日は、いい国作ろう鎌倉.pm より、ドラキチで有名な typester さんです。
