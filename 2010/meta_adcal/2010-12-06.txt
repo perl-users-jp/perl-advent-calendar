@@ -1,3 +1,4 @@
+RSS 出力対応した作業ログ
 meta-author: mattn <mattn.jp@gmail.com>
 meta-tags: perl
 
