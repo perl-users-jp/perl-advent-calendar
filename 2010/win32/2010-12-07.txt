@@ -9,7 +9,7 @@ meta-tags: win32, perl
 
 
 でも色々あって書けない時もありますよね！気付いたら終電！勤務表更新しようと思って朝来たらトラブル！
-あるあるあるある！
+<span style="font-size: 1em">ある</span> <span style="font-size: 2em">ある</span> <span style="font-size: 3em">ある</span> <span style="font-size: 4em">ある</span> <span style="font-size: 5em">！</span>
 
 で、「えぇーーーっとあの日、何時から何時まで仕事したっけ...」とかなりませんか？なりますよね？
 Perl で解決しましょう！
