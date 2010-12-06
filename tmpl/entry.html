@@ -44,15 +44,25 @@
 
 
 <div class="entry">
-	<h1 class="entry-header">[% title %]&nbsp;<a href="http://b.hatena.ne.jp/entry/[% uri_for(req.path_info) %]"><img src="http://b.hatena.ne.jp/entry/image/[% uri_for(req.path_info) %]" alt="B!" /></a></h1><br />
+    <h1 class="entry-header">[% title %]&nbsp;<a href="http://b.hatena.ne.jp/entry/[% uri_for(req.path_info) %]"><img src="http://b.hatena.ne.jp/entry/image/[% uri_for(req.path_info) %]" alt="B!" /></a></h1><br />
     <div class="entry-content">
       [% text %]
     </div>
+
+    <div class="entry-notes">
+        [% FOR note IN footnotes %]
+        <div class="note" id="fn[% note.number %]">
+            *[% note.number %]:
+            [% note.note %]
+        </div>
+        [% END %]
+    </div>
+
     <div class="entry-meta">
         <a rel="bookmark" href="[% uri_for(req.path_info) %]">[% update_at %]</a>
         &nbsp;|&nbsp;
         <a href="[% uri_for(year _ '/' _ name _ '/') %]">Index</a>
-		<br />
+        <br />
 
         <div style="margin-top:12px;margin-bottom:-8px;">
           <div style="float:left;margin-right:8px;">
