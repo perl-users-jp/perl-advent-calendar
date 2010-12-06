@@ -1,0 +1,37 @@
+Furl - Lightning fast HTTP client library
+
+First, LWP is very good HTTP client library. It's de-facto standard in Perl5 world.
+But, it's bit slow if you are using for RPC over HTTP.
+
+For example, <a href="http://fallabs.com/kyototycoon/">KyotoTycoon</a> supports RPC over HTTP.
+
+Synopsis code is here.
+>|perl|
+    use Furl;
+
+    my $furl = Furl::HTTP->new(
+        agent   => 'MyGreatUA/2.0',
+        timeout => 10,
+    );
+
+    my ($minor_version, $code, $msg, $headers, $body) = $furl->request(
+        method => 'GET',
+        host   => 'example.com',
+        port   => 80,
+        path   => '/'
+    );
+    # or
+
+    # Accept-Encoding is supported but optional
+    $furl = Furl->new(
+        headers => [ 'Accept-Encoding' => 'gzip' ],
+    );
+    my $body = $furl->get('http://example.com/some/compressed');
+||<
+
+Furl does not requires XS(XS part exists, but optional.).
+
+<a href="http://search.cpan.org/dist/WWW-Curl/">WWW::Curl</a> is very fast too.
+But, it depends on libcurl. It's bit hard to install.
+
+regards,
