@@ -1,0 +1,114 @@
+インデックスに記事のタイトルを出してみる
+
+こんにちは。Acme関連でしか登場しないと思われているんじゃないかと危惧している<a href="http://twitter.com/maka2_donzoko">makamka</a>です。すいません嘘です。危惧していません。
+
+ほんの一部ですが私もカレンダーアプリのコードをいじりましたので、そのことについて記事を書きます。
+
+最初、各トラックのインデックスには記事へのリンクとして日付しか出ていませんでした。これだとちょっと寂しいので、記事のタイトルを出してみました。
+
+インデックス部分を処理するコードは下記のようになっていました。
+
+>|perl|
+my $t = Time::Piece->strptime( "$p->{year}/12/01", '%Y/%m/%d' );
+my @entries;
+while ( $t->mday <= 25 ) {
+    push @entries,
+      {
+        date   => Time::Piece->new($t),
+        exists => ( -e $root->file( $t->ymd . '.txt' ) )
+          && ( localtime->year > $p->{year}
+            || $t->yday <= localtime->yday ) ? 1 : 0,
+      };
+    $t += ONE_DAY;
+}
+$vars->{entries} = \@entries;
+||<
+
+
+記事がある場合にはファイルを読み込んで1行目のタイトルを取り出します。
+
+>|perl|
+my $t = Time::Piece->strptime( "$p->{year}/12/01", '%Y/%m/%d' );
+my @entries;
+while ( $t->mday <= 25 ) {
+    my $title;
+    my $exists = ( -e $root->file( $t->ymd . '.txt' ) )
+          && ( localtime->year > $p->{year}
+            || $t->yday <= localtime->yday ) ? 1 : 0;
+
+    if ( $exists ) {
+        my $fh    = $root->file( $t->ymd . '.txt' )->open;
+        $title = <$fh>; chomp($title);
+    }
+
+    push @entries,
+      {
+        date   => Time::Piece->new($t),
+        exists => $exists,,
+        title  => $title,
+      };
+    $t += ONE_DAY;
+}
+$vars->{entries} = \@entries;
+||<
+
+これでテンプレートの方で
+
+>|perl|
+[% entry.title %]
+||<
+
+とやれば各記事のタイトルが出るようになりました。賑やかになりましたね！
+
+ただ、これだとインデックスページを開くたびに毎回全部の記事を読みにいってしまいますので、キャッシュさせます。
+
+
+>|perl|
+my $t = Time::Piece->strptime( "$p->{year}/12/01", '%Y/%m/%d' );
+my $cache = Cache::MemoryCache->new( { namespace => $p->{ name } } );
+my @entries;
+while ( $t->mday <= 25 ) {
+    my $title;
+    my $exists = ( -e $root->file( $t->ymd . '.txt' ) )
+          && ( localtime->year > $p->{year}
+            || $t->yday <= localtime->yday ) ? 1 : 0;
+
+    if ( $exists ) {
+        my ( $cached_mtime, $cached_title ) = split/\t/, ( $cache->get( $t->mday ) || "0\t" );
+        my $mtime = $root->file( $t->ymd . '.txt' )->stat->mtime;
+        if ( not $cached_title or $mtime > $cached_mtime ) {
+            my $fh    = $root->file( $t->ymd . '.txt' )->open;
+            $title = <$fh>; chomp($title);
+            $cache->set( $t->mday => "$mtime\t$title", 'never' );
+        }
+        else {
+            $title = $cached_title;
+        }
+    }
+
+    push @entries,
+      {
+        date   => Time::Piece->new($t),
+        exists => $exists,,
+        title  => $title,
+      };
+    $t += ONE_DAY;
+}
+$vars->{entries} = \@entries;
+||<
+
+これで一度読み込んだタイトルはキャッシュされ、記事ファイルの更新時間が変更された時だけ、タイトルが更新されるようになりました。
+なお、上記のコードのファイルの更新時間を取得する部分、私は
+
+>|perl|
+$root->file( $t->ymd . '.txt' )->stat->[9];
+||<
+
+と野暮ったい書き方をしていたのですが、後でgfxさんに
+
+>|perl|
+$root->file( $t->ymd . '.txt' )->stat->mtime;
+||<
+
+と、モダンなものに書き直してもらっています。
+
