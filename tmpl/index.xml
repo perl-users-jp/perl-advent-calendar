@@ -13,10 +13,10 @@
       <guid isPermaLink="true">[% uri_for(entry.link) %]</guid>
       <description>
       [% entry.text | unmark_raw %]
-      [% FOR note IN entry.footnotes %]<div class="note" id="fn[% note.number %]">
+      [% FOR note IN entry.footnotes %][% '<div class="note" id="fn[% note.number %]">' %]
           *[% note.number %]:
           [% note.note | unmark_raw %]
-      </div>
+      [% '</div>' %]
       [% END %]
       </description>
       <author>[% entry.author %]</author>
