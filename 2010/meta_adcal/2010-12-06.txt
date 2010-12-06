@@ -1,14 +1,14 @@
 meta-author: mattn <mattn.jp@gmail.com>
 meta-tags: perl
 
-����ɂ���BPerl �E�̍���͈�ƌĂ΂�Ă��� <a href="http://mattn.kaoriya.net/">mattn</a> �ł��B�L���[���t�́u���񂽁A�R�[�h�������Ă邺�v�ł�((�v�o�T))�B
-���񏉂߂� JPerl Advent Calendar �ɎQ�����܂������A���� Advent Calendar �𓮂����Ă�T�[�o�A�v���̃\�[�X���K�`���K�`���ƐG���Ă���A�ƂĂ������̂Ȃ��Ă��Ȃ���l�ł��B
+こんにちわ。Perl 界の桜井章一と呼ばれている <a href="http://mattn.kaoriya.net/">mattn</a> です。キメゼリフは「あんた、コードが煤けてるぜ」です((要出典))。
+今回初めて JPerl Advent Calendar に参加しましたが、この Advent Calendar を動かしてるサーバアプリのソースをガチャガチャと触っている、とてもしつけのなっていない大人です。
 
-���̃T�[�o�A�v���ō��񎄂������ꂽ�̂́ARSS �̏o�͕����ł��������͂ǂ̗l�ɑΉ���������������܂��B�ǂ��炩�Ƃ����ƍ�ƃ��O�ł��B
+このサーバアプリで今回私が手を入れたのは、RSS の出力部分ですが今日はどの様に対応したかを説明します。どちらかというと作業ログです。
 
-<a href="https://github.com/p5-app-adventcalendar/p5-app-adventcalendar">App::AdventCalendar</a> �� kan ���񂪂��� JPerl Advent Calendar �ׂ̈ɏ������T�[�o�A�v���ŁA�e�L�X�g�t�@�C����H�킵�ău���O�`���Ɏd�グ��㕨�ł��B���g�� PSGI �`���̃��N�G�X�g handler �ƁAText::Xatena ���g�������`�ARouter::Simple ���g�������[�e�B���O�AText::Xslate ���e���v���[�g�G���W���Ɏg���Ă��܂��B���\�l�C�̂��镨���W�߂���肾�Ǝv���܂��B
-���ɕ�����₷������Ă���Ǝv���̂ŁA���ЎQ�l�Ƀ\�[�X������ƕ׋��ɂȂ邩�Ǝv���܂��B���Ȃ݂Ɏ����m�F���Ă���̂� Windows ��ł̓���͕ۏႵ�܂��B
-RSS �Ή�����ɂ�����A�܂����[�e�B���O���Ă��镔����G��܂����B�ʏ�̋L�����T�[�u���Ă���n���h���͈ȉ��̕����ł��B
+<a href="https://github.com/p5-app-adventcalendar/p5-app-adventcalendar">App::AdventCalendar</a> は kan さんがこの JPerl Advent Calendar の為に書いたサーバアプリで、テキストファイルを食わしてブログ形式に仕上げる代物です。中身は PSGI 形式のリクエスト handler と、Text::Xatena を使った整形、Router::Simple を使ったルーティング、Text::Xslate をテンプレートエンジンに使っています。結構人気のある物を集めた作りだと思います。
+非常に分かりやすく作ってあると思うので、ぜひ参考にソースを見ると勉強になるかと思います。ちなみに私が確認しているので Windows 上での動作は保障します。
+RSS 対応するにあたり、まずルーティングしている部分を触りました。通常の記事をサーブしているハンドラは以下の部分です。
 
 >|perl|
 $router->connect(
@@ -22,7 +22,7 @@ $router->connect(
 );
 ||<
 
-���� URL �̌��� rss ��t���� RSS ���o�͂���l�ɂ������̂ŁA���̕������R�s�y���Ĉȉ���ǉ��B
+この URL の後ろに rss を付けて RSS を出力する様にしたいので、この部分をコピペして以下を追加。
 
 >|perl|
 $router->connect(
@@ -37,18 +37,18 @@ $router->connect(
 );
 ||<
 
-�e�n���h���ɋ��ʓI�ɐݒ肳��Ă��� content_type �� "application/xml" �ɁAtmpl �� "index.xml" �ɕύX���܂����B�n���h���̒��g�͒ʏ��HTML�łƕς��܂��񂪁ARSS ��z�M����ɂ͊�炩��񂪑���܂���Blink�Acategory�Aauthor �ɐݒ肷����e�ł��B
-link �� HTML �ł̃����N���w���Ηǂ��̂ŃJ�e�S���Ɠ��t�ԍ��𑫂��Đݒ�B�c�� category �� author �ɂ��Ă͋L�����������{�l���ݒ肷�ׂ����̂Ȃ̂ŁA���^�����z���グ��d�g�݂�ʓr�������܂����B
-�ǂ�ȕ��ɋL�q���邩�́A<a href="http://mattn.kaoriya.net/software/lang/perl/20101204012213.htm">����������L��</a>�����Ē������Ƃ��܂��B
+各ハンドラに共通的に設定されている content_type を "application/xml" に、tmpl を "index.xml" に変更しました。ハンドラの中身は通常のHTML版と変わりませんが、RSS を配信するには幾らか情報が足りません。link、category、author に設定する内容です。
+link は HTML 版のリンクを指せば良いのでカテゴリと日付番号を足して設定。残る category と author については記事を書いた本人が設定すべきものなので、メタ情報を吸い上げる仕組みを別途実装しました。
+どんな風に記述するかは、<a href="http://mattn.kaoriya.net/software/lang/perl/20101204012213.htm">先日書いた記事</a>を見て頂く事とします。
 
-RSS �o�͑Ή����s�����ہA�ʏ� HTML �łƋ��ʂ���e�L�X�g�t�@�C����͏����� parse_entry �Ƃ�T�u���[�`���ɂ܂Ƃ߂܂������A�����ɏ�����ǉ����܂����B�e�L�X�g��ǂݍ���ł��镔���������
+RSS 出力対応を行った際、通常 HTML 版と共通するテキストファイル解析処理を parse_entry とるサブルーチンにまとめましたが、そこに処理を追加しました。テキストを読み込んでいる部分を見ると
 
 >|perl|
 my $text = $file->slurp( iomode => '<:utf8' );
 my ( $title, $body ) = split( "\n\n", $text, 2 );
 ||<
 
-�e�L�X�g�Ɩ{���͍ŏ��̋�s�ŋ�؂���̂ŁA��L�����N��Ő������Ă���L�q���@�̏ꍇ�A�^�C�g�����Ƀ��^��񂪊܂܂��܂��ˁB
+テキストと本文は最初の空行で区切られるので、上記リンク先で説明している記述方法の場合、タイトル側にメタ情報が含まれれますね。
 
 >|perl|
 my ( $tmp, %meta ) = ( '', () );
@@ -65,7 +65,7 @@ for ( split /\n/, $title ) {
 $title = $tmp;
 ||<
 
-����Ȋ����Ƀ^�C�g��������umeta-XXX�v�ƂȂ��Ă��镔�����E���グ�A�^�C�g�����Đݒ肵�܂��B�܂� parse_entry ���Ԃ��n�b�V�����t�@�����X�ɑ΂��Ĉȉ��̗l�Ƀ��^�����}�[�W���܂����B
+こんな感じにタイトル部から「meta-XXX」となっている部分を拾い上げ、タイトルを再設定します。また parse_entry が返すハッシュリファレンスに対して以下の様にメタ情報をマージしました。
 
 >|perl|
 return {
@@ -74,20 +74,20 @@ return {
     update_at => $ftime->strftime( '%c' ),
     pubdate   => $ftime->strftime( '%Y-%m-%dT%H:%M:%S' ),
     footnotes => $inline->can('footnotes') ? $inline->footnotes : {},
-    %meta, <em>����</em>
+    %meta, <em>ここ</em>
 };
 ||<
 
-����� RSS �e���v���[�g�� entry.author �Ƃ����ϐ����Q�Əo����l�ɂȂ�܂��B
-���čŌ�ɁAcategory �ł��Bmeta-tags �Ƃ������^��񂩂畡���� category �m�[�h�����K�v������܂��Bmeta-tags �ŋL���̒��҂ɐݒ肵�Ă�������J���}�Z�p���[�g�������z��ɏ悹�ς��܂��B
-���^���̋z���グ�͔ėp�I�ɍ�����̂ŊȒP�ł��ˁB
+これで RSS テンプレートで entry.author という変数が参照出来る様になります。
+さて最後に、category です。meta-tags というメタ情報から複数の category ノードを作る必要があります。meta-tags で記事の著者に設定してもらったカンマセパレート文字列を配列に乗せ変えます。
+メタ情報の吸い上げは汎用的に作ったので簡単ですね。
 
 >|perl|
 my @tags = split /,\s*/, $entry->{tags} || '';
 $entry->{categories} = \@tags;
 ||<
 
-���Ƃ̓e���v���[�g�� entry.categories �����[�v�ŉ񂵂Ă������ok�B
+あとはテンプレートで entry.categories をループで回してあげればok。
 
 >|xml|
 <?xml version="1.0" encoding="UTF-8"?>
@@ -113,4 +113,4 @@ $entry->{categories} = \@tags;
 </rss>
 ||<
 
-�ȒP�ł��ˁB
+簡単ですね。
