@@ -5,9 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" />
     <title>[% name %] - [% conf.title %]</title>
-<!--
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://perl-users.jp/articles/advent-calendar/2009/index.xml" />
--->
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="[% uri_for(year _ '/' _ name _ '/rss') %]" />
 </head>
 <body class="layout-two-column-right">
 <div id="container">
