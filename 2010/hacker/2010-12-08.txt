@@ -1,0 +1,164 @@
+HTTPサーバフレームワークとしてのPlack活用法と、Plack::Middleware::Pictogram::MobileJpを使ったその事例紹介
+meta-author: hirose31
+meta-tags: perl, hacker, plack, psgi, mobile
+
+みなさん、<a href="http://plackperl.org/" title="Plack">Plack</a>使ってますか？ 弊社でも<a href="http://search.cpan.org/dist/Starlet/" title="Starlet">Starlet</a>をNginxのバックエンドに置いてプロダクション環境でモリモリ使っているのですが、ちょっとした検証にもPlackは大変重宝しています。
+
+具体的には、キャッシュに関連するレスポンスヘッダ(Last-Modified、Expiresなど)の組み合わせと、条件付きGETやブラウザキャッシュの挙動をブラウザごとに調べたときに使いました。あくまで検証用と割りきって特にファイル分割などはせず、psgiファイルにゴリゴリっとベロっとコードを書いてパパパっと検証用のHTTPサーバを作りました。
+
+このように、限定された目的のHTTPサーバをサササっと実装してペロっと上げるのにもPlackは大変有益です。
+
+そこで今日は、検証用簡易HTTPサーバとしてのPlack活用法ということで、最近あった事例をひとつ紹介したいと思います。
+
+* モバイルサイトのテンプレートをPCブラウザで確認したい
+
+タイトルママなんですが、
+
+- モバイルサイト用のHTMLを、エンジニアじゃない人に編集させたい
+-- 非エンジニア向けにテンプレートタグがないHTMLで管理すると、あとでmergeしてタグを埋め込む作業がクソ面倒くさいのでイヤ
+-- なので、テンプレートのタグが入っている状態のファイルを編集させたい
+--- となると、テンプレートを解釈(変数展開、ヘッダ、フッタの差し込み等)するアプリケーションサーバが必要
+-- 3キャリア対応の絵文字を使いたい
+--- Firefoxと<a href="http://firemobilesimulator.org/" title="FireMobileSimulator">FireMobileSimulator</a>で、PCブラウザで絵文字の確認はできる
+--- が、3キャリ対応するには、User-Agentを見て絵文字のコードポイントを変換する必要がある
+--- となると、UAを見て動的にコード変換する機構が必要
+
+という要件がありました。
+
+当初、データストアをモックに差し換えたWebアプリをまるまる動かそうかなと思ったのですが、必要なのはテンプレと絵文字の変換程度なのでちょっと牛刀かなぁと思い、psgiにモリっと必要な実装をしてplackupでHTTPサーバを立てることにしました。
+
+** 実装編
+
+*** psgiファイル
+
+psgiファイルはこんな感じです。(※コードはイメージです)
+
+>|perl|
+# -*- mode: cperl; -*-
+
+use utf8;
+use Text::Xslate qw(0.2013);
+use Text::Xslate::Util qw(hash_with_default);
+use Encode;
+use Plack::App::Directory;
+
+my $TMPL_DIR     = '/home/hirose31/work/hidek48/tmpl';
+my @INCLUDE_DIRS = (); # optional
+my $STATIC_DIR   = '/home/hirose31/work/hidek48/htdocs';
+
+###
+my %_vars = (
+    user => {
+        name => "hidek",
+        age  => 20*2,
+    },
+   );
+###
+
+my $vars  = hash_with_default(\%_vars, sub { qq{FILLME ($_[0])} });
+
+my $xslate = Text::Xslate->new(
+    path        => [$TMPL_DIR, @INCLUDE_DIRS],
+    cache       => 0,
+    input_layer => ':utf8',
+    syntax      => 'TTerse',
+    module      => [ 'Text::Xslate::Bridge::TT2Like' ],
+    verbose     => 2,
+   );
+
+my $app = sub {
+    $env = shift;
+
+    my $path = $env->{PATH_INFO};
+    $path .= '.tx' if ($path !~ /\.tx$/ && ! -d "$TMPL_DIR/$path");
+    my $code = 200;
+
+    if (-d "$TMPL_DIR/$path") {
+        my $res = Plack::App::Directory->new({
+            root     => $TMPL_DIR,
+            encoding => "shift_jis",
+        })->to_app->($env);
+
+        # mangle body of response if necessary
+        #$res->[2][0] =~ s{href='/}{href='/hidek48/}g;
+        return $res;
+    } else {
+        my $body = $xslate->render($path, $vars);
+        my $body_encoded = Encode::encode(shift_jis, $body);
+
+        return [$code,
+                ['Content-Type'   => 'application/xhtml+xml; charset=shift_jis',
+                 'Content-Length' => length($body_encoded)],
+                [$body_encoded]];
+    }
+};
+
+use Plack::Builder;
+builder {
+    enable "Pictogram::MobileJp", notation => 'unicode';
+    enable "Static",
+        path => sub { s!^/static/!! || m!(jpe?g|gif|png)$! },
+        root => $STATIC_DIR;
+    $app;
+}
+
+__END__
+
+plackup -r --port 1970 -a /home/hirose31/work/hidek48/check-tmpl.psgi
+
+||<
+
+tmpl/top.txはこんな感じで、
+
+>||
+[% INCLUDE 'inc/header.tx' %]
+
+<div style="text-align:center;">
+  <img src="/static/logo.jpg" />
+</div>
+
+<p>
+こんにちは[% user.name %]さん！
+</p>
+
+<p>
+今日のラッキー推しメンは[% oshimen %]でごわす<span style="color:#FF0000;">&#xE6ED;</span>
+</p>
+
+[% INCLUDE 'inc/footer.tx' %]
+||<
+
+アクセスするとこんなふうに表示されます:
+
+<div style="text-align:center;">
+  <img src="pictogram-mobilejp/display-au.png" alt="hidek48" />
+</div>
+
+*** テンプレートの処理
+
+例ではテンプレートエンジンに今をトキメク<a href="http://search.cpan.org/dist/Text-Xslate/" title="Text::Xslate">Text::Xslate</a>を使っています。
+
+処理自体は特に奇をてらったところはなく、$appの中で素直にrenderしてShift_JISに変換したものをレスポンスとして返しているだけです。
+
+ひとつ注目していただきたい点は、テンプレートに埋め込む変数等は、冒頭の%_varsで定義していて(ここは別ファイルにくくり出した方が見通しがよくなると思います)、テンプレ変数の指定洩れ、変数名のtypoをあぶり出すために、
+
+>||
+my $vars  = hash_with_default(\%_vars, sub { qq{FILLME ($_[0])} });
+||<
+
+とし、表示例のように、存在しない変数を参照しようとした場合には「FILLME (変数名)」と表示されるようにしているところです。これはText::Xslage 0.2013 以降の機能です。
+
+*** 絵文字の処理
+
+さて、続いて絵文字の処理ですが、拙作のPlack::Middleware::Pictogram::MobileJpを使い、わずか1行書き足すだけで済んでいます。ね、簡単でしょう？
+
+- <a href="https://github.com/hirose31/Plack-Middleware-Pictogram-MobileJp" title="Plack::Middleware::Pictogram::MobileJp">Plack::Middleware::Pictogram::MobileJp</a>
+
+前掲のtmpl/top.txの通り、絵文字はドコモのユニコード記法で指定していますが、au端末のふりをしている前掲の画面キャプチャでもちゃんと絵文字がいい塩梅に変換されて表示されているのがわかりますね。
+
+* おわりに
+
+以上、自作モジュールの紹介というより、「既存のMiddleware＋足りないところはコード書いて好きに制御可能なHTTPサーバフレームワーク」としてのplackupの紹介でしたがいかがだったでしょうか。みなさん年に三回ぐらいは「俺HTTPサーバ書くわ。あ〜俺マジでHTTPサーバ書くわ〜」と思うことがあると思います。そういったときにこのエントリを思い出していただけると幸いです。
+
+さて、明日は、同僚でもあり征夷大将軍でもあるYappoさんです。
+
