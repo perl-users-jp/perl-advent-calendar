@@ -1,0 +1,187 @@
+AnyEvent::APNSでiPhoneのプッシュ通知を実装しよう
+meta-author: typester
+meta-tags: perl, hacker, iphone, anyevent
+
+perlハッカー1のドラゴンズファンと自負しております、typesterです。
+今回はあんまりちゃんとした記事がないiPhoneのプッシュ通知の仕組みと、それをperlから実装するにはどうしたらええんじゃ、という話をします。
+
+* iPhoneプッシュ通知の概要
+
+iPhoneのプッシュ通知とはサーバーアプリケーションからリアルタイムにiPhoneに通知を送ることができる仕組みのことで、
+通知対象のiPhoneアプリケーションが起動していなくても、またiPhoneがロック状態であってもいつでも通知を送ることができます。
+
+通知が送られるとiPhoneでは以下のような画面が表示され、その通知からアプリケーションを起動することができます。
+
+<a href="http://www.flickr.com/photos/typester/5239485853/" title="IMG_1746 by typester, on Flickr"><img src="http://farm6.static.flickr.com/5242/5239485853_74b5cfb93d.jpg" width="333" height="500" alt="IMG_1746" /></a>
+
+* iPhoneプッシュ通知の仕組み
+
+サーバーアプリケーション（通知プロバイダーと言います）はiPhoneに直接通知パケットを送るわけではなく、代わりにアップルが用意しているプッシュ通知専用の通知サーバー（Apple Push Notification Service、以下APNS）に対してパケットを送ります。
+APNSはその通知をうけ、対象のiPhoneにプッシュ通知を送ります。
+
+>|perl|
+.----------.      .------.      .--------.
+|          |      |      |      |        |
+| provider +----> | APNS +----> | iPhone |
+|          |      |      |      |        |
+'----------'      '------'      '--------'
+||<
+
+プロバイダーとAPNSの間のやりとりは簡単な独自形式になっていますが、AnyEvent::APNSを使用するかぎり意識する必要はありません。詳しくは<a href="https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/index.html">ドキュメント</a>を参照ください。
+またこの接続はTLSを使用する必要があり、その証明書によってproviderは識別されます。
+
+* 証明書の取得と展開
+
+<a href="https://developer.apple.com/ios/">iOS Provisioning Portal</a>のApp IDsの項からPush通知の設定を有効にすると、そのアプリケーション専用の証明書鍵ペアをダウンロードすることが出来ます。
+
+これは .p12 と言う拡張子の証明書と鍵をペアで保存している形式ですが、AnyEvent::APNSから利用するためには分離してあげる必要があります。
+それには以下のコマンドを使用します。
+
+>|perl|
+openssl pkcs12 -in app.p12 -clcerts -nokeys -out app.cer
+openssl pkcs12 -in app.p12 -nocerts -nodes -out app.key
+||<
+
+* AnyEvent::APNS でプッシュ通知を送る
+
+以下に一番シンプルな例を挙げます。
+
+>|perl|
+use strict;
+use warnings;
+use AnyEvent::APNS;
+
+my $cv = AnyEvent->condvar;
+
+my $apns; $apns = AnyEvent::APNS->new(
+    certificate => '/path/to/app.cer',
+    private_key => '/path/to/app.key',
+    on_error    => sub { # something went wrong },
+    on_connect  => sub {
+        $apns->send( $device_token => {
+            aps => {
+                alert => 'ほげ',
+            },
+        });
+    },
+);
+$apns->connect;
+
+$cv->recv;
+||<
+
+これは先ほど作成した app.cer、app.key という証明書・鍵ペアを使用してAPNSへ接続し、接続できしだい $device_token というiPhoneに対して「ほげ」と言う通知をおくっています。
+
+デバイストークンはiPhoneの通知用のIDで、これは別途取得する必要があります（後ほど説明します）
+そのIDで表されたiPhoneにこの通知が送られることになります。
+
+実際にはこのように一回だけ通知をおくり終了するプログラムではなく、APNSには接続を貼りっぱなしにしておいて外部からすきなときに通知を送るように実装する必要がありますが、
+それには AnyEvent::JSONRPC::Lite や AnyEvent::MPRPC といったモジュールを使用すれば簡単ですね。
+
+AnyEvent::MPRPC を使用した例を見てみましょう。
+
+>|perl|
+use strict;
+use warnings;
+use AnyEvent::APNS;
+use AnyEvent::MPRPC::Server;
+
+my $cv = AnyEvent->condvar;
+
+my $apns; $apns = AnyEvent::APNS->new(
+    certificate => '/path/to/app.cer',
+    private_key => '/path/to/app.key',
+    on_error    => sub { # something went wrong },
+    on_connect  => sub {
+        $apns->send( $device_token => {
+            aps => {
+                alert => 'ほげ',
+            },
+        });
+    },
+);
+$apns->connect;
+
+my $server = AnyEvent::MPRPC::Server->new( port => 4423 );
+$server->reg_cb(
+    notify => sub {
+        my ($res_cv, $device_token, $payload) = @_;
+
+        $apns->send($device_token, $payload);
+    },
+);
+
+$cv->recv;
+||<
+
+この例ではプッシュ通知をおくる処理をMessagePack-PRCのnotifyメソッドとして実装しています。
+このように接続を使いまわすことで、効率よく通知が行えるというわけです。
+
+ここで注意する必要としてはこのデバイストークンはバイナリなので、MPRPCではうまく扱えますがJSONRPCなどではそのままでは扱えません。別途base64するなどしてあげる必要があります。
+あと本番で使う場合はエラー処理や再接続処理もいれる必要があるでしょう。
+
+また、公式ドキュメントには
+
+> APNs may consider connections that are rapidly and repeatedly established and torn down as a denial-of-service attack. 
+
+とあり、通知をするたびにAPNSに対してTCPコネクションを張ったり切ったりしているとDOS攻撃として扱われ最悪サービスが利用できなく恐れがありますので、
+なるべく上の例のように接続を使いまわすよう実装するべきでしょう。
+
+* 通知payloadの中身
+
+上の例では
+
+>|perl|
+{
+    aps => {
+        alert => 'ほげ',
+    },
+}
+||<
+
+と言う通知を行っていましたが、ここでは通知本文以外にも様々なオプションを指定することが出来ます。
+
+>|perl|
+{
+    aps => {
+        alert => 'ほげ',
+        badge => 100,
+        sound => 'hoge.wav',
+    },
+}
+||<
+
+などのようにすると通知時にアプリケーションアイコンに100と言うバッジ表示をつけ、hoge.wavという音を鳴らすというようなことができます。
+こちらも詳しくはドキュメントに一覧されていますので参照ください。
+
+
+* デバイスIDの取得方法
+
+通知を送信するためにはターゲットのデバイストークンが必要ですが、これはアプリケーション専用な通知専用のIDで、アプリケーション内で取得する必要があります。
+（以降はObjective-Cのコードになります）
+
+>|objc|
+[[UIApplication sharedApplication] registerForRemoteNotificationTypes:(UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeSound)];
+||<
+
+を呼んでプッシュ通知を初期化し、成功すると、
+
+>|objc|
+-(void)application:(UIApplication *)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)devToken {
+    const void *devTokenBytes = [devToken bytes];
+    // これをサーバーに送信する
+}
+||<
+
+という感じでコールバックでトークンを得ることが出来ますので、これを何らかの方法でサーバー（通知プロバイダー）へ転送してあげればいいということになります。
+
+* まとめ
+
+iPhoneのプッシュ通知についてざっと説明しました。
+初見ではだいぶん複雑に見えるかもしれませんが、通知の仕組み自体は至ってシンプルなものです。
+
+慣れればさくっと実装でき、かつiPhoneアプリとしては強力な機能です。
+iPhone周りを触っている方はぜひ身につけておくと良いと思います。
+
+明日はスーツが似合うことで有名なhirose31さんです。
+
