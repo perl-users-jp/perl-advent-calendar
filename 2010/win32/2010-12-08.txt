@@ -1,0 +1,150 @@
+Win32::GUITest と Win32::Clipboard で GUI 操作を自動化する
+meta-author: xaicron <xaicron@cpan.org>
+meta-tags: win32, perl
+
+こんにちわ。のどの痛みと熱でだいぶ体がだるい上に、開けていないフィギュアの箱を思いっきり踏んでしまって軽く凹んでいる <a href="http://blog.livedoor.jp/xaicron/">xaicron</a> です。
+
+今日紹介するモジュールは <a href="http://search.cpan.org/dist/Win32-GuiTest/">Win32::GUITest</a> というとってもナイスなモジュールです。
+これの詳しい説明は、その昔に <a href="http://perl-users.jp/articles/advent-calendar/2008/13.html">amachang が書いています</a>のでそちらを見るのが良いかと思います。
+簡単にいうと、window 名から window を取得したり、キーボード入力やマウス入力をエミュレートしてくれる便利なやつです。
+
+普段は、iTunes や foobar2000 を愛用していますが、たまに楽曲情報が見つからなかったりするときに、割と簡単に gracenote に情報を登録できるので SonicStage を使ってます。（最近、X-Application とかいう名前に変わってしまったみたいですが）
+しかし、これのインターフェースってまぁ当然のことながら GUI なんですよね。で、GUI ってめんどくさいじゃないですか（ぇ
+というわけで、YAML ファイルからタイトルや楽曲名を取ってきて、この GUI にテロテロと突っ込んでくれるやつを試しに書いてみました。
+
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use Win32::GuiTest ':ALL';
+use Win32::Clipboard;
+use Win32::API;
+use YAML 0.71 qw/LoadFile/;
+use Data::Recursive::Encode;
+use Time::HiRes qw/sleep/;
+
+my $file = shift || die "Usage: $0 config.yaml";
+my $data = Data::Recursive::Encode->encode(cp932 => LoadFile $file);
+
+UnicodeSemantics 1;
+
+my $clip = Win32::Clipboard();
+$clip->Empty;
+
+my ($win, @wins) = FindWindowLike 0 => '^Gracenote';
+die 'Oops!' if @wins;
+my $childs = [ GetChildWindows $win ];
+SetForegroundWindow $win;
+
+my $MessageBox = Win32::API->new('user32', 'MessageBoxA', 'NPPN', 'N');
+
+&main();exit;
+
+sub main {
+    set_data_lang();
+    set_title($data->{title});
+    set_artist($data->{artist});
+
+    $MessageBox->Call(0, Encode::encode(cp932 => 'ジャンルを選択して、このダイアログを閉じてください'), 'perl', 0x00000030 | 0x00010000 | 0x00040000);
+    SetForegroundWindow $win;
+
+    select_track_tab();
+    set_tracks($data->{tracks});
+}
+
+# Album Tab
+sub set_data_lang {
+    my $lang_combo = get_next_component('^データ言語$');
+    SetFocus $lang_combo;
+    SelComboItem $lang_combo, 43; # 日本語
+}
+
+sub set_title {
+    my $title = shift;
+    my $title_edit = get_next_component('^アルバム情報$');
+    SetFocus $title_edit;
+    sleep 0.1;
+    SendKeys '{END}';
+    SendKeys '{BS}' for (0..8);
+    $clip->Set($title);
+    SendKeys '^v';
+}
+
+sub set_artist {
+    my $artist = shift;
+    my $artist_edit = get_next_component('^レコーディング アーティスト$');
+    SetFocus $artist_edit;
+    sleep 0.1;
+    $clip->Set($artist);
+    SendKeys '^v';
+}
+
+# Track Tab
+sub select_track_tab {
+    my ($tab1) = FindWindowLike $win, '^Tab1$' or die 'Oops';
+    SetFocus $tab1;
+    sleep 0.1;
+    SendKeys '{RIGHT}';
+}
+
+sub set_tracks {
+    my $tracks = shift;
+    my ($track_list, $i) = get_next_component('^トラック 1/\d+$');
+    my $track_edit = $childs->[$i + 2];
+    for my $track (@$tracks) {
+        SetFocus $track_edit;
+        sleep 0.1;
+        SendKeys '{END}';
+        SendKeys '{BS}' for (0..9);
+        $clip->Set($track);
+        SendKeys '^v';
+        SendKeys '+{TAB}';
+        SendKeys '{DOWN}';
+    }
+}
+
+# Util
+sub get_next_component {
+    my $reg = shift;
+
+    my $i = 0;
+    for (; $i < @$childs; $i++) {
+        last if GetWindowText($childs->[$i]) =~ /$reg/;
+    }
+
+    return $childs, $i + 1 if wantarray;
+    return $childs->[$i + 1];
+}
+||<
+
+ソースはこんなんで、
+
+>|yaml|
+---
+title: Last Song
+artist: Girls Dead Monster starring marina
+tracks:
+  - Last Song
+  - Hot Meal
+  - God Bless You
+||<
+
+みたいな YAML を食わせます。
+
+これを X-Application を起動して、以下の画面の時に実行します。
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-08/dialog1.png" />
+
+>||
+$ insert_gracenote.pl track_list.yaml
+||<
+
+そうすると、タイトルとアーティストが入力されて、以下のようにダイアログが出るので、適当にジャンルを選んであげます。
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-08/dialog2.png" />
+
+選び終わってダイアログを閉じると、トラックリストの入力になるので、あとは入力が終わるまで待てばOKです！
+最終的に以下のような感じになってめでたしめでたし。
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-08/dialog3.png" />
+
+Win32::GUITest には WMSetText() という、edit box に文字を突っ込む API があるんですが、なんかこいつだとうまくいかなかったので、頑張って バックスぺースで文字を消したり、YAML の定義をクリップボードに突っ込んでそれを Ctrl-V で貼りつけたりとかなりナイーブな実装になったけど、なんとなく動きましたね！！
+
+Win32::GUITest + Win32::Clipboard を使えば、GUI 操作もお手の物ですね！！バンザイ！！
