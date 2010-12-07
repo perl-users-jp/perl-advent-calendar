@@ -9,7 +9,7 @@
 <script type="text/javascript">
 function foo(){
     var node;
-    if( document.location.href.match( /\/sym\/\d*$/ ) ){
+    if( document.location.href.match( /\/sym\// ) ){
         node = document.getElementById("banner-description");
         if( node ){
             node.innerHTML = node.innerHTML.replace( /Perl\s*/gi, "記号プログラミング" );
