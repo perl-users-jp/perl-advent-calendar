@@ -132,18 +132,18 @@ tracks:
 みたいな YAML を食わせます。
 
 これを X-Application を起動して、以下の画面の時に実行します。
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-08/dialog1.png" />
+<img width="420px" src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-08/dialog1.png" />
 
 >||
 $ insert_gracenote.pl track_list.yaml
 ||<
 
 そうすると、タイトルとアーティストが入力されて、以下のようにダイアログが出るので、適当にジャンルを選んであげます。
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-08/dialog2.png" />
+<img width="420px" src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-08/dialog2.png" />
 
 選び終わってダイアログを閉じると、トラックリストの入力になるので、あとは入力が終わるまで待てばOKです！
 最終的に以下のような感じになってめでたしめでたし。
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-08/dialog3.png" />
+<img width="420px" src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-08/dialog3.png" />
 
 Win32::GUITest には WMSetText() という、edit box に文字を突っ込む API があるんですが、なんかこいつだとうまくいかなかったので、頑張って バックスぺースで文字を消したり、YAML の定義をクリップボードに突っ込んでそれを Ctrl-V で貼りつけたりとかなりナイーブな実装になったけど、なんとなく動きましたね！！
 
