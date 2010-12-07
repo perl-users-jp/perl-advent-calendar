@@ -1,0 +1,75 @@
+Useful modules for writing tool scripts (opts, Config::Pit and Script::State)
+
+
+* use opts;
+
+<code>opts</code> is a command-line options parser written by Fushihara, Kan.
+
+Getopt::Long is not bad but opts is very simple and feeling nice.
+
+>|perl|
+use opts;
+
+opts (
+	my $force  => 'Bool',
+	my $foobar => { isa => 'Str', default => 'baz' },
+);
+
+$force;
+$foobar;
+||<
+
+* use Config::Pit;
+
+<code>Config::Pit</code> is a management module of configurations written by me.
+
+This module provides get or set global configuration by easy way, mainly for public scripts which access web services with authentication.
+
+>|perl|
+use Config::Pit;
+
+## If the fields are not set, open setting by $EDITOR automatically.
+my $config = pit_get("example.com", require => {
+	"username" => "your username on example",
+	"password" => "your password on example"
+});
+
+## And you can use $config->{username}, $config->{password}
+my $client = Example::API->new(
+	username => $config->{username},
+	password => $config->{password}
+);
+||<
+
+The first parameter of <code>pit_get</code> is typically the domain of a web service, so configuration is set once and can be re-used by other scripts.
+
+* use Script::State;
+
+<code>Script::State</code> is a useful hack for saving script states written by Motemen.
+
+>|perl|
+use Script::State;
+
+## Define state variable
+script_state my $last_timestamp = 0;
+
+my $res = $ua->get('http://example.com/api/timeline.json?after=' . $last_timestamp);
+if ($res->is_success) {
+	my $data = decode_json $res;
+	for my $entry (@{ $data->{entries} }) {
+	}
+
+	## Update state
+	$last_timestamp = $data->{entries}->[0]->{timestamp};
+} else {
+	die $res->status_line;
+}
+||<
+
+Script::State saves the state variable before the program exits, and restores it on next time.
+
+* Writer
+
+cho45 <a href="http://www.lowreal.net/">www.lowreal.net</a>
+
+- CPAN <a href="http://search.cpan.org/~satoh/">SATOH</a>
