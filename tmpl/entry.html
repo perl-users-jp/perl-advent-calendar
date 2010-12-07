@@ -23,6 +23,25 @@ function foo(){
 			node.innerHTML = node.innerHTML.replace( /Perl\s*/gi, "記号プログラミング" );
 		}
 	}
+	/* fix twitter links */
+	(function(){
+		var i, elms, href;
+		var twid, hid;
+		var re1 = /^https?:\/\/twitter\.com\/(#!\/)?(\w+)$/, re2 = /^id:(\w+)$/;
+		var m;
+
+		elms = document.getElementsByTagName( "a" );
+		for( var i = 0; i < elms.length; i++ ){
+			href = elms[ i ].getAttribute( "href" ) || "";
+			if( !( m = re1.exec( href ) ) ) continue;
+			twid = m[ 2 ]; 
+			if( !( m = re2.exec( elms[ i ].innerHTML ) ) ) continue;
+			hid = m[ 1 ];
+			if( twid == hid ){
+				elms[ i ].innerHTML = "@" + twid;
+			}
+		}
+	})();
 }
 </script>
 
