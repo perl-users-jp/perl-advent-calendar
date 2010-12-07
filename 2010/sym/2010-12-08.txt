@@ -2,6 +2,7 @@ Haskell(GHC)で記号プログラミング
 meta-author: oskimura
 meta-tags: sym
 
+<a href="http://twitter.com/oskimura">oskimura</a>です。
 <a href="http://haskell.org/ghc/">HaskellというかGHC</a>固有なのですが、実はGHCってcppオプションを使う事によってプリプロセッサを展開してくれます。(発見者はid:ranhaさんです)
 なので、これを利用して記号プログラミングで"HELLO WORD!"を出力してみます。
 
