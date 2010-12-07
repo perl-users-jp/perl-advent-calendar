@@ -1,0 +1,51 @@
+POSIX character classes in regexp
+
+Here is a string `"Hello, world!^["' that containing escape character. How can I remove escape character from this string? Let's get start it.
+
+Note: raw escape char cannot see in web browser, so in this article I use two-bytes string `^[' as a single-byte escape char.
+
+First way, put escape char literally in regexp.
+
+>|perl|
+    my $str = "Hello, world!^[";
+    $str =~ s/^[//;
+||<
+
+This is ok, but this way isn't copy-and-paste friendly.
+
+Second way, use octal/hex char instead of raw escape sequence.
+
+>|perl|
+    my $str = "Hello, world!^[";
+    $str =~ s/\x1B//;            # \x1B is escape char
+||<
+
+>|perl|
+    my $str = "Hello, world!^[";
+    $str =~ s/\033//;            # \033 is escape char
+||<
+
+These are also ok, but I think `\x1B' and `\033' are bit unreadable.
+
+Third way, use POSIX character class `[[:print:]]'.
+
+>|perl|
+    my $str = "Hello, world!^[";
+    $str =~ s/[^[:print:]]//;
+||<
+
+Good. This is more readable than second way.
+
+POSIX character classes looks like `[:name:]'. `[:' and `:]' are delimiter. `name' is self-descriptive. POSIX character classes are only available in bracketed character class. So valid regexp has continuous brackets looks like `[[:print:]]'.
+
+POSIX character classes are just sets of characters, similar to a bracketed character class like `[aiueo]'. You can use POSIX character classes with any other parts of normal characters and meta characters.
+
+>|perl|
+    /[[:alpha:]]/;      # matches all of alphabet characters, same as [a-zA-Z].
+    /[cntrl[:cntrl:]]/; # matches control characters and five lower case alphabets `c', `n', `t', `r', `l'.
+    /[^[:print:]]/;     # negation of [[:print:]], matches all non-printable characters.
+||<
+
+For more details, see [http://perldoc.perl.org/perlre.html:title=perlre] and [http://perldoc.perl.org/perlrecharclass.html:title=perlrecharclass].
+
+Kensuke Kaneko ([http://twitter.com/kyanny:title=@kyanny])
