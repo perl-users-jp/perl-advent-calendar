@@ -2,6 +2,8 @@ HTTPサーバフレームワークとしてのPlack活用法と、Plack::Middlew
 meta-author: hirose31
 meta-tags: perl, hacker, plack, psgi, mobile
 
+実はお腹回りが入らなくなってスーツを新調した<a href="http://twitter.com/hirose31">hirose31</a>です。
+
 みなさん、<a href="http://plackperl.org/" title="Plack">Plack</a>使ってますか？ 弊社でも<a href="http://search.cpan.org/dist/Starlet/" title="Starlet">Starlet</a>をNginxのバックエンドに置いてプロダクション環境でモリモリ使っているのですが、ちょっとした検証にもPlackは大変重宝しています。
 
 具体的には、キャッシュに関連するレスポンスヘッダ(Last-Modified、Expiresなど)の組み合わせと、条件付きGETやブラウザキャッシュの挙動をブラウザごとに調べたときに使いました。あくまで検証用と割りきって特にファイル分割などはせず、psgiファイルにゴリゴリっとベロっとコードを書いてパパパっと検証用のHTTPサーバを作りました。
