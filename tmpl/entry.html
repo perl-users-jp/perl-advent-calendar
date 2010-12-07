@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:og="http://ogp.me/ns#"
+      xmlns:mixi="http://mixi-platform.com/ns#"
+      xml:lang="ja" lang="ja"
+>
 <head profile="http://purl.org/net/ns/metaprof">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" />
     <title>[% title %] - JPerl advent calendar [% year %] [% name %] Track</title>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="[% uri_for(year _ '/' _ name _ '/rss') %]" />
     <link rel="stylesheet" href="http://perl-users.jp/articles/advent-calendar/prettify.css" type="text/css" media="screen" />
+
+    <meta property="og:description" content="JPerl Advent Calendar 2010に投稿された記事です" />
+    <meta property="og:type"  content="article" />
+    <meta property="og:url"   content="[% uri_for(req.path_info) %]" />
+    <meta property="og:site_name" content="JPerl Advent Calendar 2010" />
+    <meta property="og:image" content="http://capture.heartrails.com/medium?[% uri_for(req.path_info) %]" />
+    <link rel="mixi-check-image" type="image/jpeg"
+          href="http://capture.heartrails.com/medium?[% uri_for(req.path_info) %]" />
+
 <meta http-equiv="Content-Script-Type" content="text/javascript" />
 <script type="text/javascript" src="http://google-code-prettify.googlecode.com/svn/trunk/src/prettify.js"></script>
 <script type="text/javascript" src="http://perl-users.jp/articles/advent-calendar/adventcal2009.js"></script>
@@ -102,7 +115,6 @@ function foo(){
             class="mixi-check-button"
             data-key="6e769313568f4b9fe2270602e5cba4c9d6febd58"
             >Check</a>
-            <script type="text/javascript" src="http://static.mixi.jp/js/share.js"></script>
           </div>
 
           <!-- AddThis Button BEGIN -->
@@ -111,7 +123,6 @@ function foo(){
             <a class="addthis_button_tweet"></a>
             <a class="addthis_counter addthis_pill_style"></a>
           </div>
-          <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#username=xa-4cf91af90fd7d613"></script>
           <!-- AddThis Button END -->
         </div>
         <div style="clear:both;"></div>
@@ -137,5 +148,8 @@ function foo(){
         [% INCLUDE 'include/sidemenu.html' %]
     </div>
 </div>
+
+<script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#username=xa-4cf91af90fd7d613"></script>
+<script type="text/javascript" src="http://static.mixi.jp/js/share.js"></script>
 </body>
 </html>
