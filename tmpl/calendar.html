@@ -8,17 +8,16 @@
     <link rel="alternate" type="application/rss+xml" title="RSS" href="[% uri_for(year _ '/' _ name _ '/rss') %]" />
 <script type="text/javascript">
 function foo(){
-	var node;
-	if( document.location.href.match( /\/sym\// ) ){
-		node = document.getElementById("banner-description");
-		if( node ){
-			node.innerHTML = node.innerHTML.replace( /Perl\s*/gi, "記号プログラミング" );
-		}
-	}
+    var node;
+    if( document.location.href.match( /\/sym\// ) ){
+        if( node ){
+            node.innerHTML = node.innerHTML.replace( /Perl\s*/gi, "記号プログラミング" );
+        }
+    }
 }
 </script>
 </head>
-<body class="layout-two-column-right">
+<body class="layout-two-column-right" onload="javascript:foo()">
 <div id="container">
     <div id="container-inner" class="pkg">
 
