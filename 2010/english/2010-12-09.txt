@@ -1,0 +1,72 @@
+More Easily To Write Perl By Vim.
+meta-author: Kenji Matsumura <mazkeng@gmail.com>
+meta-tag: perl, english, beginner
+
+Which the editors do you use, Vim or Emacs? They are the most popular text editor. I guess that you surely use either.
+This airticle is about Vim editor, I present some plugins for writing Perl conveniently. ( I hope someone refers about writing by Emacs. )
+The plugins that I tried are as follows.
+
+- vim-perl
+- autocomplpop
+- perldoc.vim
+
+
+* Vim-perl
+Vim-perl, written by Andy Lester, is syntax plugin for Perl. It shows you the suitable code that become colorful to comprehend sentence. So it becomes easy to understand to learn Prel more. 
+The installation is very easy to use it. First, download the distributed modules from <a href="https://github.com/petdance/vim-perl">here</a>. Then,
+
+>||
+% make install
+||<
+
+Just do it only. These modules are deployed to your '~/.vim/' directory. The syntax is reflected at once. And the syntax supports Perl6.
+
+
+* Autocomplpop
+Autocomplpop, written by Takeshi NISHIDA, is a writing suportment plugin. You are sure to think that you don't want to type same word many times. Autocomlpop opens the list matching some words when you just type two charactors. So you can choice one from the list, automaticaly complete typing that word. 
+
+Installation is as follows:
+
++ Download the distribution from <a href="">here</a>, and unzip it.
++ Unzip and copy the directories and files to your '~/.vim/'. 
+
+It's so easy, too. Autocomplpop is one of good plugin to solve the problem.
+
+
+* Perldoc.vim
+Perldoc.vim, written by Yuichi Tateno, is to refer to Perl documentation on editor. Perl has the huge document volum about functions and CPAN modules. You can refer them at anytime and anywhere. It's possible to refer them simply and speedy by using Perldoc.vim
+
+Installation is as follows:
+
++ Download 'perldoc.vim' from Github.
++ Copy to '~/.vim/plugin/'.
+
+Type the following command, when you refer a module.
+>||
+:Perldoc <MODULE NAME>
+||<
+
+And when you refer a standerd function,
+>||
+:Preldoc -f <FUNCTION NAME>
+||<
+
+It show a document of the terget module or function. And type "s", you can see source code of the module. Also when console is on another keyword, type "K", link and show you a document of the another module.
+
+
+* Summary
+I have known that there are a lot of tools to support coding. Please let me know your experience if you have more suitable.
+Thanks.
+Regards,
+
+
+* Autoher
+
+Kenji Matsumura (<a href="http://twitter.com/mazkeng">mazkeng</a>)
+
+* References
+- [https://github.com/petdance/vim-perl]
+- [http://www.vim.org/scripts/script.php?script_id=1879]
+- [http://blog.blueblack.net/item_164]
+- [https://github.com/mattn/perldoc-vim]
+- [http://mattn.kaoriya.net/software/lang/perl/20100901231137.htm]
