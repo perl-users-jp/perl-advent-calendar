@@ -1,0 +1,148 @@
+How to run MovableType with Plack
+meta-author: typester
+meta-tags: perl, english, plack
+
+Hello, this is <a href="http://search.cpan.org/~typester/">typester</a>. I'm now creating kamakura.pm website with <a href="http://www.movabletype.org/opensource/">MTOS</a>, but I'm using nginx as web server that doesn't support CGI. But no worry about that. Now we have Plack!
+
+This article shows you how to setup MovableType with Plack. Let's get started.
+
+
+* Requirements
+
+- Plack 0.9952+
+- Starlet or Starman
+- MovableType or MTOS (MTOS-5.04, I confirmed)
+
+At first, make sure your Plack version is higher than 0.9952, otherwise some MT scripts will cause pipe dead lock.
+
+
+
+* Write mt.psgi
+
+Then write psgi script like following:
+
+>|perl|
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use File::Basename;
+
+use Plack::Builder;
+use Plack::App::URLMap;
+use Plack::App::WrapCGI;
+use Plack::App::Directory;
+
+my $basedir = dirname(__FILE__);
+
+my $map = Plack::App::URLMap->new;
+$map->map('/mt-static', Plack::App::Directory->new({ root => "$basedir/mt-static" }));
+
+my @scripts = qw(
+    mt.cgi
+    mt-atom.cgi
+    mt-upgrade.cgi
+    mt-add-notify.cgi
+    mt-check.cgi
+    mt-comments.cgi
+    mt-feed.cgi
+    mt-tb.cgi
+    mt-xmlrpc.cgi
+    mt-wizard.cgi
+);
+
+for my $script (@scripts) {
+    $map->map("/${script}", Plack::App::WrapCGI->new( script => "$basedir/${script}", execute => 1 )->to_app);
+}
+
+my $app = $map->to_app;
+||<
+
+Save this psgi file as mt.psgi to same directory for mt.cgi.
+
+
+* Run it!
+
+>||
+$ plackup -s Starlet -a mt.psgi
+||<
+
+(or "-s Starman")
+
+Then you can access MT setup wizard at http://127.0.0.1:5000/mt.cgi !
+
+
+* More clean URLs
+
+I dislike URLs contains .cgi like "mt.cgi" or "mt-comments.cgi". Let's make more clean URL!
+
+Fix mt.psgi like following:
+
+>|perl|
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use File::Basename;
+
+use Plack::Builder;
+use Plack::App::URLMap;
+use Plack::App::WrapCGI;
+use Plack::App::Directory;
+
+my $basedir = dirname(__FILE__);
+
+my $map = Plack::App::URLMap->new;
+$map->map('/mt-static', Plack::App::Directory->new({ root => "$basedir/mt-static" }));
+
+my %apps = (
+    app        => 'mt.cgi',
+    atom       => 'mt-atom.cgi',
+    upgrade    => 'mt-upgrade.cgi',
+    'add-notify' => 'mt-add-notify.cgi',
+    check      => 'mt-check.cgi',
+    comments   => 'mt-comments.cgi',
+    feed       => 'mt-feed.cgi',
+    search     => 'mt-search.cgi',
+    tb         => 'mt-tb.cgi',
+    xmlrpc     => 'mt-xmlrpc.cgi',
+    wizard     => 'mt-wizard.cgi',
+);
+
+while (my ($path, $script) = each %apps) {
+    $map->map("/mt/${path}", Plack::App::WrapCGI->new( script => "$basedir/${script}", execute => 1 )->to_app);
+}
+
+my $app = $map->to_app;
+||<
+
+And also add following configs to mt-config.cgi:
+
+>||
+ActivityFeedScript feed
+AdminScript app
+AtomScript atom
+CheckScript check
+CommentScript comments
+NotifyScript add-notify
+SearchScript search
+TrackbackScript tb
+UpgradeScript upgrade
+XMLRPCScript xmlrpc
+||<
+
+Then you can access http://127.0.0.1/mt/app instead of http://127.0.0.1/mt.cgi .
+
+
+* That's it!
+
+Thanks for reading.
+
+
+* Writer
+
+Daisuke Murase (typester)
+
+- CPAN <a href="http://search.cpan.org/~typester/">TYPESTER</a>
+
+
