@@ -60,6 +60,10 @@ my $app = $map->to_app;
 
 Save this psgi file as mt.psgi to same directory for mt.cgi.
 
+** UPDATE
+
+<a href="http://twitter.com/fujiwara">@fujiwara</a> wrote <a href="https://gist.github.com/732822">more simple .psgi script</a> using Plack::App::CGIBin.
+
 
 * Run it!
 
