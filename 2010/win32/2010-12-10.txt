@@ -2,9 +2,7 @@
 meta-author: turugina <turugina@cpan.org>
 meta-tags: perl, win32
 
-どもです、こっそりWin32Trackに参加したら速攻でcharsbarさんに「次お前な」とい
-われてしまいました、<a href="http://floralcompany.jp/">turugina</a>です。一
-応<a href="http://kansai.pm.org/">kansai.pm</a>所属らしいです。
+どもです、こっそりWin32Trackに参加したら速攻でcharsbarさんに「次お前な」といわれてしまいました、<a href="http://floralcompany.jp/">turugina</a>です。一応<a href="http://kansai.pm.org/">kansai.pm</a>所属らしいです。
 
 さて、今回はperl/binディレクトリの中から 「*nix環境には普通にあるけど、Windows環境にはない」というコマンドの代替スクリプトのようなものをいくつか紹介してみたいと思います。
 
