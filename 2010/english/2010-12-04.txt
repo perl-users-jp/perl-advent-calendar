@@ -54,7 +54,7 @@ sub run_worker {
     # run until the worker receives SIGTERM
     my $got_term;
     local $SIG{TERM} = sub { $got_term++ };
-    $worker->work(stop_if => { $got_term })
+    $worker->work(stop_if => sub { $got_term })
         until $got_term;
 }
 ||<
