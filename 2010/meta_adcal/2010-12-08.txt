@@ -14,13 +14,11 @@ Xslateに渡すオブジェクトとしては calendar という名前のハッ�
 
 >|perl|
 @cols = ();
-push @cols,
-  {
+push @cols, {
     date   => undef,
     exists => 0,
     title  => '',
-  }
-  for 1 .. $t->day_of_week;
+} for 1 .. $t->day_of_week;
 ||<
 
 あとは Time::Piece に1日ずつ足しながら、その日の記事タイトルを収集し cols に格納して行きます。ただしその日の day_of_week が 0 つまり日曜になった場合には、格納していた cols を rows に追加し、次回から次の cols へ追加を行う様にする必要があります。
@@ -53,8 +51,7 @@ while ( $t->mday <= 25 ) {
         @cols = ();
     }
 
-    push @cols,
-      {
+    push @cols, {
         date   => Time::Piece->new($t),
         exists => $exists,
         title  => $title,
