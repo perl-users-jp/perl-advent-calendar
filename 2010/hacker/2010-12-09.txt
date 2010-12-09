@@ -1,0 +1,90 @@
+HTML5 な今だからこその位置情報ハンドリング♡  - Geo::Coordinates::Converter
+meta-author: yappo
+meta-tags: perl, geo, hok
+
+Shibuya.PM #15 の会場からこんにちわ<a href="http://twitter.com/hirose31">yappo</a>です。
+
+なにを紹介をしようと考えた時に、以外と使いどころがある<a href="http://search.cpan.org/dist/Geo-Coordinates-Converter/">Geo::Coordinates::Converter</a>について書こうとおもいました。
+
+これが何が良いかというと、緯度経度の測地系( wgs84 とか tokyo )やら、表示フォーマット(degree, dms, geohash)をプラガブルに追加して使えるって事なんです。<a href="http://search.cpan.org/dist/Geo-Coordinates-Converter-iArea/">iArea</a>とかにも対応しております。
+
+まー作った当時から似たような物は沢山あったのですが、どれも特定の測地系に特化していたり古い時代の Perl みたいなモジュールだったりで使いにくかったりしたので作ったのであります。
+
+** とりあえずつかおう！
+
+まずはインストールです。
+
+>||
+$ cpanm Geo::Coordinates::Converter
+||<
+
+で入ります簡単ですね。
+
+使い方はとっても簡単で
+
+>|perl|
+use common::sense;
+use Geo::Coordinates::Converter;
+
+my $geo = Geo::Coordinates::Converter->new(
+    lat   => '35.65580',
+    lng   => '139.65580',
+    datum => 'wgs84'
+);
+my $point = $geo->convert( tokyo => 'dms' );
+
+say $point->lat;
+say $point->lng;
+||<
+
+のように書くと
+
+>||
+35.39.09.225
+139.39.32.434
+||<
+
+と表示されます。ここで肝なのは
+
+>|perl|
+my $point = $geo->convert( tokyo => 'dms' );
+||<
+
+で、 new して作った geo オブジェクトを tokyo 測地系に変換しつつ dms フォーマットにしてくれます。
+dgree のままでいいけど tokyo 測地系に変換したいよ！というときは
+
+>|perl|
+my $point = $geo->convert( 'tokyo' );
+||<
+
+と、書くだけでokです。このケースは例えば Google Maps から取得した緯度経度を使ってライブドア地図を表示したい時に有効です。 Google Maps は wgs84 測地系でライブドアの地図は tokyo 測地系だから、測地系の変換処理が必要になるのでした。
+
+** 携帯サイトで使ってみたい！
+
+当初から日本の携帯の位置情報を取り扱う事を想定していて、標準で入っているものだけで日本の携帯電話の位置情報を取り扱えるんです。
+まぁ、それはどーでも良いんですが携帯の各キャリアでの位置情報の取り扱いが多様化していて一々キャリア別のコードなんか書いてらんないじゃんすか。
+そこで、日本の携帯Perl業界のドンの clouder さんが<a href="http://blog.clouder.jp/archives/001015.html">HTTP::MobileAgent::Plugin::Locator</a>を書いたので、それを使うとよいですよ！
+
+>|perl|
+use HTTP::MobileAgent;
+use HTTP::MobileAgent::Plugin::Locator;
+
+my $req      = Plack::Request->new($env);
+my $agent    = HTTP::MobileAgent->new($req->header('USER_AGENT'));
+my $location = $agent->get_location( $req->parameters );
+warn "lat is " . $location->lat;
+warn "lng is " . $location->lng;
+||<
+
+こんな感じで書くとキャリアを意識しないで、携帯端末から送られてきた位置情報が取得出来ます！簡単ですね！
+
+関係無いけど HTTP::MobileAgent を Plack::Request 経由で使う方法を pod に書いといて欲しいです！
+
+** まとめ
+
+ということで Geo::Coordinates::Converter を使うと簡単に位置情報を取り扱えるようになります。
+そういえば Geo::Coordinates::Converter::Format::GeoHash とか欲しいんですけど。
+
+
+shibuya.pmの自分の発表までに間に合って書けた。。。よかった！
+という事であしたは、無謀にも hacker track に挑戦してきた keroyonn さんの番です！お楽しみ！！！
