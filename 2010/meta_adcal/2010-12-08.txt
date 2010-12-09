@@ -2,7 +2,7 @@
 meta-author: mattn <mattn.jp@gmail.com>
 meta-tags: perl
 
-こんにちわ。<a href="http://mattn.kaoriya.net/">mattn</a> です。
+こんにちわ。<a href="http://mattn.kaoriya.net/" title="オッサン">mattn</a> です。
 カレンダ表示機能を追加しました。
 
 カレンダって仕組みを理解しながら作らないといけないので、新人教育の題材としてカレンダ表示は良いんじゃないかなと思います。技術者のスキル判断基準にも出来るかもしれませんね。
