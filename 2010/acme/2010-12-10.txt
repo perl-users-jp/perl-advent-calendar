@@ -1,0 +1,134 @@
+なぜか よめる てきとすに へかんん する Acme::Yomeru
+meta-author: bayashi <bayashi@cpan.org>
+meta-tags: perl, acme, joke
+
+こんちには 、 みさなん 、<a href="http://twitter.com/#!/bayashi">bayashi</a> です。
+さくむて かなぜど ひいて いですないか 。
+おかだらは くれれぐも  お だいじに 。
+
+げきんが あれば こーども かける ！
+げきんが あれば AKB48も うたえる ！
+
+さて 、 あれ 、 なだんか へんすでね 。
+あれれ 、 よく わせかまりんが 、 この ぶょんしう 、  よめて いすまか ？
+よめますね 。 なぜか よすまめね 。
+かなり びみかょうも しせんまれが 、 よめすまね 。
+よなめい ひとは 、 がばっんて よんで くさだい 。
+
+はい 、 そでうす 。 いちじ わいだに なった 「 なぜか よめる ぶょしんう 」です 。
+きうょは 、 この ような なぜか よめ る ぶうしょんを せせいい する
+もじゅーるを しかょうい します 。
+もう 、 かんの よい かたは きづいて いかると おいすもまが 、
+いっ ぱつ ねたのなで 、 ほとんうに 、 これ いじょう な にも ありせまん 。
+う ひ ー ＞＜
+
+
+[<a href="https://github.com/bayashi/Acme-Yomeru">Acme::Yomeru</a>]
+
+>|perl|
+    #!/usr/bin/perl
+    use strict;
+    use warnings;
+    use utf8;
+
+    use Acme::Yomeru;
+    use Acme::Yomeru::Parser::TextMeCab;
+
+    my $yomeru = Acme::Yomeru->new(
+        text => 'これは、奇妙な日本語フィルタだよ。',
+    );
+
+    print $yomeru->cambridgize;
+||<
+
+基本は Text::MeCab を利用して形態素解析してコンバートしますが、以下のように、Yahoo API を利用する方法もあります。
+しかし、そもそも Text::MeCab がないとインストールさえままならないんじゃないかどうかはよく確認していませんが、なんだかそれ風なつくりを目指していた時期がありました。
+
+>|perl|
+    use Acme::Yomeru;
+    use Acme::Yomeru::Parser::YahooAPI;
+
+    my $yomeru = Acme::Yomeru->new(
+        text   => 'これは、奇妙な日本語フィルタだよ。',
+        parser => Acme::Yomeru::Parser::YahooAPI->new(
+            api_key => 'YOUR_APP_ID',
+        ),
+    );
+
+    print $yomeru->cambridgize;
+||<
+
+- フィルタ部分は一目瞭然
+- 無駄に Moose で書かれています
+- テスト充実させたい → まさかの PODでコメントアウト状態
+
+Acme もじゅーる だすいき！！
+
+というわけで、明日は、、あれ、明日は、誰なんだ？ 誰か、誰かが書くでしょう！
+なぜか よめる てきとすに へかんん する Acme::Yomeru
+meta-author: bayashi <bayashi@cpan.org>
+meta-tags: perl, acme, joke
+
+こんちには 、 みさなん 、<a href="http://twitter.com/#!/bayashi">bayashi</a> です。
+さくむて かなぜど ひいて いですないか 。
+おかだらは くれれぐも  お だいじに 。
+
+げきんが あれば こーども かける ！
+げきんが あれば AKB48も うたえる ！
+
+さて 、 あれ 、 なだんか へんすでね 。
+あれれ 、 よく わせかまりんが 、 この ぶょんしう 、 よめて いすまか ？
+よめますね 。 なぜか よすまめね 。
+かなり びみかょうも しせんまれが 、 よめすまね 。
+よなめい ひとは 、 がばっんて よんで くさだい 。
+
+はい 、 そでうす 。 いちじ わいだに なった 「 なぜか よめる ぶょしんう 」です 。
+きうょは 、 この ような なぜか よめ る ぶうしょんを せせいい する
+もじゅーるを しかょうい します 。
+もう 、 かんの よい かたは きづいて いかると おいすもまが 、
+いっ ぱつ ねたのなで 、 ほとんうに 、 これ いじょう な にも ありせまん 。
+う ひ ー ＞＜
+
+
+[<a href="https://github.com/bayashi/Acme-Yomeru">Acme::Yomeru</a>]
+
+>|perl|
+    #!/usr/bin/perl
+    use strict;
+    use warnings;
+    use utf8;
+
+    use Acme::Yomeru;
+    use Acme::Yomeru::Parser::TextMeCab;
+
+    my $yomeru = Acme::Yomeru->new(
+        text => 'これは、奇妙な日本語フィルタだよ。',
+    );
+
+    print $yomeru->cambridgize;
+||<
+
+基本は Text::MeCab を利用して形態素解析してコンバートしますが、以下のように、Yahoo API を利用する方法もあります。
+しかし、そもそも Text::MeCab がないとインストールさえままならないんじゃないかどうかはよく確認していませんが、なんだかそれ風なつくりを目指していた時期がありました。
+
+>|perl|
+    use Acme::Yomeru;
+    use Acme::Yomeru::Parser::YahooAPI;
+
+    my $yomeru = Acme::Yomeru->new(
+        text   => 'これは、奇妙な日本語フィルタだよ。',
+        parser => Acme::Yomeru::Parser::YahooAPI->new(
+            api_key => 'YOUR_APP_ID',
+        ),
+    );
+
+    print $yomeru->cambridgize;
+||<
+
+- フィルタ部分は一目瞭然
+- 無駄に Moose で書かれています
+- テスト充実させたい → まさかの PODでコメントアウト状態
+
+Acme もじゅーる だすいき！！
+
+というわけで、明日は、、あれ、明日は、誰なんだ？ 誰か、誰かが書くでしょう！
