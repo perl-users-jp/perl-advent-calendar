@@ -1,4 +1,4 @@
-そうだ、カレンダーを出そう
+そうだ、カレンダを出そう
 meta-author: mattn <mattn.jp@gmail.com>
 meta-tags: perl
 
