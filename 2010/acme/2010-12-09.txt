@@ -1,0 +1,52 @@
+Acme::CheckCharactorsOutsideRange
+meta-author: xaicron
+meta-tags: perl, acme
+
+こんにちは！相変わらず一週間にわたって風邪をひき続けている [http://blog.livedoor.jp/xaicron/:title=xaicron] です。
+今日は shibuya.pm ということもあって、perl mongers にとっての最大規模の忘年会的な感じになったんじゃないでしょうか。行ってないのでよくわかりませんが。
+
+さて、本当は Acme::Iku を実装して紹介しようと思っていたのですが、普通に「あ、18禁になるなこれ」と気付いてやめました。CPAN にも 18歳未満の方はダウンロードできない的な仕組みが必要なんじゃないかと思い始めています。
+というわけで、はるか昔に書いたよくわからんモジュールであるところの Acme::CheckCharactorsOutsideRange を紹介しようと思います。
+
+* 使い方
+
+もうすでに名前からしてわけがわかりませんが、とりあえず use するだけで動きます。
+
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use Acme::CheckCharactorsOutsideRange;
+
+print "I ♡ Acme";
+||<
+
+これを実行すると普通に動きます。(Wide character in print という警告が出ますが、Acme 本質じゃないので無視してね☆)
+しかし、以下のように import の引数に文字コードを指定すると、
+
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use Acme::CheckCharactorsOutsideRange 'cp932';
+
+print "I ♡ Acme";
+||<
+
+>||
+"\x{2661}" does not map to cp932 at foo.pl line 7
+||<
+
+というように怒られます。地味ですね。
+
+* 解説
+
+なにをやっているかというと、import 時に指定した 文字コードの範囲外の文字がそのソースコード上に含まれている場合、実行せずに die するという処理が走ります。
+しかし、default は utf8 なので、最初の例では特に問題がなかったということになります。
+コードは utf8 で書くのが前提だけど、出力は cp932 だったり、euc-jp だったりするんだぜって時に、printable じゃない文字があるかどうかを事前にチェックしてほしいなーって時に、超重宝します！！
+ぜひ使ってみてください！
+
+ちなみに、実装的には、ソースフィルターと PPI で地道に encode していって、失敗したらあぼーんするというとってもお手軽な感じになっています。
+\x{XXXX} 形式にも対応しているので、一見マルチバイトが無いように見えるコードにも安心してお使いいただけます。でも eval で文字生成は検知できません。
+
+さてさて、明日は海外旅行のお土産がとってもアレだった bayashi さんです！お楽しみに！！
