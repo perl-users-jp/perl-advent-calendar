@@ -1,0 +1,171 @@
+Google Docsの表計算書類をNet::Google::Spreadsheetsを使ってブラウザ抜きで読み書きする
+meta-author: otsune <otsune@gmail.com>
+meta-tags: perl, google
+
+こんばんは。tumblr がサーバーダウンするとネット呼吸が出来ない<a href="http://www.otsune.com/">otsune</a> (<a href="http://www.facebook.com/otsune">Facebook - otsune</a>) です。
+
+<a href="http://jp.blogs.com/">jp.blogs.com｜おもしろブログ記事のまとめサイト</a>というサイトで、ネットウォッチ中に見かけた興味深いWebページのURLを美人編集長上野さんにたれ込むという趣味的行為をしているんですが。困ったことにURL集計にGoogle Docsの表計算の複数人編集機能を使ってて、1-clickどころかブラウザひらいてマウスでカチコチと気の長くなるほどメンドクサイ手順を踏まないとURLを貼れないという、CUIとGUIのあいだに横たわる深くて長い天の川があったりしてシンドイわけです。世間でもよくある話ですね。
+そんなわけでめんどくさいことはPerlのようなものにやらせればいいのよってことで、今日は飲み会のヒーローlopnorさんが書いたNet::Google::Spreadsheetsを使うことで、PerlからGoogle Docs表計算書類を扱う手順を紹介します。
+ちなみに今回の表計算書類には「name」「ネタ記事タイトル」「URL」「Date」という列があります。日本語名が混ざっているのでuse utf8;することにします。
+
+**1. インストール
+<a href="http://search.cpan.org/~danjou/Net-Google-Spreadsheets/">Net::Google::Spreadsheets</a>はCPANに登録されてるのでcpan系コマンドで入ります。
+>|sh|
+# cpanm Net::Google::Spreadsheets
+||<
+
+**2. Config::Pitを使う
+GoogleアカウントのパスワードをスクリプトにハードコーディングしないためにConfig::Pitを使いましょう。
+>|sh|
+# cpanm Config::Pit
+||<
+>|sh|
+% ppit set google.com
+||<
+でusernameとpasswordを$EDITORを使って書きこむか、 
+>|sh|
+% perl -MConfig::Pit -e'Config::Pit::set("google.com", data=>{ username=>"dankogai", password=>"kogaidan" })'
+||<
+というようなワンライナーでパスワードを保存しておきます。
+
+**3. 表計算書類のkeyとシートタイトルを確認しておく
+Net::Google::Spreadsheets（というかGoogle Docs API）はkeyとtitleで表を指定します。
+一旦ブラウザで表計算書類をひらいてアドレスバーの「https://spreadsheets.google.com/ccc?key={キー文字列}」を調べておきます。そしてシートの名前も控えておきます。
+仮に「hogefugafoobar」「blogs.com ネタ蔵」の「url」列だとすると
+>|perl|
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Config::Pit;
+use Net::Google::Spreadsheets;
+use Perl6::Say;
+use utf8;
+
+my $service = Net::Google::Spreadsheets->new(pit_get('google.com'));
+my $sheet = $service->spreadsheet(
+        { key => 'hogefugafoobar', }
+        );
+my $worksheet = $sheet->worksheet(
+        { title => 'blogs.com ネタ蔵', }
+        );
+
+my @rows = $worksheet->rows;
+
+say map{ $_->content->{url} } @rows;
+||<
+なんてスクリプトで簡単に任意の列だけ指定して表示することができます。便利！
+
+**4. キー文字列をConfig::Pitに収納する 
+スクリプト内にGoogle Docsキー文字列を埋め込まないでConfig::Pitにsheetkeyという項目を増やしてそこから読み取るように変更してます。
+
+>|perl|
+my $config = pit_get('google.com', require => {
+        username => 'your Google ID', 
+        password => 'your Google password', 
+        sheetkey => 'your Spreadsheets key', 
+    });
+my $service = Net::Google::Spreadsheets->new($config);
+my $sheet = $service->spreadsheet(
+    {
+        key => $config->{sheetkey}, 
+    }
+);
+||<
+
+**5. 表計算書類に書き込み
+add_rowメソッドで新しい行に書きこむことが簡単にできます。
+（date列には投稿日の日付を自動的に生成して入れたいのでTime::Pieceを使っています）
+
+>|perl|
+use strict;
+use warnings;
+use Config::Pit;
+use Net::Google::Spreadsheets;
+use utf8;
+use Time::Piece;
+
+my $config = pit_get('google.com', require => {
+        username => 'your Google ID', 
+        password => 'your Google password', 
+        sheetkey => 'your Spreadsheets key', 
+    });
+my $service = Net::Google::Spreadsheets->new($config);
+my $sheet = $service->spreadsheet(
+    {
+        key => $config->{sheetkey}, 
+    }
+);
+my $worksheet = $sheet->worksheet(
+    {
+        title => 'blogs.com ネタ蔵', 
+    }
+);
+
+my $date = localtime->mdy("/"); 
+my $new_row = $worksheet->add_row(
+    {
+        name => $config->{username}, 
+        'ネタ記事タイトル'
+             => 'テスト投稿', 
+        url  => 'http://perl-users.jp/articles/advent-calendar/2010/casual/9', 
+        date => "$date",
+    }
+);
+||<
+
+**6. CUIで引数からURLを取得
+伏原さんの書いたoptsを使います。まぁ普通は$ARGV[0]から取ればいいんですが。
+
+>|perl|
+use strict;
+use warnings;
+use Config::Pit;
+use Net::Google::Spreadsheets;
+use utf8;
+use Time::Piece;
+use opts;
+
+opts my $url   => { isa => 'Str', required => 1 }; 
+     my $title => { isa => 'Str', default =>'' };
+
+my $date = localtime->mdy("/"); 
+
+my $config = pit_get('google.com', require => {
+        username => 'your Google ID', 
+        password => 'your Google password', 
+        sheetkey => 'your Spreadsheet key', 
+    });
+my $service = Net::Google::Spreadsheets->new($config);
+my $sheet = $service->spreadsheet(
+    {
+        key => $config->{sheetkey}, 
+    }
+);
+my $worksheet = $sheet->worksheet(
+    {
+        title => 'blogs.com ネタ蔵', 
+    }
+);
+
+my $new_row = $worksheet->add_row(
+    {
+        name => $config->{username}, 
+        'ネタ記事タイトル'
+             => $title, 
+        url  => $url, 
+        date => "$date",
+    }
+);
+||<
+
+これで
+>|sh|
+% perl ./blogs_addrow.pl --url=http://www.example.com
+||<
+というようなコマンドラインからGoogle Docsの表計算書類に一発投稿が出来たりします。
+
+**まとめ
+ブラウザをひらいてマウスで毎回カチカチやる時間の分だけ寿命が縮みます。決まりきった作業はperlに書いて機械にやらせましょう。
+あとGoogle Docsはpythonで扱ったり、今回のような自動化はjsで書いたりしたほうが王道っぽいですが、perlのようなものでもやれるからいいんです。手段のためなら目的はえらびません。
+
+明日はhisaichi5518さんです。刮目して見るべし。
