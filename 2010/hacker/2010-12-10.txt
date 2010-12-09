@@ -10,6 +10,7 @@ meta-tags: perl, hacker, tatsumaki, webservice, 非同期
 
 すばらしいですなっ! YAPC は!
 
+
 * WebService::Async とは
 
 さて今回ご紹介する、WebService::Async というモジュールは、yusukebe さんの WebService::Simple の非同期版です。
@@ -37,7 +38,6 @@ WebService::Simple はカジュアルにウェブサービスにアクセスで�
 
 ** サンプルコード
 >|perl|
-# -*- mode: cperl; -*-
 
 use WebService::Async;
 use WebService::Async::Parser::JSON;
