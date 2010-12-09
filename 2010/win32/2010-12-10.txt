@@ -1,0 +1,67 @@
+それ多分Perlでできるよ
+meta-author: turugina <turugina@cpan.org>
+meta-tags: perl, win32
+
+どもです、こっそりWin32Trackに参加したら速攻でcharsbarさんに「次お前な」とい
+われてしまいました、<a href="http://floralcompany.jp/">turugina</a>です。一
+応<a href="http://kansai.pm.org/">kansai.pm</a>所属らしいです。
+
+さて、今回はperl/binディレクトリの中から 「*nix環境には普通にあるけど、Windows環境にはない」というコマンドの代替スクリプトのようなものをいくつか紹介してみたいと思います。
+
+* <a href="http://search.cpan.org/perldoc?ptar">ptar</a>
+
+<a href="http://search.cpan.org/dist/Archive-Tar/">Archive::Tar</a>付属スクリプト。 tarコマンドっぽいスクリプト。
+
+tarコマンドと違って オプション指定にハイフンが必須だったり圧縮オプションはz(zlib圧縮)しか対応してなかったり(伸長はbzip2でも大丈夫)と微妙に使いづらい気も...
+
+とりあえず、perlのソースコード tarball はこのptarで問題なく展開できるはずです。
+
+おまけで(?) tarファイルの中身とディレクトリとのdiffを取る ptardiff や tarファイル内をgrepするための ptargrep なんてのもいます。
+
+* <a href="http://search.cpan.org/perldoc?find2perl">find2perl</a>
+
+<a href="http://search.cpan.org/perldoc?File::Find">File::Find</a>付属スクリプト(で、いいんだっけ)。 findコマンド互換の引数を取り、実行可能なperl scriptを吐き出します。
+
+例えばカレントディレクトリ及び下位ディレクトリ内にある一週間以上前に修正された*.txtファイルを探すなんて場合は
+
+>||
+C:\>find2perl . -mtime +7 -a -name "*.txt" | perl
+||<
+
+のようにします。
+
+* lwp-***
+
+<a href="http://search.cpan.org/dist/libwww-perl/">libwww-perl (LWP)</a>付属スクリプト群。 wgetやcurlの代わりに割と使える。
+
+指定したURLからファイルをダウンロードする lwp-download, ファイルの修正日付を考慮してミラーリングを行う lwp-mirror,  再帰的にWebページを取得する lwp-rget などがあります。
+
+* <a href="http://search.cpan.org/perldoc?psed">psed</a>
+
+sed互換スクリプト。 これは一体誰得なんでしょうか...
+
+* <a href="http://search.cpan.org/perldoc?pwhich">pwhich</a>
+
+<a href="http://search.cpan.org/dist/File-Which/">File::Which</a>付属スクリプト。実行ファイルのパスを調べてくれる便利屋さん
+
+>||
+C:\>pwhich explorer
+C:\WINDOWS\explorer.EXE
+||<
+
+ちなみにどーでもいいことですが、私はこいつの存在に気がつかずに独自にwhichスクリプトを書いていました。
+
+* <a href="http://search.cpan.org/dist/md5sum-perl/">md5sum-perl</a>, <a href="http://search.cpan.org/perldoc?shasum">shasum</a>
+
+md5sum-perl は単独のdistribution, shasumは<a href="http://search.cpan.org/dist/Digest-SHA-PurePerl/">Digest::SHA::PurePerl</a>付属スクリプト。
+
+それぞれ、 md5sum や sha1sum 等の 互換 ... だと思います。
+
+<hr />
+
+とりあえずこんな感じで。
+
+みなさんもお暇な時にでも dir X:\path\to\perl\bin\*.bat して何か便利そうなスクリプトがいつの間に入っていないか気にかけてあげてください。
+
+
+さて、commitの履歴を辿ると.. 次ははせがわさんでしょうか。
