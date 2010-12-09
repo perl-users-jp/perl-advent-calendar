@@ -27,18 +27,18 @@ Autocomplpop, written by Takeshi NISHIDA, is a writing suportment plugin. You ar
 
 Installation is as follows:
 
-+ Download the distribution from <a href="">here</a>, and unzip it.
++ Download the distribution from <a href="http://www.vim.org/scripts/script.php?script_id=1879">here</a>, and unzip it.
 + Unzip and copy the directories and files to your '~/.vim/'. 
 
 It's so easy, too. Autocomplpop is one of good plugin to solve the problem.
 
 
 * Perldoc.vim
-Perldoc.vim, written by Yuichi Tateno, is to refer to Perl documentation on editor. Perl has the huge document volum about functions and CPAN modules. You can refer them at anytime and anywhere. It's possible to refer them simply and speedy by using Perldoc.vim
+Perldoc.vim, written by Yuichi Tateno and expanded by Mattn, is to refer to Perl documentation on editor. Perl has the huge document volum about functions and CPAN modules. You can refer them at anytime and anywhere. It's possible to refer them simply and speedy by using Perldoc.vim
 
 Installation is as follows:
 
-+ Download 'perldoc.vim' from Github.
++ Download 'perldoc.vim' from <a href="https://github.com/mattn/perldoc-vim">here</a>.
 + Copy to '~/.vim/plugin/'.
 
 Type the following command, when you refer a module.
