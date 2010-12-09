@@ -1,0 +1,117 @@
+そうだ、カレンダーを出そう
+meta-author: mattn <mattn.jp@gmail.com>
+meta-tags: perl
+
+こんにちわ。<a href="http://mattn.kaoriya.net/">mattn</a> です。
+カレンダ表示機能を追加しました。
+
+カレンダって仕組みを理解しながら作らないといけないので、新人教育の題材としてカレンダ表示は良いんじゃないかなと思います。技術者のスキル判断基準にも出来るかもしれませんね。
+では行きましょう。
+
+Xslateに渡すオブジェクトとしては calendar という名前のハッシュリファレンスで、その下に rows というハッシュリファレンスの配列、各 row には cols という記事情報を格納したハッシュリファレンスを保持します。
+カレンダは、まずその月の1日が何曜日で始まっているかを見て、そこまで空を表示する必要があります。
+何個空白を入れれば良いかは、週の何曜日かで取得出来ますので Time::Piece の day_of_week を使います。
+
+>|perl|
+@cols = ();
+push @cols,
+  {
+    date   => undef,
+    exists => 0,
+    title  => '',
+  }
+  for 1 .. $t->day_of_week;
+||<
+
+あとは Time::Piece に1日ずつ足しながら、その日の記事タイトルを収集し cols に格納して行きます。ただしその日の day_of_week が 0 つまり日曜になった場合には、格納していた cols を rows に追加し、次回から次の cols へ追加を行う様にする必要があります。
+
+>|perl|
+while ( $t->mday <= 25 ) {
+    my $title;
+    my $exists = ( -e $root->file( $t->ymd . '.txt' ) )
+      && ( $now->year > $vars->{year}
+        || $t->yday <= $now->yday ) ? 1 : 0;
+
+    if ($exists) {
+        my ( $cached_mtime, $cached_title ) = split /\t/,
+          ( $cache->get( $t->mday ) || "0\t" );
+        my $mtime = $root->file( $t->ymd . '.txt' )->stat->mtime;
+        if ( not $cached_title or $mtime > $cached_mtime ) {
+            my $fh = $root->file( $t->ymd . '.txt' )->open;
+            $title = <$fh>;
+            chomp($title);
+            $cache->set( $t->mday => "$mtime\t$title", 'never' );
+        }
+        else {
+            $title = $cached_title;
+        }
+    }
+
+    if ( $t->day_of_week == 0 ) {
+        my @tmp = @cols;
+        push @rows, { cols => \@tmp };
+        @cols = ();
+    }
+
+    push @cols,
+      {
+        date   => Time::Piece->new($t),
+        exists => $exists,
+        title  => $title,
+      };
+    $t += ONE_DAY;
+}
+||<
+
+あとは最後に途中まで追加されていた cols を rows に足し、rows 自体を calendar に格納すれば準備okです。
+テンプレートとしてはカレンダ表示用に以下 HTML を指定します。
+
+>|html|
+<table border="1" class="calendar">
+    <tr>[% FOR week IN ["日", "月", "火", "水", "木", "金", "土"] %]<th>[% week %]</th>[% END %]</tr>
+[% FOR row IN calendar.rows %]
+    <tr>
+    [% FOR col IN row.cols %]
+        <td class="cell">
+            [% IF col.exists %]
+                [% col.date.mday %]<br /><a class="article-title" href="[% uri_for(year _ '/' _ name _ '/' _ col.date.mday) %]">[% col.title %]</a>
+            [% ELSE %]
+                [% col.date.mday %]
+            [% END %]
+        </td>
+    [% END %]
+    </tr>
+[% END %]
+</table>
+||<
+
+このままだとタイトルが折り曲げられず、長いタイトルでカレンダの表示が崩れるので CSS で調整します。
+
+>|css|
+.article-title {
+    overflow: hidden;
+}
+.calendar th {
+    background-color: lightgray;
+}
+.cell {
+    background-color: white;
+    word-break: break-all;
+    font-size: 0.2em !important;
+    width: 70px !important;
+    height: 70px !important;
+    vertical-align: top;
+}
+||<
+
+動いている例は以下の URL を参照下さい。
+
+http://perl-users.jp/articles/advent-calendar/2010/acme/calendar
+http://perl-users.jp/articles/advent-calendar/2010/casual/calendar
+http://perl-users.jp/articles/advent-calendar/2010/win32/calendar
+http://perl-users.jp/articles/advent-calendar/2010/meta_adcal/calendar
+http://perl-users.jp/articles/advent-calendar/2010/english/calendar
+http://perl-users.jp/articles/advent-calendar/2010/hacker/calendar
+http://perl-users.jp/articles/advent-calendar/2010/sym/calendar
+
+簡単ですね。
