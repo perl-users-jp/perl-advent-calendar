@@ -38,14 +38,18 @@ function foo(){
                     <ul>
                         [% FOR entry IN entries %]
                             [% IF entry.exists %]
-                                <li>[% format_date(entry.date) %] <a href="[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]">[% entry.title %]</a></li>
+                                <li class="text-indent">[% format_date(entry.date) %] <a href="[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]">[% entry.title %]</a></li>
                             [% ELSE %]
-                                <li>[% format_date(entry.date) %]</li>
+                                <li class="text-indent">[% format_date(entry.date) %]</li>
                             [% END %]
                         [% END %]
                     </ul>
 
                     <style>
+                        .text-indent {
+                            padding-left: 9em;
+                            text-indent: -9em;
+                        }
                         .description {
                             margin-left: 10px;
                             margin-right: 10px;
