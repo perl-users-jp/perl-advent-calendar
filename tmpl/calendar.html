@@ -15,6 +15,14 @@ function foo(){
             node.innerHTML = node.innerHTML.replace( /Perl\s*/gi, "記号プログラミング" );
         }
     }
+    if(navigator.userAgent.indexOf('Firefox/') != -1) {
+        var elems = document.getElementsByTagName('a');
+        for (var n = 0; n < elems.length; n++) {
+            var elem = elems[n];
+            if (elem.className == 'article-title')
+                elem.innerHTML = elem.innerHTML.split('').join('<wbr />');
+        }
+    }
 }
 </script>
 </head>
