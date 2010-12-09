@@ -30,7 +30,7 @@ Googleアカウントのパスワードをスクリプトにハードコーデ�
 
 **3. 表計算書類のkeyとシートタイトルを確認しておく
 Net::Google::Spreadsheets（というかGoogle Docs API）はkeyとtitleで表を指定します。
-一旦ブラウザで表計算書類をひらいてアドレスバーの「https://spreadsheets.google.com/ccc?key={キー文字列}」を調べておきます。そしてシートの名前も控えておきます。
+一旦ブラウザで表計算書類をひらいてアドレスバーの「https://spreadsheets.google.com/ccc?key={キー文字列} 」を調べておきます。そしてシートの名前も控えておきます。
 仮に「hogefugafoobar」「blogs.com ネタ蔵」の「url」列だとすると
 >|perl|
 #!/usr/bin/env perl
@@ -125,8 +125,8 @@ use utf8;
 use Time::Piece;
 use opts;
 
-opts my $url   => { isa => 'Str', required => 1 }; 
-     my $title => { isa => 'Str', default =>'' };
+opts my $url   => { isa => 'Str', alias = 'u', required => 1 },
+     my $title => { isa => 'Str', alias = 't', default => '' };
 
 my $date = localtime->mdy("/"); 
 
