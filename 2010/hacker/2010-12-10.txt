@@ -1,5 +1,5 @@
 WebService::Async でウェブサービスの非同期アクセスを簡単に! あるいは私は如何にしてMacBookProを手に入れたか？
-meta-author: keroyonn
+meta-author: keroyonn <keroyonn@gmail.com>
 meta-tags: perl, hacker, tatsumaki, webservice, 非同期
 
 今年は<a href="http://hokkaido.pm.org/">Hokkaido.pm</a>からはるばる YAPC::Asia に出張してきた<a href="http://twitter.com/keroyonn_">keroyonn</a>です。
@@ -84,7 +84,7 @@ apple => mela             ※英語→イタリア語
 
 ※ on_done に加えて、on_complete を使うと、全てのアクセスが完了した場合のコールバックを書くことができます。
 
-※ on_done の引数の $id は、個々のリクエストを識別するためのキーとなっています。id は自分で指定することも自動で生成されたものを使うことも、使わずにクエリのパラメータでしのぐこともできます。
+※ on_done の引数の $id は、個々のリクエストを識別するためのキーとなっています。id は自分で指定することも自動で生成されたものを使うことも、使わずにクエリのパラメータをキー代わりにしのぐこともできます。
 
 ※ その他色々な書き方はPODを参照ください
 
@@ -159,7 +159,7 @@ my $result = $wa->send_request()
 
 Any::Moose じゃなくて、Moose を使っているとか、依存モジュールがそれなりにあるとか、Smart::Args の新しいバージョンだと警告が出るとか色々つっこみどころはあると思いますが、私は普段便利に使っているので是非!
 
-速度とかレン鯖でも動くというようなポータビリティを求める方には適さないと思いますが、とりあえず簡単ですし、WebService の既存コードを非同期にしたい場合もいいかもしれません。
+速度とかレン鯖でも動くというようなポータビリティを求める方には適さないと思いますが、とりあえず簡単ですし、WebService::Simple の既存コードを非同期にしたい場合にもいいかもしれません。
 
 ちなみに私は Tatsumaki の HTTPClient のかわりに良く利用しています。
 
