@@ -4,3 +4,52 @@ meta-tag: perl6 rakudo
 
 遅れてやってきたperl6トラック、現在12月10日です。ここから一気に追い上げていきたいと思います！よろしくお願いします！
 
+まずはperl6を使える環境を作らないといけないですね。「そんなの面倒だよ」という方はdanさんの[http://colabv6.dan.co.jp/lleval.html:title=lleval]で試してみるのもいいでしょう。
+
+** インストール
+
+https://github.com/rakudo/star/downloads にソースがあるので落としてきます。7月から毎月リリースされていますので、最新のものを選びましょう。以前インストールしたけどHDDの肥やしにしちゃってる方も、この際ですから最新版をインストールしてみましょう。そしてなんと、Windows用のインストーラもあります！Windowsユーザーの方はぜひインストールしてみてください。Windowsマシンが手元にないので、今回はunixっぽいシステムに入れることにします。
+インストールするにはCコンパイラ、make、perl-5.8.4以降が必要なので、事前に準備しておきましょう。また、Unicodeをちゃんと扱うためにはICUライブラリが必要になります。Fedoraだとyumで入れておくのが楽でしょう。
+
+>||
+$ sudo yum -y install libicu-devel
+||<
+
+では、~/tmpディレクトリをつくってそこにインストールしてみましょう。
+
+>||
+$ cd
+$ mkdir tmp
+$ wget https://github.com/downloads/rakudo/star/rakudo-star-2010.11.tar.gz
+$ tar xf rakudo-star-2010.11.tar.gz
+$ cd rakudo-star-2010.11
+$ perl Configure.PL --gen-parrot
+$ make
+$ make install
+||<
+
+これでインストール完了です！
+そしてPATHを通しておきましょう。.zshenvや.bashrcなどに以下のように追記し、設定を読み込みましょう。
+
+>||
+export PATH="$HOME/.perl6/bin:$HOME/tmp/rakudo-star-2010.11/install/bin:$PATH"
+||<
+
+>||
+$ source ~/.zshenv
+||<
+
+さぁ、記念すべきperl6の最初の実行です！
+
+>||
+$ perl6 -v
+
+This is Rakudo Perl 6, version 2010.11 built on parrot 2.10.1Null PMC access in get_bool()
+current instr.: 'perl6;Perl6;Compiler;version' pc 326465 (src/gen/perl6-grammar.pir:16967)
+called from Sub 'perl6;PCT;HLLCompiler;command_line' pc 1855 (compilers/pct/src/PCT/HLLCompiler.pir:917)
+called from Sub 'perl6;Perl6;Compiler;main' pc 326404 (src/gen/perl6-grammar.pir:16945)
+||<
+
+ん？？？なんかでてる。。。。
+とにかく実行できました！では、明日からばりばりPerl6を使っていきましょう！
+
