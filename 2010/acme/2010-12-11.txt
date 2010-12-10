@@ -1,0 +1,108 @@
+CPAN愛のモジュール 
+meta-author: makamaka
+meta-tags: perl, acme
+
+(firstly written in Japanese, later in English)
+
+こんにちは。愛に飢えずに愛を植えたい<a href="http://twitter.com/maka2_donzoko">makamaka</a>です。
+CPANモジュールって便利ですよね！　ところで、皆さんはCPAN屈指のLoveなモジュールをご存じでしょうか？
+
+
+ええ、あるんですよ！　ずばり名前空間Loveから始まるモジュールが！
+
+
+それが<a href="http://search.cpan.org/dist/Love-Match-Calc/">Love::Match::Calc</a>です。
+
+このモジュールに二人の名前を渡すと相性度を教えてくれます！　まあ素敵。
+
+
+>|perl|
+use strict;
+use Love::Match::Calc;
+
+my $first  = "Nagisa";
+my $second = "Honoka";
+
+my $m = lovematch( $first, $second );
+
+print "$first と $second の相性は…… $m％\n";
+||<
+
+
+文字列を分解して何か色々計算しているようです（ascii以外の文字を渡すとあまりよろしくない感じ）が、とにもかくにもCPANモジュールは相性診断さえ可能にするのです。
+
+
+<a href="http://search.cpan.org/dist/Love-Match-Calc">レビュー</a>がありましたので、適当な訳で引用してみます。
+
+>>
+なんじゃこりゃ？　これはPerlの皮を被ったCだ。Acme::*下にあれば良かったのに。それと、関数が不必要にプロトタイプを強制している。さらに、このモジュールは感情のカクテルたる”Love”と無関係だ。何か上手いこと頭文字をとってるわけでもないし。(<a href="http://cpanratings.perl.org/dist/Love-Match-Calc">Gene Boggs</a>)
+<<
+
+
+冒頭のPerlでなくてCというのは、このモジュールが<a href="http://search.cpan.org/dist/Math-Cephes/">Math::Cephes</a>という数値計算用Cライブラリのモジュールに依存していることを指してるようです。ただし、その計算は
+
+>|perl|
+my $lettermitte = ceil($anzletter/2);
+||<
+
+というただ1カ所でのみ使われてますが。贅沢な依存関係ね。<a href="http://search.cpan.org/search?query=posix&mode=module">POSIX</a>じゃだめだったのかしら？
+
+
+<h2>Lesson4 Acmeじゃなくても油断しない((Lesson1-3は1日目の記事を参照ください))</h2>
+
+Acmeの名前を持たなくてもAcme臭あふれるCPANモジュールもありますよと。というわけで、このお正月はCPAN上でAcmeがつかないAcmeモジュールを探す旅に出てみては如何でしょうか。
+
+
+
+ * ----------------------------------------------------
+ * English version
+ * ----------------------------------------------------
+
+Hello everyone. I'm <a href="http://twitter.com/maka2_donzoko">makamaka</a>, want to be not a love explorer but  a love planter.
+
+Do you know the most 'LOVE' cpan module?
+Yes, there is a Love namespace module.
+
+
+That is <a href="http://search.cpan.org/dist/Love-Match-Calc/">Love::Match::Calc</a>.
+
+It calculates the love factor between two names. Sounds cool!
+
+
+>|perl|
+use strict;
+use Love::Match::Calc;
+
+my $first  = "Nagisa";
+my $second = "Honoka";
+
+my $m = lovematch( $first, $second );
+
+print "Lovematch for $first and $second: $m%\n";
+||<
+
+Now, CPAN module can calculate a love factor!
+
+Threre is a <a href="http://search.cpan.org/dist/Love-Match-Calc">review</a>.
+
+>>
+WTF? This is c in perl clothing. It would have been proper to file this under the Acme::* namespace. Also,
+the functions needlessly enforce prototyping. Also, this has nothing to do with the emotion cocktail that is "love." If it is some clever acronym, the documentation doesn't say so - because there is none. (<a href="http://cpanratings.perl.org/dist/Love-Match-Calc">Gene Boggs</a>)
+<<
+
+'c in perl clothing' means that this module requires <a href="http://search.cpan.org/dist/Math-Cephes/">Math::Cephes</a> which is C math library interface module.
+Though it uses the function at the one line....
+
+>|perl|
+my $lettermitte = ceil($anzletter/2);
+||<
+
+Is <a href="http://search.cpan.org/search?query=posix&mode=module">POSIX</a> no good?
+
+
+<h2>Lesson4 Be on your guard against no Acme name module ((See to first day for Lesson1-3))</h2>
+
+There are Acme modules have Acme smell on CPAN. Well, in this winter vacation, would you like to explore them.
+
+The tomorrow writter is !!
+
