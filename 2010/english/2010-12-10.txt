@@ -1,0 +1,45 @@
+Use Perl with UNIX tools
+meta-author: Kensuke Kaneko
+meta-tags: perl
+
+Perl is very useful programming language for not only programmers but also system administrators.
+
+Perl has good compatibility with UNIX philosophy - `Make each program do one thing well'. Experienced system administrators use simple tools by combination. But sometimes these long one-liner looks like too complex.
+
+For example, see this command line. Note that `^[' is ESC character.
+
+>||
+# tail -f /var/log/messages | sed -e 's/\(error\)/^[[7m\1^[[m^G/'
+||<
+
+It works like this: to invert highlighting matching string `error' and send bell.
+
+But I think there are some problems to write literal escape character.
+
+- It's hard to read. I can't remember `ESC[7m' means invertion. This looks like magic (of voodoo).
+- It's hard to write. You must write raw ESC character, so you cannot copy and paste this command line.
+
+I fixed these problem to write simple filter program by Perl. This is [https://gist.github.com/568197:title=escfilter], simple grep-like tool.
+
+>||
+# tail -f /var/log/messages | escfilter --reverse error
+||<
+
+I think this approach is bit better than previous way.
+
+- Easy to read. There is no longer escape sequence in command line.
+- Easy to write. --help option will inform you how to use it.
+
+**See Also
+escfilter on gist
+- https://gist.github.com/568197
+
+**Special Thanks
+Yuuki Namikawa ([http://twitter.com/namikawa:title=@namikawa]) was described how to processing log file with escape sequence by sed.
+- http://d.hatena.ne.jp/rx7/20100827/p1
+Kato Kazuyoshi ([http://twitter.com/kzys:title=kzys]) was improved escfilter script by using Term::ANSIColor.
+-- https://gist.github.com/571700
+
+**Writer
+Kensuke Kaneko ([http://twitter.com/kyanny:title=@kyanny])
+- CPAN [http://search.cpan.org/~kyanny/:title=KYANNY]
