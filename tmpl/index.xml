@@ -22,7 +22,7 @@
       &lt;/div&gt;
       [% END %]
       </description>
-      <author>[% entry.author %]</author>
+      <author>[% html_escape_hex(entry.author) | mark_raw %]</author>
     </item>
     [% END %]
   </channel>
