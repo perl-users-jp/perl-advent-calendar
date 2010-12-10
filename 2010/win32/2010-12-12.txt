@@ -2,3 +2,175 @@ Windows でも Growl を使おう
 meta-author: mattn.jp@gmail.com (mattn)
 meta-tags: win32, perl, growl
 
+こんにちわ。Growl 大好きっ子 <a href="http://mattn.kaoriya.net/">mattn</a> です。
+
+重たいバッチジョブを走らせている間、別の作業をする。ジョブが終わったらデスクトップに Growl が表示させて処理の完了を知る。
+その合間にもRSSから配信されたニュースや自分への Mension を Growl 表示し、あっという間に情報を操作する。
+
+誰もが憧れる Hackish な作業風景ですね。Mac ユーザであればその他の活用方法を知ってる人も数多くいるでしょう。
+
+<em><strong>Windows だから同じ様には行かない...</strong></em>
+
+そんな風に思っていた頃が僕にもありました。
+
+* Growl For Windows
+<img src="http://www.growlforwindows.com/gfw/images/growl4windows.jpg" />
+
+http://www.growlforwindows.com/gfw/
+
+そんな僕らはある日 Growl を得た。リッチな UI そして変更出来るデザイン。アイコンも表示出来る。さらにはプロトコルが公開されている。
+
+http://www.growlforwindows.com/gfw/help/gntp.aspx
+
+僕は Growl For Windows がリリースされてまもなく Perl インタフェースライブラリ、Growl::GNTP を書いた。
+勢いで書いたが、一応殆どの機能を操作出来るライブラリになっている。
+
+使い方は簡単。
+
+>|perl|
+use strict;
+use warnings;
+use Growl::GNTP;
+
+my $growl = Growl::GNTP->new( AppName => 'Advent Calendar Notify' );
+$growl->register( [ { Name => '記号プログラミング' } ] );
+
+$growl->notify(
+    Event          => '記号プログラミング',
+    Title          => 'ライター募集のお知らせ',
+    Message        => '君も記号プログラミングしてみないか？ ｳﾎｯ',
+    Icon           => 'http://api.dan.co.jp/twicon/hasegawayosuke/bigger',
+    CallbackTarget => 'http://perl-users.jp/articles/advent-calendar/2010/sym/',
+);
+||<
+
+アプリケーションを作成して、register で登録して、notify を呼び出すだけ。
+これだけで
+
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-12/growl1.png" />
+
+こんな通知アプリケーションが書けます。Callback は URL 指定でブラウザを起動する事ができます。
+またコールバックの指定方法を
+
+>|perl|
+$growl->notify(
+    Event          => '記号プログラミング',
+    Title          => 'ライター募集のお知らせ',
+    Message        => '君も記号プログラミングしてみないか？ ｳﾎｯ',
+    Icon           => 'http://api.dan.co.jp/twicon/hasegawayosuke/bigger',
+    CallbackContext => "invitation about writer",
+    CallbackContextType => "announce",
+    CallbackFunction => sub {
+        my ($result, $type, $context) = @_;
+        print "$result: $context ($type)\n";
+    },
+);
+
+$growl->wait(1);
+||<
+
+この様にして wait で待つと、自分専用のコールバック関数が定義出来ます。Growl をクリックした瞬間に処理が走らせられるので、例えば家族からの「お腹すいた」のネットワーク Growl をトリガーに <a href="http://e8y.net/blog/2006/07/25/p126.html">Plagger でピザを注文する</a>なんて事も出来るのです。
+
+さて今日はシンプルに Twitter Stream を Growl に垂れ流すアプリケーションを書きましょう。
+
+>|perl|
+use strict;
+use warnings;
+use Config::Pit;
+use AnyEvent::Twitter::Stream;
+use Growl::GNTP;
+use Encode;
+
+my $config = pit_get(
+    "twitter.com",
+    require => {
+        "username" => "your username on twitter",
+        "password" => "your password on twitter",
+    }
+);
+
+AnyEvent::HTTP::set_proxy $ENV{HTTP_PROXY} if $ENV{HTTP_PROXY};
+
+my $growl = Growl::GNTP->new( AppName => 'twitter stream notifier' );
+$growl->register( [ { Name => 'twitter stream' } ] );
+
+my $cv = AnyEvent->condvar;
+
+my $streamer = AnyEvent::Twitter::Stream->new(
+    username => $config->{username},
+    password => $config->{password},
+    method   => 'filter',
+    track    => 'twitter',
+    on_tweet => sub {
+        my $tweet = shift;
+        $growl->notify(
+            Event   => 'twitter stream',
+            Title   => encode_utf8( $tweet->{user}{screen_name} ),
+            Message => encode_utf8( $tweet->{text} ),
+            Icon    => encode_utf8( $tweet->{user}{profile_image_url} ),
+        );
+    },
+    on_error => sub { warn shift; $cv->send },
+    on_eof => $cv,
+);
+
+$cv->recv;
+||<
+
+いろんなブログで A::T::Stream なコードは既出なので誰でも書けるかと思います。
+ちなみに、twitter という検索語でフィルタを実行したら、画面がとんでもない事になりました。
+
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-12/growl2.png" width="400" />
+
+ぜひ皆さんもやってみて下さい！
+
+その他 Perl と Growl の組み合わせとしては、Gearman で
+
+>|perl|
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Gearman::Worker;
+use Growl::GNTP;
+
+my $growl = Growl::GNTP->new( AppName => 'Heavy Job Notifier' );
+$growl->register( [ { Name => 'Job Finished' } ] );
+
+my $worker = Gearman::Worker->new;
+$worker->job_servers(qw|localhost|);
+$worker->register_function(
+    heavy_job => sub {
+        my $job = shift;
+
+        # ここで重たい処理！
+
+        $growl->notify(
+            Event   => 'Job Finished',
+            Title   => 'Completed',
+            Message => "Finished heavy job: ID-".$job->arg,
+        );
+    }
+);
+$worker->work while 1;
+||<
+
+みたいな処理をやって、ジョブをを流す側から
+
+>|perl|
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Gearman::Client;
+
+my $client = Gearman::Client->new;
+$client->job_servers(qw|localhost|);
+$client->do_task( "heavy_job", shift || 'foo');
+||<
+
+なんて事も出来ますね。処理の終わりをずっと見ておかなくても、終われば Growl が表示される様になりました。
+
+さぁ空いた時間で何をしましょうか。
+
+次は... 誰かな？
