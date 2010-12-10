@@ -1,0 +1,4 @@
+Windows でも Growl を使おう
+meta-author: mattn.jp@gmail.com (mattn)
+meta-tags: win32, perl, growl
+
