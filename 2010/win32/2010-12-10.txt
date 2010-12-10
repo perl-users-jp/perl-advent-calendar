@@ -55,6 +55,22 @@ md5sum-perl は単独のdistribution, shasumは<a href="http://search.cpan.org/d
 
 それぞれ、 md5sum や sha1sum 等の 互換 ... だと思います。
 
+<ins>はてブコメントでgfxさんに「piconv様を忘れるとは何事だｺﾞﾙｧ」とお叱りをいただきました。素で忘れてたんです。ゴメンナサイ</ins>
+
+<ins>というわけで追記 @2010-12-10 21:50</ins>
+
+* <a href="http://search.cpan.org/perldoc?piconv">piconv</a>
+
+あのdankogaiさんがmaintainerを努める<a href="http://search.cpan.org/dist/Encode">Encode</a>の付属スクリプト。文字コード変換API/ツールである<a href="http://ja.wikipedia.org/wiki/Iconv">iconv</a>のperl版
+
+使用例としてはlwp-requestと組み合わせて
+
+>||
+C:\>lwp-request http://example.com/written-in-utf8.txt | piconv -f utf-8 -t cp932 | more
+||<
+
+なんてのが出来ますかね。
+ 
 <hr />
 
 とりあえずこんな感じで。
