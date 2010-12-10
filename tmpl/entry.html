@@ -26,7 +26,7 @@
 <script type="text/javascript" src="http://perl-users.jp/articles/advent-calendar/adventcal2009.js"></script>
 <script type="text/javascript" src="http://s.hatena.ne.jp/js/HatenaStar.js"></script>
 <script type="text/javascript">
-    Hatena.Star.SiteConfig = { entryNodes: { 'div.entry': { uri: 'a[rel="bookmark"]', title: 'h1.entry-header', container: 'h1.entry-header' } } };
+    Hatena.Star.SiteConfig = { entryNodes: { 'div.entry': { uri: 'a.permalink', title: 'h1.entry-header', container: 'h1.entry-header' } } };
 </script>
 <script type="text/javascript">
 function foo(){
@@ -105,7 +105,7 @@ function foo(){
 
     <br />
     <div class="entry-meta">
-        <a rel="bookmark" href="[% uri_for(req.path_info) %]">[% update_at %]</a>
+        <a rel="bookmark" class="permalink" href="[% uri_for(req.path_info) %]">[% update_at %]</a>
         &nbsp;|&nbsp;
         <a href="[% uri_for(year _ '/' _ name _ '/') %]">Index</a>
         <br />
