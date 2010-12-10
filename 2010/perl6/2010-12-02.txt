@@ -1,0 +1,49 @@
+コマンドラインツールをつくってみよう
+meta-author: Nobuo Danjou <nobuo.danjou@gmail.com>
+meta-tag: perl6 rakudo
+
+昨日Perl6をインストールしました。「さて何をしよう。特にすることがない！」というのがPerl6に限らず言語を勉強する際の最大の障害だと思います。題材重要ですね。
+今回は「12月25日まであと何日?」というのを調べるスクリプトを書いてみましょうか。
+
+>||
+#!/usr/bin/env perl6
+# days_till_christmas.pl
+use v6;
+
+sub MAIN (:$date = Date.today) {
+    my $howmany = Date.new('2010-12-25') - Date.new($date);
+    say "$howmany days till christmas";
+}
+||<
+
+あれ。こんだけだ。できちゃいましたね。実行してみましょう。
+
+>||
+$ perl6 days_till_christmas.pl
+15 days till christmas
+
+$ perl6 days_till_christmas.pl --date '2010-12-02'
+23 days till christmas
+
+$ perl6 days_till_christmas.pl '2010-12-02'
+Usage:
+days_till_christmast.pl [--date=value-of-date]
+
+||<
+
+おおー、ちゃんと動きました！
+
+このスクリプトで主張したかったことは
+
+- perl6のshebangは#!/usr/bin/env perl6が無難だと思います。
+- perl6のコードを書いたらuse v6;しましょう。
+- コマンドラインから実行するとMAINサブルーチンが実行されます。
+- シグニチャが強力。これだけでperl5でのGetopt::Longみたいなことができました。
+-- Usageまで出してくれちゃいます。
+-- perl5での「my $date = shift || DateTime->today->ymd;」が要りません。
+- 日付はDateモジュールを使います。でも組み込みなのでuse Date;は不要です。
+- メソッド呼び出しは「->」ではなくて、「.」です。1タイプ減りました！
+- sayメソッドはもうおなじみですね！
+- あら意外。perl5に似てる気がする！
+
+こんな辺りでしょうか。こんな短いスクリプトでもいろいろわかって面白いですね！
