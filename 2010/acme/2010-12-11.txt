@@ -50,7 +50,7 @@ my $lettermitte = ceil($anzletter/2);
 というただ1カ所でのみ使われてますが。贅沢な依存関係ですね。<a href="http://search.cpan.org/search?query=posix&mode=module">POSIX</a>じゃだめだったのかしら？
 
 
-<h2>Lesson4 Acmeじゃなくても油断しない((Lesson1-3は1日目の記事を参照ください))</h2>
+<h2>Lesson4 Acmeじゃなくても油断しない((Lesson1-3は<a href="http://perl-users.jp/articles/advent-calendar/2010/acme/1">1日目の記事</a>を参照ください))</h2>
 
 Acmeの名前を持たなくてもAcme臭あふれるCPANモジュールもありますよと。というわけで、このお正月はCPAN上でAcmeがつかないAcmeモジュールを探す旅に出てみては如何でしょうか。
 
@@ -102,7 +102,7 @@ my $lettermitte = ceil($anzletter/2);
 Is <a href="http://search.cpan.org/search?query=posix&mode=module">POSIX</a> no good?
 
 
-<h2>Lesson4 Be on your guard against no Acme name module ((See to first day for Lesson1-3))</h2>
+<h2>Lesson4 Be on your guard against no Acme name module ((See to <a href="http://perl-users.jp/articles/advent-calendar/2010/acme/1">the first day article</a> for Lesson1-3))</h2>
 
-There are Acme modules have Acme smell on CPAN. Well, in this winter vacation, would you like to explore them.
+There are CPAN modules that have no Acme name but emmit Acme smell. Well, in this winter vacation, would you like to travel to explore them.
 
