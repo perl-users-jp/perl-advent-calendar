@@ -124,7 +124,7 @@ $cv->recv;
 
 ぜひ皆さんもやってみて下さい！
 
-その他 Perl と Growl の組み合わせとしては、Gearman で
+その他 Perl と Growl の組み合わせとしては、Gearman を使いサーバ側で
 
 >|perl|
 #!/usr/bin/perl
@@ -155,7 +155,7 @@ $worker->register_function(
 $worker->work while 1;
 ||<
 
-みたいな処理をやって、ジョブをを流す側から
+みたいな処理を走らせ、ジョブをを流す側から
 
 >|perl|
 #!/usr/bin/perl
@@ -169,7 +169,7 @@ $client->job_servers(qw|localhost|);
 $client->do_task( "heavy_job", shift || 'foo');
 ||<
 
-なんて事も出来ますね。処理の終わりをずっと見ておかなくても、終われば Growl が表示される様になりました。
+と実行する。なんて事も出来ますね。処理の終わりをずっと見ておかなくても、終われば Growl が表示される様になりました。
 
 さぁ空いた時間で何をしましょうか。
 
