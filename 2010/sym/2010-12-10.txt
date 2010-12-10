@@ -113,6 +113,7 @@ expr
             #line hidden
             @__w.Write("*/</span>);<span style="color:green">//");</span>
 </pre><
+<pre>             @__w.Write(<span style="color:darkred;background-color:#ffeeee">@");<br/><br/><br/>            #line default<br/>            #line hidden<br/>            @__w.Write("</span><span style="color:green">/*");<br/><br/>            #line 1 "c:\users\tomoyo\documents\visual studio 10\Projects\WebApplication6\WebApplication6\Default2.aspx"<br/>                                    */</span>['*']<span style="color:green">/*<br/><br/>            #line default<br/>            #line hidden<br/><br/>            @__w.Write("*/</span>);<span style="color:green">//");</span></pre>
 こうなっていましてさらにコメントを消すと…
 ><pre>
              @__w.Write(<span style="color:darkred;background-color:#ffeeee">@");
