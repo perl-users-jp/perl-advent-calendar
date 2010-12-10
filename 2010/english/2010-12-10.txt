@@ -38,7 +38,7 @@ escfilter on gist
 Yuuki Namikawa ([http://twitter.com/namikawa:title=@namikawa]) was described how to processing log file with escape sequence by sed.
 - http://d.hatena.ne.jp/rx7/20100827/p1
 Kato Kazuyoshi ([http://twitter.com/kzys:title=kzys]) was improved escfilter script by using Term::ANSIColor.
--- https://gist.github.com/571700
+- https://gist.github.com/571700
 
 **Writer
 Kensuke Kaneko ([http://twitter.com/kyanny:title=@kyanny])
