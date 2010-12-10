@@ -1,0 +1,28 @@
+RFC822対応しててサーバアプリケーション動かなくなった
+meta-author: mattn.jp@gmail.com (mattn)
+meta-tags: perl, p5-advent-calendar
+
+今朝サーバ落とした <a href="http://mattn.kaoriya.net/">mattn</a> です。
+日付フォーマットがRFC822じゃなかったのでotsuneさんがforkしてpatch書いてくれた。
+
+デプロイしてサーバで動かしたら、ロケールが効いててRSSのpubdateに日本語の曜日とか時差名が表示された。
+
+こりゃいかんとばかりに、ロケール依存じゃないRFC822が得られる Date::Format を使うが如く「use Date::Time」を足して commit、そして push した。
+
+サーバに Date::Time が入ってなくてサーバアプリケーションが立ち上がらなくなった。
+
+デプロイはそのサーバアプリケーションから実行する方法しか知らなかったので焦った。
+
+泣きそうになった。
+
+くじけそうになった。
+
+ぼく JPerl Advent Calendar なんか参加してないよ？ってシラを切る覚悟もした。
+
+>||
+
+typester: @mattn_jp Makefile.PL にちゃんと依存書けばいけるらしいよ！
+
+||<
+
+あなたが神か...
