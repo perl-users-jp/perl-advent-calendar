@@ -1,0 +1,142 @@
+C#(ASP.NET 4)で記号プログラミングをやってみたい!
+
+こんにちは、Microsoft好きの<a href="http://subtech.g.hatena.ne.jp/mayuki/">id:mayuki</a>です。
+昨日はperl -MDigest::SHA -e 'print Digest::SHA->new(256)->add("hauhau")->hexdigest' という感じでPerlを活用しました。Perlすばらしいですね。
+
+昨今記号プログラミングというのが流行っているようで、みんな大好きC#でもできないかなーと思いますよね。
+とはいえ通常C#のコードはpublic class Programなどとはじまるので最初無理だろう思ったのですが、唯一 class 定義などを書かずに実行できる環境がある事に気づきました。そう…ASP.NETです。
+
+** 記号で文字を出力してみる
+
+と、なんかできそうな雰囲気がしてきたので恒例の "Hello, World!" を……といきたいところですが折角なので "hauhau" しましょう。はうはう。
+
+>|cs|
+<%=@"%>/*<%*/['<'-('('-'-')]/*%>*/);//<%=@"%>/*<%*/[')']/*%>*/);//<%=@"%>/*<%*/['*']/*%>*/);//<%=@"%>/*<%*/['<'-('('-'-')]/*%>*/);//<%=@"%>/*<%*/[')']/*%>*/);//<%=@"%>/*<%*/['*']/*%>*/);//
+||<
+
+というわけでごく普通の何の変哲のないC#(ASP.NET)のコードができあがりました。これをDefault.aspxとして保存します。
+Web.configにはC#としてコンパイルされるようdefaultLanguageの指定をしておきます。これを忘れるとVB.NET扱いになってしまいます。
+
+>|xml|
+<configuration>
+    <system.web>
+        <compilation debug="true" targetFramework="4.0" defaultLanguage="C#"/>
+    </system.web>
+</configuration>
+||<
+
+そしてどこか(IISやVisual Studio 2010などの開発環境)に配置してWebブラウザで Default.aspx を表示すると…
+
+>||
+hauhau
+||<
+
+ヤッター。はうはう。更にちょちょっと書き換えると…
+
+>|cs|
+<%=@"%>/*<%*/['*']/*%>*/);//<%=@"%>/*<%*/['"']/*%>*/);//<%=@"%>/*<%*/['@'+('+'-'*')]/*%>*/);//<%=@"%>/*<%*/[')']/*%>*/);//<%=@"%>/*<%*/['[']/*%>*/);//<%=@"%>/*<%*/['*']/*%>*/);//
+||<
+
+大好きなあの子の名前が…!
+
+>||
+uiharu
+||<
+
+ヤッター……と言いたいところですが、あえて "hauhau" などを選んだのは "Hello, World!" のような好きな文を出力できるわけではないという理由からだったりします。
+
+**種明かし
+どうやって出力しているのかというお話です。とりあえず文字 "u" を表示するコード <%=@"%>/*<%*/['*']/*%>*/);// の最後 );// を x);// に変更してコンパイルエラーにしてみましょう。
+エラーページには「完全なコンパイル ソースを表示」というaspxがcs(C#)に変換されたあとのコードを表示する機能があるのでこれで覗けます。
+
+するとこんな感じのコードが見つかります。見ての通り "u" を出力しているコードですね。
+
+>|cs|
+行 184:          private void @__Render__control1(System.Web.UI.HtmlTextWriter @__w, System.Web.UI.Control parameterContainer) {
+行 185:              
+行 186:              #line 1 "c:\users\tomoyo\documents\visual studio 10\Projects\WebApplication6\WebApplication6\Default2.aspx"
+行 187:                   @__w.Write(@");
+行 188:  
+行 189:              
+行 190:              #line default
+行 191:              #line hidden
+行 192:              @__w.Write("/*");
+行 193:              
+行 194:              #line 1 "c:\users\tomoyo\documents\visual studio 10\Projects\WebApplication6\WebApplication6\Default2.aspx"
+行 195:                                      */['*']/*
+行 196:              
+行 197:              #line default
+行 198:              #line hidden
+行 199:              @__w.Write("*/);//"x);
+||<
+
+これを見てもわかるように、aspxの構文は解析されてC#のソースコードとして一度変換されコンパイルされます。大体以下のような感じです。
+<%= … %> が
+>||
+#line 1 "…"
+@_w.Write(expr);
+||<
+と変換され、
+<% expr %> は
+>||
+#line 1 "…"
+expr
+||<
+に、そしてそれ以外の直接かかれた文字は
+>||
+#line default
+#line hidden
+@_w.Write("文字");
+||<
+に変換されます。#lineという行はコンパイラがマークとして残している行ですね。
+
+というわけで先ほどの <%=@"%>/*<%*/['*']/*%>*/);// をばらしてみると…
+-<%=@"%> は@_w.Write(@"); に変換され、逐語的文字列リテラル(ヒアドキュメントみたいなやつ)を開いて、
+-/* は @_w.Write("/*"); に変換され、ダブルクォートでそこまでの一度逐語的文字列リテラルを閉じ、今度はコメントを開始し、
+-<%*/['*']/*%> は @_w.Write(*/['*']/*); に変換され、一度そこまでのコメントを閉じて ['*'] を残して、またコメントを開始して、
+-*/);// は @_w.Write(*/);//); に変換され、コメントを閉じつつ ); で一番最初の Write メソッドの括弧を閉じて、後ろに余分な);がついてしまうので//でコメントアウト
+という風に展開されます。
+
+初心者の方にはちょっとわかりにくいかもしれないので色をつけつつちょっと切り出すと…
+<pre>
+             @__w.Write(<span style="color:darkred;background-color:#ffeeee">@");
+
+            
+            #line default
+            #line hidden
+            @__w.Write("</span><span style="color:green">/*");
+            
+            #line 1 "c:\users\tomoyo\documents\visual studio 10\Projects\WebApplication6\WebApplication6\Default2.aspx"
+                                    */</span>['*']<span style="color:green">/*
+            
+            #line default
+            #line hidden
+            @__w.Write("*/</span>);<span style="color:green">//");</span>
+</pre>
+こうなっていましてさらにコメントを消すと…
+<pre>
+             @__w.Write(<span style="color:darkred;background-color:#ffeeee">@");
+
+            
+            #line default
+            #line hidden
+            @__w.Write("</span>['*']);
+</pre>
+と言うのが残ります。
+
+@" から次の " までが逐語的文字列リテラルで、その文字列のStringのインデクサに '*' というCharを渡すと、42という値に変換され、文字列リテラルの42番目の文字を取ってきて、めでたく "u" が出てきてそれをWriteしているので "u" が表示されるという訳です。そしてこれを繰り返せば文字列を作れます。かんたんですね。
+まあ逐語的文字列リテラルにある文字しか出せないですが。
+
+数値は普通にChar型の足し算引き算( '+' - '-' )などで得ることができるのでインデクサの値にしたり、Stringとくっつけて文字列にしたりできます。でもCharにはもどせません。戻せるならこんな苦労は要らない訳で。
+
+他にも定番の技として (""+('-' == '-')) とすると "True", (""+('-' != '-')) とすれば "False" という文字列を得られるので、同じようにインデクサを使えば
+-("" + ('-' == '-'))['-'-'-'] //=> T
+-("" + ('-' != '-'))['-'-'-'] //=> F
+などを得ることができます。
+
+** まとめ
+という訳でここまでで記号のみで出力できるようになった文字は 記号 + 数字 + F T W a d e f h i l n r s t u です。
+hauhauはできますがHello, World!できないため、より高度なテクニックでの完璧な記号プログラミングを模索中です。
+
+なお、コンパイラの出力に頼っているので動作は環境とバージョンに強く依存することを付け加えておきます。
+
