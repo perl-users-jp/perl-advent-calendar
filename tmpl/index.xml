@@ -3,7 +3,7 @@
   <channel>
     <title>[% name %] - [% conf.title %]</title>
     <link>[% uri_for(year _ '/' _ name _ '/') %]</link>
-    <atom:link rel="self" href="[% uri_for(year _ '/' _ name _ '/') %]/rss" type="application/rss+xml" /> 
+    <atom:link rel="self" href="[% uri_for(year _ '/' _ name _ '/') %]rss" type="application/rss+xml" /> 
     <atom:link rel="hub" href="http://pubsubhubbub.appspot.com/"/>
     <description>[% name %] - [% conf.title %]</description>
     [% FOR entry IN entries %]<item>
