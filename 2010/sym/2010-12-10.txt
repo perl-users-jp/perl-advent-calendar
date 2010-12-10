@@ -98,7 +98,7 @@ expr
 という風に展開されます。
 
 初心者の方にはちょっとわかりにくいかもしれないので色をつけつつちょっと切り出すと…
-<pre>
+><pre>
              @__w.Write(<span style="color:darkred;background-color:#ffeeee">@");
 
             
@@ -112,16 +112,16 @@ expr
             #line default
             #line hidden
             @__w.Write("*/</span>);<span style="color:green">//");</span>
-</pre>
+</pre><
 こうなっていましてさらにコメントを消すと…
-<pre>
+><pre>
              @__w.Write(<span style="color:darkred;background-color:#ffeeee">@");
 
             
             #line default
             #line hidden
             @__w.Write("</span>['*']);
-</pre>
+</pre><
 と言うのが残ります。
 
 @" から次の " までが逐語的文字列リテラルで、その文字列のStringのインデクサに '*' というCharを渡すと、42という値に変換され、文字列リテラルの42番目の文字を取ってきて、めでたく "u" が出てきてそれをWriteしているので "u" が表示されるという訳です。そしてこれを繰り返せば文字列を作れます。かんたんですね。
