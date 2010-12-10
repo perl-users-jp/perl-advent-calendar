@@ -1,0 +1,6 @@
+Perl6を入れてみよう！
+meta-author: Nobuo Danjou <nobuo.danjou@gmail.com>
+meta-tag: perl6 rakudo
+
+遅れてやってきたperl6トラック、現在12月10日です。ここから一気に追い上げていきたいと思います！よろしくお願いします！
+
