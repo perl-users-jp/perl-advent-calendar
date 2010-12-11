@@ -2,7 +2,7 @@ Windows で複数の perl を使い分けよう！
 meta-author: xaicron <xaicron@cpan.org>
 meta-tags: perl, win32
 
-こんにちはこんにちは！ [http://atnd.org/events/9803:title=MySQL Casual] でこの記事を書いてます。MySQL とかよくわかってません。
+こんにちはこんにちは！ [http://atnd.org/events/9803:title=MySQL Casual] でこの記事を書いている [http://twitter.com/#!/xaicron:title=xaicron] です。MySQL とかよくわかってません。
 
 さて、世間一般では、perlbrew を使わないでいいのは小学生までだよねーって感じになってますが、当然 Win32 で使うのは大変ですし、バイナリあるから使いたいよねって感じです。
 
