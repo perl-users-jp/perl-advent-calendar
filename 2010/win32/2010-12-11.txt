@@ -150,7 +150,7 @@ C:\> psw.pl -l
 >||
 C:/strawberry -> C:/strawberry-5.12.1
 C:/strawberry-5.12.0 -> C:/strawberry
-<||
+||<
 
 としてるだけです。
 こんな感じで簡単に perl を switch できてとっても便利です。
