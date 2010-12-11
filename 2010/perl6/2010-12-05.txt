@@ -1,0 +1,131 @@
+モジュールを書いてみよう
+meta-author: Nobuo Danjou <nobuo.danjou@gmail.com>
+meta-tag: perl6 rakudo
+
+昨日は既存のモジュールを使ってみました。今日は自分で新しいモジュールを書いてみましょう。例が思いつかなかったので、こんなスクリプトを実行すると'foo'と帰ってくる、そんなFoo.pmを書いてみましょう。
+
+>||
+#!/usr/bin/env perl6
+use v6;
+use Foo;
+
+my $f = Foo.new;
+say $f.foo;
+||<
+
+* コードを書く
+
+まずfooディレクトリにtとlibディレクトリを切ります。
+
+>||
+$ cd ~/tmp
+$ mkdir foo
+$ cd foo
+$ mkdir lib t
+$ ls
+lib  t
+||<
+
+ではt/01-usage.tとしてテストを書きましょう。
+
+>||
+use v6;
+use Test;
+use Foo;
+
+ok my $f = Foo.new;
+isa_ok $f, 'Foo';
+is $f.foo, 'foo';
+
+done_testing;
+
+# vim: set ft=perl6
+||<
+
+こんな感じでしょうか。perl 5 とおんなじ感じですね。lib/Foo.pmも書いてみます。
+
+>||
+use v6;
+
+class Foo {
+    method foo {
+        return 'foo';
+    }
+}
+
+# vim: set ft=perl6
+||<
+
+んー、お題が良くなかったですが、こんな感じですね。これだけなので特に問題ないと思います。
+
+* ビルドする
+
+さて、Perl 5 ではMakefile.PLというのを書いて、以下のようにしてビルドするのがよくある手順でした。
+
+>||
+$ perl Makefile.PL
+$ make
+$ make test
+$ make install
+||<
+
+Perl 6 ではどうなんでしょう？Makefile.PLは書きません。そしてperl Makefile.PLするかわりにufoコマンドというのを実行します。実際にインストールの手順を行ってみると、こんな出力が得られます。
+
+>||
+$ ufo
+
+$ make
+mkdir -p `dirname 'blib/lib/Foo.pir'`
+env PERL6LIB=/home/danjou/tmp/foo/blib/lib:/home/danjou/tmp/foo/lib: perl6 --target=pir --output=blib/lib/Foo.pir lib/Foo.pm
+mkdir -p `dirname 'blib/lib/Foo.pm'`
+cp lib/Foo.pm blib/lib/Foo.pm
+
+$ make test
+env PERL6LIB=/home/danjou/tmp/foo/blib/lib:/Users/danjou/tmp/foo/lib: prove -e 'perl6' -r t/
+t/01-usage.t .. ok   
+All tests successful.
+Files=1, Tests=3,  1 wallclock secs ( 0.02 usr  0.00 sys +  0.86 cusr  0.35 csys =  1.23 CPU)
+Result: PASS
+
+$ make install
+mkdir -p `dirname '/home/danjou/.perl6/lib/Foo.pm'`
+install lib/Foo.pm /home/danjou/.perl6/lib/Foo.pm
+mkdir -p `dirname '/home/danjou/.perl6/lib/Foo.pir'`
+install blib/lib/Foo.pir /home/danjou/.perl6/lib/Foo.pir
+
+||<
+
+これからわかることは、
+
+>||
+env PERL6LIB=/home/danjou/tmp/foo/blib/lib:/home/danjou/tmp/foo/lib: \
+    perl6 \
+        --target-pir \
+        --output=blib/lib/Foo.pir lib/Foo.pm
+||<
+
+というところで、
+- PERL6LIBというのがPerl 6でのPERL5LIBのように@INCにパスを追加する環境変数
+- Foo.pmをFoo.pirに、perl6のコードをparrotのコードにコンパイルしている
+
+>||
+env PERL6LIB=/home/danjou/tmp/foo/blib/lib:/Users/danjou/tmp/foo/lib: \
+    prove -e 'perl6' -r t/
+||<
+
+というところで、
+- テストはPERL6LIBにlibとblibを追加してprove -e 'perl6'で実行している
+
+>||
+mkdir -p `dirname '/home/danjou/.perl6/lib/Foo.pm'`
+install lib/Foo.pm /home/danjou/.perl6/lib/Foo.pm
+mkdir -p `dirname '/home/danjou/.perl6/lib/Foo.pir'`
+install blib/lib/Foo.pir /home/danjou/.perl6/lib/Foo.pir
+||<
+
+というところで、
+- インストール先は昨日出てきた「$HOME/.perl6/lib」以下だった
+
+という辺りだと思います。昨日の.pirの説明が間違っていたことがわかりました。すいませんでした。訂正しておきます。
+
+これで、自作モジュールを自由に使えるようになりました。
