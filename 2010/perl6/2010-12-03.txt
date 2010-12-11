@@ -10,7 +10,7 @@ meta-tag: perl6 rakudo
 PDFは英語ですが順を追ってPerl6の機能を紹介してあるので、ざっと一度読んでおくとよいでしょう。[https://github.com/rakudo/star/raw/master/skel/docs/UsingPerl6-draft.pdf:title=こちら]でオンラインで読めるので、インストールするほどじゃないけど興味があるな、という方もぜひ読んでみてください。
 cheetsheet.txtの中身はこんなのです。
 
->||
+>|
 
 Perl 6 cheat sheet v2                                                »ö«
 
@@ -77,7 +77,7 @@ $!     error object     <foo>  subrule          REGEX CHARCLASSES
 %*ENV  environment      ||     serial or        \d == <digit>, \D non
 $*PID  process id       « »    word boundary    \w == <+alpha+digit+[_]>
 
-||<
+|<
 
 うわあ。perl5とperl6の書き方が違う気がする！と思った瞬間にさっと開いてカンニングしましょう。
 
