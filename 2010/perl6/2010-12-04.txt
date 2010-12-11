@@ -81,7 +81,7 @@ $ head MiniDBD.pir
 ||<
 
 MiniDBD.pirファイルの先頭の10行をのぞいてみました。なんだこれ。私たちが知っているPerl的なものとはどうも様子が違いますね。やってることは何となく想像できますけど、これはちがう。これはParrotという別の言語のファイルでした。
-Perl6はParrot仮想マシン上で動いています。なので、これはPerl6の下で動作するファイルのようです。イメージとしてはPerl5におけるXSモジュール、のような立場ではないでしょうか。Perl6とParrotの関係についてはcharsbarさんによる[http://gihyo.jp/dev/serial/01/modern-perl/0014:title=モダンPerlの世界へようこそ 第14回　Rakudo：実装する方法だってひとつではないのです]を読んでいただくとよいと思います。
+Perl6はParrot仮想マシン上で動いています。なので、これはPerl6の下のParrotで動作するファイルのようです。<del>イメージとしてはPerl5におけるXSモジュール、のような立場ではないでしょうか。</del><ins>Perl6のコードをParrotにコンパイルしたもので、実際にはこのコードが実行されることになります。</ins> Perl6とParrotの関係についてはcharsbarさんによる[http://gihyo.jp/dev/serial/01/modern-perl/0014:title=モダンPerlの世界へようこそ 第14回　Rakudo：実装する方法だってひとつではないのです]を読んでいただくとよいと思います。
 
 * つかってみよう！
 

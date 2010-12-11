@@ -105,7 +105,7 @@ env PERL6LIB=/home/danjou/tmp/foo/blib/lib:/home/danjou/tmp/foo/lib: \
 ||<
 
 というところで、
-- PERL6LIBというのがPerl 6でのPERL5LIBのように@INCにパスを追加する環境変数
+- PERL6LIBというのがPerl 5でのPERL5LIBのように@INCにパスを追加する環境変数
 - Foo.pmをFoo.pirに、perl6のコードをparrotのコードにコンパイルしている
 
 >||
