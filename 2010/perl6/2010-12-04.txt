@@ -34,6 +34,14 @@ $ perl6 -e 'say $_ for @*INC'
 :install/lib/parrot/languages/perl6/lib: これはrakudo-starをインストールしたときに入った、デフォルトでついてくるモジュールが入っている場所です。あとで詳しくのぞいてみましょう。
 :.: これはカレントディレクトリですね。
 
+** 追記
+
+#per6@freenodeで読んでもらったら、
+>||
+$ perl6 -e '.say for @*INC'
+||<
+のほうがよくね？と言われました。こっちの方がperl6っぽいですね！
+
 * どんなのがある？
 
 ではinstall/lib/parrot/languages/perl6/libをのぞいてどんなのがあるか見てみましょう。
