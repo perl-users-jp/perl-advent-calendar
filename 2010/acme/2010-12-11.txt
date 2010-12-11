@@ -33,7 +33,7 @@ print "$first と $second の相性は…… $m％\n";
 文字列を分解して何か色々計算しているようです（ascii以外の文字を渡すとあまりよろしくない感じ）が、とにもかくにもCPANモジュールは相性診断さえ可能にするのです。
 
 
-<a href="http://search.cpan.org/dist/Love-Match-Calc">レビュー</a>がありましたので、適当な訳で引用してみます。
+<a href="http://cpanratings.perl.org/dist/Love-Match-Calc">レビュー</a>がありましたので、適当な訳で引用してみます。
 
 >>
 なんじゃこりゃ？　これはPerlの皮を被ったCだ。Acme::*下にあれば良かったのに。それと、関数が不必要にプロトタイプを強制している。さらに、このモジュールは感情のカクテルたる”Love”と無関係だ。何か上手いこと頭文字をとってるわけでもないし。(<a href="http://cpanratings.perl.org/dist/Love-Match-Calc">Gene Boggs</a>)
@@ -85,7 +85,7 @@ print "Lovematch for $first and $second: $m%\n";
 
 Now, CPAN module can calculate a love factor!
 
-Threre is a <a href="http://search.cpan.org/dist/Love-Match-Calc">review</a>.
+Threre is a <a href="http://cpanratings.perl.org/dist/Love-Match-Calc">review</a>.
 
 >>
 WTF? This is c in perl clothing. It would have been proper to file this under the Acme::* namespace. Also,
