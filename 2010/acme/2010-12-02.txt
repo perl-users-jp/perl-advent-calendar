@@ -1,4 +1,6 @@
 Acme::Pokemon
+meta-author: tomi-ru
+meta-tags: perl, acme, pokemon
 
 こんにちは<a href="http://e8y.net/blog/">トミール</a>です。
 

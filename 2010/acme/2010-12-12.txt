@@ -8,7 +8,8 @@ meta-tags: perl, acme, ikamusume
 
 今日は<a href="http://search.cpan.org/perldoc?Acme::Ikamusume">Acme::Ikamusume</a>を紹介するでゲソ
 
-<h1>使い方</h1>
+
+<h3>使い方</h3>
 
 geso() にテキストを渡すと変換されるでゲソ。簡単じゃなイカ？
 
@@ -27,14 +28,14 @@ IKA
 
 「私は海からの使者、イカ娘でゲソ。みんなもいっしょに侵略しなイカ？」
 
-となるでゲソ。
+と、なるでゲソ。
 
 おろかなる人間どものために、簡単に試せるサイトを作ったのでさっそくてきとうな文章を侵略してみようじゃなイカ！？
 
-<a href="http://ika.koneta.org/">侵略！イカ娘変換<br />http://ika.koneta.org/</a>
+<a href="http://ika.koneta.org/">侵略！イカ娘変換</a> <a href="http://b.hatena.ne.jp/entry/http://ika.koneta.org/"><img src="http://b.hatena.ne.jp/entry/image/http://ika.koneta.org/" alt="B!" /></a><br />
 
 
-<h1>開発こばなし</h1>
+<h3>開発こばなし</h3>
 
 ちょっと作れろうとおもってすぐわかったのでゲソが、意外にイカ文法がむずかしくこれはサクっとイカない、と放置していたのですゲソ（－ω－）
 
@@ -51,7 +52,7 @@ IKA
 <a href="https://github.com/tomi-ru/ika.koneta.org">サイトのコード</a>もまるっと上げてるでゲソ。つっこんでほしいイカ的オサレポイントがあるのでぜひ見つけてみなイカ？
 
 
-<h1>MeCabつかってるでゲソ</h1>
+<h3>MeCabつかってるでゲソ</h3>
 
 <a href="https://github.com/bayashi/Acme-Yomeru">bayashiさんのAcme::Yomeruも</a>やってるけどMAParser（形態素解析機）をText::MeCabとかChasen、YahooのAPIと切り替えることのできる汎用インターフェースを作ろうと思ったのでゲソが、Acme::IkamusumeではMeCab伝説の宝刀userdicを使うことにしたのであきらめたでゲソ。だれかLingua::JA::MAParserとか作らなイカ？
 
