@@ -1,0 +1,58 @@
+公開されているモジュールを使ってみよう
+meta-author: Nobuo Danjou <nobuo.danjou@gmail.com>
+meta-tag: perl6 rakudo
+
+昨日は自分でモジュールを書いて、$HOME/.perl6/lib/以下にインストールするところまでやりました。今日は公開されているモジュールを使ってみましょう。これについては、未来の記事になりますが（！！）、本家のPerl 6 Advent Calendarに掲載された[http://perl6advent.wordpress.com/2010/12/09/day-9-–-the-module-ecosystem/:title=Day 9 - The module ecosystem]に詳しく説明してありました。こちらでも紹介しておきます。
+
+公開されているモジュールはhttp://modules.perl6.org/ で見ることができ、この一覧はgithub上の https://github.com/perl6/ecosystem/blob/master/projects.list というファイルで管理されています。また、すべてのモジュールはそれぞれの作者のgithub上にあります。
+なので、この中に使いたいな、と思うモジュールが見つかったら、このリストを見たりリンクをたどったりしてレポジトリの場所を見つけて、
+
+>||
+$ cd ~/tmp
+$ git clone git://github.com/tadzik/perl6-Acme-Meow.git
+$ cd perl6-Acme-Meow
+$ ufo
+$ make
+$ make install
+||<
+
+などのようにすればいいことになります。でもこれはcpanmコマンドを使わずにCPANモジュールをインストールするようなもので、依存関係の解決ができません。そこで[http://perl6advent.wordpress.com/2010/12/09/day-9-–-the-module-ecosystem/:title=Day 9 - The module ecosystem]で紹介されていたのが、neutroというコマンドです。以下のようにインストールします。
+
+>||
+$ git clone git://github.com/tadzik/neutro.git
+$ cd neutro
+$ PERL6LIB=tmplib bin/neutro .
+||<
+
+このコマンドで先ほどのperl6-Acme-Meowをインストールすると、以下のようになります。
+
+>||
+$ neutro perl6-Acme-Meow
+==> Fetching perl6-Acme-Meow
+==> Building perl6-Acme-Meow
+==> Testing perl6-Acme-Meow
+All tests successful.
+Files=2, Tests=3,  2 wallclock secs ( 0.02 usr  0.01 sys +  1.56 cusr  0.65 csys =  2.24 CPU)
+Result: PASS
+==> Installing perl6-Acme-Meow
+==> Successfully installed perl6-Acme-Meow
+
+||<
+
+また、公開されているモジュールの一覧も以下のようにして見ることができます。
+
+>||
+$ neutro update
+==> Updating modules database
+==> Fetching ecosystem
+
+$ neutro list
+ABC
+Algorithm--Diff
+Algorithm-Viterbi
+Bennu
+....
+
+||<
+
+と、いい感じ。ですが、いくらか試してみたところ、ufo && makeするとコンパイルできるけどneutroでインストールできないこともあったし、最新のrakudo starでは動作しないモジュールもあるようでした。rakudo starも日々成長していますし、仕方ないことかもしれません。その点だけ注意しながら使うと良いでしょう。
