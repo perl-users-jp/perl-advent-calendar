@@ -1,0 +1,79 @@
+Perlで文学を嗜む Net::AozoraBunko
+meta-author: bayashi <bayashi@cpan.org>
+meta-tags: perl
+
+今年の Advent Calendar もいよいよ中盤戦。
+もういくつ寝ると、メリークリ○○ス！
+きのうの Acme Track (<a href="http://perl-users.jp/articles/advent-calendar/2010/acme/10">Acme::Yomeru</a>) につづいて Casual Track にやってまいりました <a href="http://twitter.com/#!/bayashi">bayashi</a> です。こんにちは！
+
+さて、みなさん、コード書いてますか、コード読んでますか。
+短く簡潔なコードを読むと、気持ちもスッキリしますね。
+でも、たまには文学なんてどうですか。
+Perl で文学が嗜めるなんて、なんか渋くないですか。
+
+* 青空文庫
+
+<a href="http://ja.wikipedia.org/wiki/%E9%9D%92%E7%A9%BA%E6%96%87%E5%BA%AB">青空文庫 - Wikipedia</a>
+<blockquote>
+日本国内において著作権が消滅した文学作品、あるいは著作権は消滅していないものの著作権者が当該サイトにおける送信可能化を許諾した文学作品を収集・公開しているインターネット上の電子図書館
+</blockquote>
+<blockquote>
+古くは森鴎外、夏目漱石、芥川龍之介など、近くは中島敦（1942年没）、太宰治（1948年没）、林芙美子（1951年没）、宮本百合子（1951年没）、堀辰雄（1953年没）、坂口安吾（1955年没）、高村光太郎（1956年没）などの作品がある
+</blockquote>
+
+なかなかすごいラインナップ！ 青空文庫++
+これは Perl インターフェースがほしい！
+
+* Net::AozoraBunko
+
+というわけで書いてみました。<a href="https://github.com/bayashi/Net-AozoraBunko">Net::AozoraBunko</a>。
+このモジュールは、青空文庫の作家や作品を検索し、作品をダウンロードすることができます。
+まだ CPAN にはあげてなくて、 github においてあります。
+
+** 使い方
+
+一気に書いてみます。
+
+>|perl|
+  use utf8;
+  use Net::AozoraBunko;
+
+  $ab = Net::AozoraBunko->new;
+
+  # 作家一覧を取得します
+  $authors = $ab->authors;
+
+  $author = shift @{$authors};
+
+  # 作家の情報を取得します
+  $author_info = $ab->author($author->{url});
+
+  # 作家の作品一覧を取得します
+  $works = $ab->works($author->{url});
+
+  # 作家の作品を作業中のものを含んで取得します
+  $all_works = $ab->works($author->{url});
+
+  # 作家をキーワード検索します
+  $search_author_results = $ab->search_author('検索語');
+
+  # 作家の作品をキーワード検索します
+  $search_work_results   = $ab->search_work($author->{url}, '検索語');
+
+  # 作品のテキストを取得します
+  $text = $ab->get_text($search_work_results->[0]->{url});
+
+  # 作品を zip ファイルのまま取得します
+  $zip  = $ab->get_zip($works->[0]->{url});
+||<
+
+ひととおり揃えたつもりです。是非一度お試しいただけると幸いです。
+
+いやしかし、コマンドラインツールが欲しいですね。
+これからがんばって書こうと思います。
+
+というわけで、冬はコタツで文学を楽しみましょう！
+
+明日は、僕も昔住んでました、名古屋でPerlをゆるく語る会の <a href="http://twitter.com/#!/issm">issm さん</a>です！
+どーら楽しみにしといてちょ！
+
