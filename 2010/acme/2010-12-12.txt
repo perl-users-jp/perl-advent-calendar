@@ -1,0 +1,60 @@
+Acme::Ikamusumeで侵略しなイカ？
+meta-author: tomi-ru
+meta-tags: perl, acme, ikamusume
+
+人間どもよ！
+
+我こそは<a href="http://www.ika-musume.com/">海からの使者</a>の手先、<a href="http://twitter.com/tomita">トミール</a>でゲソ！！
+
+今日は<a href="http://search.cpan.org/perldoc?Acme::Ikamusume">Acme::Ikamusume</a>を紹介するでゲソ
+
+<h1>使い方</h1>
+
+geso() にテキストを渡すと変換されるでゲソ。簡単じゃなイカ？
+
+>|perl|
+use utf8;
+use open qw/:utf8 :std/;
+
+use Acme::Ikamusume;
+
+print Acme::Ikamusume->geso(<<'IKA');
+私は海からの使者、イカ娘です。
+みんなもいっしょに侵略しませんか？
+IKA
+
+||<
+
+「私は海からの使者、イカ娘でゲソ。みんなもいっしょに侵略しなイカ？」
+
+となるでゲソ。
+
+おろかなる人間どものために、簡単に試せるサイトを作ったのでさっそくてきとうな文章を侵略してみようじゃなイカ！？
+
+<a href="http://ika.koneta.org/">侵略！イカ娘変換<br />http://ika.koneta.org/</a>
+
+
+<h1>開発こばなし</h1>
+
+ちょっと作れろうとおもってすぐわかったのでゲソが、意外にイカ文法がむずかしくこれはサクっとイカない、と放置していたのですゲソ（－ω－）
+
+このたびここの順番がまわってきたことをきっかけに実装を決意したのでゲソ。
+
+ググってみたら、JavaScriptの正規表現でがんばってるのがいくつかあったけど、モジュール化するならちゃんと文法を認識してやりたいな、と。しかし日本語動詞の活用形って、ふくざつすぎるじゃなイカ・・・
+
+とくに難しいのが文末ルール「じゃなイカ？」。同じ文末ルール「でゲソ」との使い分け方がはっきりしないため原作にあたる必要があり、必然的に開発中はずっとアニメを流していたでゲソ(*￣∀￣*)
+
+あとアニメではわからない、「いか」「げそ」って正式な表記はカタカナなのか？ひらがななのか？という問題につきあたったため、原作のコミックも取り寄せて読まなくてはいけなかったでゲソ。ああなんて楽しい開発じゃなイカ(°∀°)
+
+ちなみに<a href="https://github.com/tomi-ru/Acme-Ikamusume">レポジトリはこちら</a>でゲソ。forkしなイカ？ pull requestしなイカ？
+
+<a href="https://github.com/tomi-ru/ika.koneta.org">サイトのコード</a>もまるっと上げてるでゲソ。つっこんでほしいイカ的オサレポイントがあるのでぜひ見つけてみなイカ？
+
+
+<h1>MeCabつかってるでゲソ</h1>
+
+<a href="https://github.com/bayashi/Acme-Yomeru">bayashiさんのAcme::Yomeruも</a>やってるけどMAParser（形態素解析機）をText::MeCabとかChasen、YahooのAPIと切り替えることのできる汎用インターフェースを作ろうと思ったのでゲソが、Acme::IkamusumeではMeCab伝説の宝刀userdicを使うことにしたのであきらめたでゲソ。だれかLingua::JA::MAParserとか作らなイカ？
+
+ついでに前から気になっていたText::MeCabのちょっとした問題とUnicodeサポートリクエストを牧さんに送りつけたでゲソ。
+
+動詞の活用とか敬体→常体変換ルールをうまいこと変換してくれるライブラリとかNLPまわりの偉い学者さんが公開してないかなあ、とけっこうググったのでゲソが、みつからなかったでゲソ。。
