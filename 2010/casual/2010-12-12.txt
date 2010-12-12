@@ -1,0 +1,456 @@
+Image::SizeとImage::Imlib2を使ってCSS Spriteしてみよう
+meta-author: issm <issmxx@gmail.com>
+meta-tags: perl
+
+
+* はじめに
+
+名古屋というところでゆるゆるとPerlを書いている[http://twitter.com/#!/issm:title=issm]と申しますこんにちは．先週イカ帽子を作りました．
+
+さて，Webサイトなんかで，比較的小さなサイズの素材画像をひとまとめにして，用途によってその背景位置をずらすことでうまく表示する「CSS Sprite」という手法，もうご存知のことかと思います．次のエントリあたりが人気のようですね．
+
+- <a href="http://www.designwalker.com/2008/02/css-sprite.html" title="CSS Spriteを活用しよう | DesignWalker">CSS Spriteを活用しよう | DesignWalker</a>
+- <a href="http://blog.creamu.com/mt/2009/06/css_5.html" title="CSSスプライトを使ったメニューの作り方 | CREAMU">CSSスプライトを使ったメニューの作り方 | CREAMU</a>
+- <a href="http://www.webcreatorbox.com/tech/css-sprite/" title="CSSスプライトで画像を円滑に表示させる | Webクリエイターボックス">CSSスプライトで画像を円滑に表示させる | Webクリエイターボックス</a>
+
+私もナビゲーション・メニュー画像（言い方古い？）をはじめ，マウスオーバーで変化するような画像なんかで，この手法を使っています．
+
+しかしまぁ，この「CSS Sprite」，素材画像をまとめるための作業（デザイナさんから渡された「デザイン重視」なデータを「素材重視」に加工したり云々）や，各画像のサイズの把握，そして次のようなCSSの記述，中でも，画像のサイズから <code>background-position</code> の計算，などなど，けっこうメンドクサイです．
+
+>|css|
+#navi ul li {
+  width: ...;
+  height: ...;
+}
+
+#navi ul li a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-image url(...);
+}
+
+#navi ul li#navi-item-1 a { background-position: ...; }
+#navi ul li#navi-item-2 a { background-position: ...; }
+#navi ul li#navi-item-3 a { background-position: ...; }
+
+#navi ul li#navi-item-1 a:hover { background-position: ...; }
+#navi ul li#navi-item-2 a:hover { background-position: ...; }
+#navi ul li#navi-item-3 a:hover { background-position: ...; }
+||<
+
+また，次をはじめとする，CSS Spriteな画像やCSSを生成するWebサービスもありますが，これはこれで，つなげたいファイルを何度も選んだりするのがメンドクサかったりします．
+
+- <a href="http://css-sprit.es/" title="CSS Sprites - Online CSS Sprite Builder / Generator">CSS Sprites - Online CSS Sprite Builder / Generator</a>
+- <a href="http://spritegen.website-performance.org/" title="CSS Sprite Generator | Project Fondue">CSS Sprite Generator | Project Fondue</a>
+- <a href="http://csssprites.com/" title="CSS Sprites generator">CSS Sprites generator</a>
+
+ということで，本エントリでは，バラバラな1つ1つの素材画像をつなげて，<code>background-position</code>の値なんかも自動で計算された状態でCSSとして出力する，あたりまでの処理をPerlでやってみます．というか，今日やってみたので，その記録的な感じです．
+
+
+
+
+
+* レシピ
+
+タイトルのとおりですが，次の2つのモジュールを使います．
+
+- [http://search.cpan.org/dist/Image-Size/:title=Imge::Size]
+- [http://search.cpan.org/dist/Image-Imlib2/:title=Image::Imlib2]
+
+
+
+*** Image::Size
+
+画像の幅・高さを取得してくれます．
+
+>|perl|
+use Image::Size;
+
+my ($width, $height) = imgsize('/path/to/image.png');
+||<
+
+
+
+*** Image::Imlib2
+
+画像をいろいろ加工してくれます．
+
+>|perl|
+use Image::Imlib2;
+
+my $img_base = Image::Imlib2->new(100, 100);
+my $img_load = Image::Imlib2->load('/path/to/image.png');
+$img_base->blend($img_load, 1, 0, 0, 100, 100, 20, 20, 50, 50); # 画像を合成
+$img_base->save('/path/to/image_saved.png');  # 保存
+||<
+
+詳しくは，[http://perl-users.jp/articles/advent-calendar/2009/casual/24.html:title=昨年のJperl Advent Calendarにaomushi510さんのナイスなチュートリアルがある]ので，こちらをご覧になるのがよいでしょう．
+
+
+
+
+
+* 仕様
+
+- 特定のディレクトリに入っている複数の画像を対象とする
+- 同ディレクトリに，どのように画像をつなげるか，などを定義したファイルを置く（「マニフェストファイル」と呼ぶことにします．まぁ設定ファイルです．）
+- つなげた画像を1つ出力する
+- 関連したCSSが記述されたものを1つ出力する
+
+
+
+*** HTML
+
+よくある<code>ul</code>表記でのナビゲーションを考えます．
+
+>|html|
+<div id="navi">
+  <ul>
+    <li id="a1"><a href="#">acme</a></li>
+    <li id="b1"><a href="#">casual</a></li>
+    <li id="c1"><a href="#">english</a></li>
+    <li id="d1"><a href="#">hacker</a></li>
+    <li id="e1"><a href="#">meta_adcal</a></li>
+    <li id="f1"><a href="#">perl6</a></li>
+    <li id="g1"><a href="#">sym</a></li>
+    <li id="h1"><a href="#">win32</a></li>
+  </ul>
+</div>
+||<
+
+
+
+*** 画像
+
+次の16個の画像をつなげます．1つの画像が1つのボタンにあたり，<code>*1.png</code>は通常，<code>*2.png</code>はマウスオーバー時となるようにしたいです．
+
+<a href="http://www.flickr.com/photos/issm/5253817106/" title="ss-2010-12-12-01 by issm, on Flickr"><img src="http://farm6.static.flickr.com/5046/5253817106_7a5fa80df3.jpg" width="485" height="232" alt="ss-2010-12-12-01" /></a>
+
+
+
+*** マニフェストファイル
+
+対象となるディレクトリに，<code>_manifest.pl</code> というファイルを置きます．
+
+- どのような順序で画像をつなげていくか
+- どの画像をどのCSSセレクタに対応させるか
+
+のような情報を定義します．
+
+試行錯誤の結果，次のようにすると多少汎用的にできそうな予感です．
+
+>|perl|
+my $m = {
+    # background-image プロパティを共有する部分の定義
+    base => {
+        selector => '#navi ul li% a%',
+        props => [
+            display => 'block',
+            width   => '160px',
+            height  => '50px',
+        ],
+    },
+    # URL上の画像パス（CSS記述時に利用）
+    image_path => '.',
+    # 画像連結なんかに関する定義
+    images => [
+        # 1段目
+        [
+            a1 => '',
+            b1 => '',
+            c1 => '',
+            d1 => '',
+        ],
+        # 2段目
+        [
+            a2 => ['#a1', ':hover'],
+            b2 => ['#b1', ':hover'],
+            c2 => ['#c1', ':hover'],
+            d2 => ['#d1', ':hover'],
+        ],
+        # 3段目
+        [
+            e1 => '',
+            f1 => '',
+            g1 => '',
+            h1 => '',
+        ],
+        # 4段目
+        [
+            e2 => ['#e1', ':hover'],
+            f2 => ['#f1', ':hover'],
+            g2 => ['#g1', ':hover'],
+            h2 => ['#h1', ':hover'],
+        ],
+    ],
+};
+||<
+
+
+
+
+
+* 主な処理
+
+ようやく本題です．処理自体はたいしたことはしていません．
+
+
+*** 前提
+
+>|perl|
+use strict;
+use warnings;
+use Image::Size;
+use Image::Imlib2;
+
+my $target;    # 対象ディレクトリ．この直下に画像ファイルがあるとする
+my $manifest;  # マニフェスト情報
+my @image;     # 画像
+my @css;       # CSS
+||<
+
+
+
+*** マニフェストファイルを読み込む
+
+>|perl|
+$manifest = do "${target}/_manifest.pl"  or die $!;
+||<
+
+な感じで読み込みます．
+
+ちなみにこの手法，このエントリを書いたり動作確認したりするためにcloneした [https://github.com/p5-app-adventcalendar:title=App::AdventCalendar]の中を見て初めて知りました．
+
+
+
+*** 対象画像を走査する
+
+マニフェストで対象になっている画像について，順に見ていきます．この段階で，各「段」における画像の幅の合計値や最大高さを基に，連結画像のサイズを計算したりします．
+
+>|perl|
+my ($sprite_width, $sprite_height) = (0, 0);  # 連結画像の幅・高さ
+my ($x, $y) = (0, 0);
+
+my $w_sum_max = 0;  # 各「段」の画像幅合計値のうち最大の物
+
+for my $l (@{ $manifest->{images} }) {
+    $x = 0;
+    my $w_sum_in_line = 0;  # 「段」における画像幅の合計値
+    my $h_max_in_line = 0;  # 「段」における画像高さの最大値
+    while (1) {
+        my ($pre, $sel) = (shift @$l, shift @$l);
+        last  unless defined $pre;
+
+        my $imgfile = "${target}/${pre}.png";
+
+        # 画像のサイズを取得する
+        my ($w, $h) = imgsize($imgfile);
+
+        # Image::Imlib2オブジェクトを作っておく
+        my $img = Image::Imlib2->load($imgfile);
+        push @image, { img => $img, w => $w, h => $h, x => $x, y => $y };
+
+        # CSS: ここでbackground-positionの情報がわかる
+        my $selector = ...;  # 省略
+        my $css = sprintf(
+            '%s { background-position %dpx %dpx; }',
+            $selector,
+            -$x, -$y,
+        );
+        push @$css, $css;
+
+        $h_max_in_line = $h  if $h > $h_max_in_line;
+        $x += $w;
+    }
+
+    $w_sum_max = $w_sum_in_line if $w_sum_in_line > $w_sum_max;
+    $y += $h_max_in_line;
+}
+
+($sprite_width, $sprite_height) = ($w_sum_max, $y);
+||<
+
+
+
+*** 画像を連結する
+
+連結画像のサイズや，連結対象の各画像をどのように連結するかの情報が揃ったので，これらを基に，実際に画像処理を行い，最後に出力します．
+
+>|perl|
+my $img_sprite = Image::Imlib2->new($sprite_width, $sprite_height);
+
+for my $i (@image) {
+    # 対象画像1つ1つを，連結画像に合成していく
+    $img_sprite->blend(
+        $i->{img}, 1,
+        0, 0,              # 対象画像のどの矩形領域を合成するか：始点（左上）
+        $i->{w}, $i->{h},  # 対象画像のどの矩形領域を合成するか：始点からの幅・高さ
+        $i->{x}, $i->{y},  # 連結画像のどの矩形領域へ合成するか：始点（左上）
+        $i->{w}, $i->{h},  # 連結画像のどの矩形領域へ合成するか：始点からの幅・高さ
+    );
+}
+||<
+
+
+
+*** 連結画像を出力する
+
+あとはできあがった画像を出力するだけ．
+
+>|perl|
+$img_sprite->save('/path/to/csssprite.png');
+||<
+
+今回定義したマニフェストの下では，次のように生成されます．
+
+<a href="http://www.flickr.com/photos/issm/5253898840/" title="2010-12-12-02 by issm, on Flickr"><img src="http://farm6.static.flickr.com/5204/5253898840_101c2dcb71.jpg" width="485" height="151" alt="2010-12-12-02" /></a>
+
+
+
+*** CSSを生成・出力する
+
+残るはCSSです．
+
+>|perl|
+if (defined $manifest->{base}) {
+   # $manifest->{base}{selector}, $manifest->{base}{props}
+   # を基にCSSの書式に整形する
+   my $css = ...
+   unshift @css, $css;
+}
+
+my $css_out = join "\n", @css;
+
+open my $fh, '>', '/path/to/csssprice.css'  or die $!;
+print $fh, $css_out;
+close $fh;
+||<
+
+一部，というかけっこう端折りましたが，今回のマニフェストの下では，次のように生成されます．
+
+>|css|
+#navi ul li a {
+  background-image: url(./csssprite.png);
+  display: block;
+  width: 160px;
+  height: 50px;
+}
+#navi ul li#a1 a { background-position: 0px 0px; }
+#navi ul li#b1 a { background-position: -160px 0px; }
+#navi ul li#c1 a { background-position: -320px 0px; }
+#navi ul li#d1 a { background-position: -480px 0px; }
+#navi ul li#a1 a:hover { background-position: 0px -50px; }
+#navi ul li#b1 a:hover { background-position: -160px -50px; }
+#navi ul li#c1 a:hover { background-position: -320px -50px; }
+#navi ul li#d1 a:hover { background-position: -480px -50px; }
+#navi ul li#e1 a { background-position: 0px -100px; }
+#navi ul li#f1 a { background-position: -160px -100px; }
+#navi ul li#g1 a { background-position: -320px -100px; }
+#navi ul li#h1 a { background-position: -480px -100px; }
+#navi ul li#e1 a:hover { background-position: 0px -150px; }
+#navi ul li#f1 a:hover { background-position: -160px -150px; }
+#navi ul li#g1 a:hover { background-position: -320px -150px; }
+#navi ul li#h1 a:hover { background-position: -480px -150px; }
+||<
+
+
+
+
+
+* できあがり
+
+生成された画像，CSSを読み込むと，次のようになります．
+
+左は何もない状態，右は「casual」にマウスオーバーした状態です．（ツールの都合上，マウスカーするがありませんが．）
+
+<a href="http://www.flickr.com/photos/issm/5253289823/" title="ss-2010-12-12-03 by issm, on Flickr"><img src="http://farm6.static.flickr.com/5125/5253289823_03649438b5.jpg" width="236" height="383" alt="ss-2010-12-12-03" /></a><a href="http://www.flickr.com/photos/issm/5253898906/" title="ss-2010-12-12-04 by issm, on Flickr"> <img src="http://farm6.static.flickr.com/5283/5253898906_98d4054359.jpg" width="236" height="383" alt="ss-2010-12-12-04" /></a>
+
+
+
+
+
+* Image::CSSSprite
+
+以上のような処理をモジュール化してみたものを，「Image::CSSSprite」としてgithubに上げてみました．上記で省略した部分については，そちらの中身をご覧いただければ幸いです．（時間の都合上，未テストですが！）
+
+- <a href="https://github.com/issm/p5-Image-CSSSprite" title="issm/p5-Image-CSSSprite - GitHub">issm/p5-Image-CSSSprite - GitHub</a>
+
+Image::CSSSpriteを使ったスクリプトの例です．
+
+>|zsh|
+# /path/to/img/_manifest.pl を読む
+% /path/to/script.pl --target /path/to/imgs --img csssprite.png --css csssprite.css
+# 任意のマニフェストを読む
+% /path/to/script.pl --target /path/to/imgs --manifest /path/to/manifest.pl --img csssprite.png --css csssprite.css
+||<
+
+といった感じで，コマンドラインでCSS Spriteできます．
+
+>|perl|
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use FindBin;
+use lib "${FindBin::Bin}/../lib";
+use Image::CSSSprite;
+use Try::Tiny;
+use opts;
+
+my ($target, $manifest, $img_out, $css_out);
+
+try {
+    opts
+        $target   => { isa => 'Str', required => 1 },
+        $manifest => { isa => 'Str' },
+        $img_out  => { isa => 'Str', alias => 'img|image' },
+        $css_out  => { isa => 'Str', alias => 'css' },
+    ;
+} catch {
+    usage(shift);
+    exit 1;
+};
+
+
+sub usage {
+    chomp( my $msg = shift || '' );
+    my $__FILE__ = __FILE__;
+
+    print << "    ...";
+Error:
+    $msg
+
+Usage:
+    $__FILE__ --target /path/to/imgs --img /path/to/csssprited.png --css /path/to/csssprited.css
+
+Options:
+    ...
+}
+
+
+sub main {
+    my $csssp = Image::CSSSprite->new({
+        target   => $target,
+        manifest => $manifest,
+        img_out  => $img_out,
+        css_out  => $css_out,
+    });
+    $csssp->manifest_from_script;
+    $csssp->scan_images;
+    print $csssp->css;
+    $csssp->save;
+}
+
+
+main();
+||<
+
+
+
+
+
+* おわりに
+
+以上，Image::SizeとImage::Imlib2を使ってCSS Spriteなことをするための一手法について紹介させていただきました．最後まで読んでいただいた方は，ありがとうございました．
+
+さーて，明日のカジュアルさんは．．．[https://twitter.com/#!/zentooo:title=zentoooさん]です．お楽しみに，でゲソ！
