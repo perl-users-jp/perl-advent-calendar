@@ -1,0 +1,100 @@
+JScriptからperlを呼び出すよ！
+meta-author: techno-cat
+meta-tags: perl, win32
+
+今日も、愛とロマンティックが止まらないtechno-cat(@techno_neko)デス;)
+
+* 今回は、JScriptからperlを呼び出すよ！
+
+まずは、前回の失態を修正、正しくはこうですよね。
+>||
+<job>
+<script language="PerlScript">
+
+use strict;
+use warnings;
+
+$main::WScript->Echo( "hello world." );
+
+</script>
+</job>
+||<
+(拡張子は"wsf")
+
+<br />
+これを、JScriptでやるとこんな感じ。
+>|javascript|
+WScript.Echo( "hello world." );
+||<
+(拡張子は"js")
+って、こんなことをやりたいわけじゃないんです。
+
+<br />
+まずは、perlスクリプトを用意します。
+>|perl|
+use strict;
+use warnings;
+
+print "オッス！オラ悟○！！ ";
+||<
+(hello.pl)
+実行方法は、もちろんこんな感じ。
+>||
+> perl hello.pl
+||<
+
+<br />
+これを、同じフォルダ階層に置いたJScriptから呼び出します。
+>|javascript|
+
+// perlスクリプトのファイル名
+var script = 'hello.pl';
+
+// スクリプトの絶対パスを作成
+var fso = new ActiveXObject( "Scripting.FileSystemObject" );
+script = fso.BuildPath( fso.GetParentFolderName(WScript.ScriptFullName), script );
+
+// コマンドを作成
+var cmd = 'perl "' + script + '"';
+
+// コマンドを実行
+var WshShell = WScript.CreateObject( "WScript.Shell" );
+var oExec = WshShell.Exec( cmd );
+
+// 標準出力をメッセージボックスに表示
+WScript.Echo( oExec.StdOut.ReadAll() );
+||<
+(hello.js)
+
+<br />
+実はこれにも弱点があって、このままだと標準エラー出力が表示されません。
+ですが、ご安心を！
+>|javascript|
+
+// 標準出力
+var stdout = oExec.StdOut.ReadAll();
+
+// 標準エラー出力
+var stderr = oExec.StdErr.ReadAll();
+||<
+あとは、空文字列か判定して表示するだけですね！
+
+<br />
+それから、JScriptでも引数を受け取って、perlに引数を渡せます。
+>|javascript|
+var args = WScript.Arguments;
+for (var i=0; i<args.length; i++) {
+	// WScript.Echo( args(i) );
+}
+||<
+(拡張子は"js")
+この引数を念のためダブルクォーテーションで括って、コマンドライン文字列を作ればperlスクリプトに渡せます。
+
+
+今までコマンドプロンプトで呼び出してた、そこアナタ！
+
+BATファイル(*.bat)が書けなくたってバッチ処理は出来るんです！！ドラッグ＆ドロップ出来るんです！！！
+
+ガシガシ書いて、バシバシ処理してはいかがでしょうか？
+
+さ～て、明日はどなたでしょうか？？
