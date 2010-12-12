@@ -2,11 +2,11 @@ JScriptからperlを呼び出すよ！
 meta-author: techno-cat
 meta-tags: perl, win32
 
-今日も、愛とロマンティックが止まらないtechno-cat(@techno_neko)デス;)
+今日も、愛とロマンティックが止まらない<a href="http://twitter.com/techno_neko">techno-cat</a>デス;)
 
 * 今回は、JScriptからperlを呼び出すよ！
 
-まずは、前回の失態を修正、正しくはこうですよね。
+まずは、<a href="./5">前回</a>の失態を修正、正しくはこうですよね。
 >||
 <job>
 <script language="PerlScript">
