@@ -1,0 +1,58 @@
+モジュールを公開してみよう
+meta-author: uasi <uasi@99cm.org>
+meta-tags: perl6 rakudo
+
+5日目の「[http://perl-users.jp/articles/advent-calendar/2010/perl6/5:title=モジュールを書いてみよう]」は読みましたか？モジュール書いてみましたか？もう書いた？すばらしい！
+
+そうすると次は……公開してみたくなりますよね？
+
+まだ書いていない人も……何か書きたい！公開したい！と思いませんか？
+
+今日はそんな人のために、 Perl 6 モジュールを公開して [http://modules.perl6.org/:title] に登録するまでのステップを説明します。
+
+
+** 0. モジュールを書こう
+何はなくともモジュールを書きましょう。実用的なものを書くもよし、 Perl 5 や他の言語のモジュールを移植するのも勉強になりますし、おふざけモジュールだってかまいません。
+
+適当なディレクトリ（以下 <code>$project</code> とします）を作って、モジュールを <code>$project/lib</code> 以下に置きます。
+
+依存する Perl 6 のモジュールがあるなら、 <code>$project/deps.proto</code> にプロジェクト名を改行区切りで書きましょう。
+
+>|
+perl6-File-Tools
+DateTime-Parse
+|<
+
+こんな感じです。
+
+** 1. README を書こう
+<code>$project/README</code> でモジュールの内容を説明しましょう。日本語で数行書くだけでもOKです。
+
+実際のところ書かなくたっていいのですが…… README があるプロジェクトは [http://modules.perl6.org:title] に載るとバッヂが付きます[http://modules.perl6.org/readme.png:image]！
+
+** 2. テストを書こう
+何はなくともテストは大事。<code>$project/t</code> にテストファイルを置きましょう。
+
+Perl 6 は言語仕様も実装も日々変化しています。仕様の変更や処理系のバグにすぐ気づくためにもテストを書いておきましょう。バッヂも付きます[http://modules.perl6.org/tests.png:image] :)
+
+** 3. GitHub で公開しよう
+<code>$project</code> を [http://github.com/:title=GitHub] にアップロードしましょう。
+
+** 4. モジュールリストに載せてもらおう
+書いたモジュールを [http://modules.perl6.org:title] に登録してもらいましょう。
+
+僕（[http://d.hatena.ne.jp/uasi/:title=uasi]）が [http://github.com/uasi/messagepack-pm6:title=MessagePack.pm6] を書いたときは、モジュールリストは [https://github.com/masak/proto:title=proto] のリポジトリで管理されていたのですが、 Perl 6 のモジュール書いたよーと Twitter でつぶやいたら向こうから載せてくれたのでした。
+
+今だったら [https://github.com/perl6/ecosystem:title=ecosystem] を fork して [https://github.com/perl6/ecosystem/blob/master/projects.list:title=project.list] を書き換えて pull request を送るか、 irc.freenode.org の #perl6 チャンネルでお願いしてもいいかもしれません。
+
+** 番外編. 分からないことはつぶやいてみよう
+
+Perl 6 でコードを書いていると分からないことが色々出てくると思います。
+
+- Perl 5 のコレは Perl 6 でどう書くの？
+- このコードが動かないんだけど何か間違ってる？それとも処理系のバグ？
+- この言語仕様って変じゃない？
+
+そんなときは Twitter でハッシュタグ [http://twitter.com/#!/search/%23perl6:title=#perl6] をつけてつぶやいてみましょう。僕（http://twitter.com/uasi:title=@uasi）に分かることであれば何かしらお答えします。
+
+また、 [https://github.com/masak/web:title=Web.pm] や [https://github.com/masak/proto:title=proto] の開発者である Carl Mäsak さん（[http://twitter.com/carlmasak:title=@carlmasak]）も、 #perl6 タグのついた発言を（日本語で書かれていても！）よく読んでいるようで、英語で返信してくれることがあります。
