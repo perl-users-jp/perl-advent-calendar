@@ -28,12 +28,12 @@ DateTime-Parse
 ** 1. README を書こう
 <code>$project/README</code> でモジュールの内容を説明しましょう。日本語で数行書くだけでもOKです。
 
-実際のところ書かなくたっていいのですが…… README があるプロジェクトは [http://modules.perl6.org:title] に載るとバッヂが付きます[http://modules.perl6.org/readme.png:image]！
+実際のところ書かなくたっていいのですが…… README があるプロジェクトは [http://modules.perl6.org:title=Perl 6 Modules Directory] に載るとバッヂが付きます<img src="http://modules.perl6.org/readme.png">！
 
 ** 2. テストを書こう
 何はなくともテストは大事。<code>$project/t</code> にテストファイルを置きましょう。
 
-Perl 6 は言語仕様も実装も日々変化しています。仕様の変更や処理系のバグにすぐ気づくためにもテストを書いておきましょう。バッヂも付きます[http://modules.perl6.org/tests.png:image] :)
+Perl 6 は言語仕様も実装も日々変化しています。仕様の変更や処理系のバグにすぐ気づくためにもテストを書いておきましょう。バッヂも付きます<img src="http://modules.perl6.org/tests.png"> :)
 
 ** 3. GitHub で公開しよう
 <code>$project</code> を [http://github.com/:title=GitHub] にアップロードしましょう。
@@ -53,6 +53,6 @@ Perl 6 でコードを書いていると分からないことが色々出てく�
 - このコードが動かないんだけど何か間違ってる？それとも処理系のバグ？
 - この言語仕様って変じゃない？
 
-そんなときは Twitter でハッシュタグ [http://twitter.com/#!/search/%23perl6:title=#perl6] をつけてつぶやいてみましょう。僕（http://twitter.com/uasi:title=@uasi）に分かることであれば何かしらお答えします。
+そんなときは Twitter でハッシュタグ [http://twitter.com/#!/search/%23perl6:title=#perl6] をつけてつぶやいてみましょう。僕（[http://twitter.com/uasi:title=@uasi]）に分かることであれば何かしらお答えします。
 
 また、 [https://github.com/masak/web:title=Web.pm] や [https://github.com/masak/proto:title=proto] の開発者である Carl Mäsak さん（[http://twitter.com/carlmasak:title=@carlmasak]）も、 #perl6 タグのついた発言を（日本語で書かれていても！）よく読んでいるようで、英語で返信してくれることがあります。
