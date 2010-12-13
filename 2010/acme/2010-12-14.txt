@@ -2,7 +2,7 @@ Acme::Seclusion::JP
 meta-author: hide_o_55
 meta-tags: perl, acme
 
-こんにちは。Acme Track 2回目の[http://d.hatena.ne.jp/hide_o_55/:title=hide_o55]です。
+こんにちは。Acme Track 2回目の[http://d.hatena.ne.jp/hide_o_55/:title=hide_o_55]です。
 
 今回紹介させて頂くのは、[https://github.com/hideo55/p5-Acme-Seclusion-JP:title=Acme::Seclusion::JP]です。
 このモジュールを使用すると江戸時代のような鎖国状態を実現できます。
@@ -19,7 +19,7 @@ use Moose;
 
 この機能を利用して、モジュールのロードをフックし、モジュール名からモジュールの作者情報を検索します。そのあと、[http://search.cpan.org/~ishigaki/Acme-CPANAuthors-0.14/lib/Acme/CPANAuthors.pm:title=Acme::CPANAuthors]を利用して、作者がAcme::CPANAuthors::Japanese、Acme::CPANAuthors::Chainese、Acme::CPANAuthors::Korean、Acme::CPANAuthors::Dutch、Acme::CPANAuthors::Portugueseに含まれるか判定し、含まれなければexitします。(ちなみにAcme::CPANAuthors::Dutchのリストは空です。理由はPODを読んでみてください)
 
-なお、以下のように "-conplete" オプションを指定すると完全鎖国モードになり、日本のモジュール以外は使用できなくなります。((コアモジュールを除く))
+なお、以下のように "-complete" オプションを指定すると完全鎖国モードになり、日本のモジュール以外は使用できなくなります。((コアモジュールを除く))
 >|perl|
 use Acme::Seclusion::JP '-complete';
 ||<
