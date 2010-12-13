@@ -34,7 +34,7 @@ use Test;
 use Foo;
 
 ok my $f = Foo.new;
-isa_ok $f, 'Foo';
+isa_ok $f, Foo;
 is $f.foo, 'foo';
 
 done_testing;
