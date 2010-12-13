@@ -1,0 +1,32 @@
+Acme::Seclusion::JP
+meta-author: hide_o_55
+meta-tags: perl, acme
+
+こんにちは。Acme Track 2回目の[http://d.hatena.ne.jp/hide_o_55/:title=hide_o55]です。
+
+今回紹介させて頂くのは、[https://github.com/hideo55/p5-Acme-Seclusion-JP:title=Acme::Seclusion::JP]です。
+このモジュールを使用する江戸時代のような鎖国状態を実現できます。
+具体的には日本、中国、韓国、オランダ、ポルトガル以外のモジュールは使用できなくなります。
+
+>|perl|
+use Acme::Seclusion::JP;
+use Moose;
+||<
+
+上記のようにMooseを使うと標準エラー出力にエラーメッセージを出力しexitします。Mouseなら通常動作をします。
+
+この動作をどのようにして実現しているかというと、[http://perldoc.perl.org/functions/require.html:title] にも書かれている、@INCに[コードリファレンス|オブジェクト]を入れるテクニックを使用しています。@INCにコードリファレンスが含まれている時にモジュールをロードしようとすると、そのコードリファレンスが実行されます(オブジェクトの場合はINCメソッドが実行されます)。
+
+この機能を利用して、モジュールのロードをフックし、モジュール名からモジュールの作者情報を検索します。そのあと、[http://search.cpan.org/~ishigaki/Acme-CPANAuthors-0.14/lib/Acme/CPANAuthors.pm:title=Acme::CPANAuthors]を利用して、作者がAcme::CPANAuthors::Japanese、Acme::CPANAuthors::Chainese、Acme::CPANAuthors::Korean、Acme::CPANAuthors::Dutch、Acme::CPANAuthors::Portugueseに含まれるか判定し、含まれなければexitします。(ちなみにAcme::CPANAuthors::Dutchのリストは空です。理由はPODを読んでみてください)
+
+なお、以下のように "-conplete" オプションを指定すると完全鎖国モードになり、日本のモジュール以外は使用できなくなります。((コアモジュールを除く))
+>|perl|
+use Acme::Seclusion::JP '-complete';
+||<
+「舶来品は使わん！」という頑固な攘夷派の方にオススメです。
+
+今回は、@INCによるモジュールロードのフックでアホなことをしていますが、以下のようにモジュールをロードした際に暗黙的にロードされるモジュールをトレースして、遅延ロード化を検討したりとかわりと実用的なこともできます。
+
+>|perl|
+perl -MPerl6::Say -e 'BEGIN{unshift @INC,sub{ say join "\t=>\t",(caller)[0],do{(my $mod = $_[1]) =~ s!/!::!g;$mod =~ m!(.+)\.pm!}}}use MyModule;'
+||<
