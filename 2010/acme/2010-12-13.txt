@@ -1,0 +1,87 @@
+Acme::W
+meta-author: dameninngenn
+meta-tags: perl, acme
+
+こんにちは、冬なのに脇からの発汗が凄まじい<a href="http://twitter.com/dameninngenn">dameninngenn</a>です。
+脇周りが白くなってるインナーを確認してはニッコリする毎日です。
+
+さて、先日<a href="http://search.cpan.org/~dameo/Acme-W-0.03/lib/Acme/W.pm">Acme::W</a>なるモジュールを書いてみましたので今回はその紹介をさせて頂きます。
+
+このAcme::Wというモジュールも<a href="http://perl-users.jp/articles/advent-calendar/2010/acme/8">acme Track 8日目</a>を担当された<a href="http://d.hatena.ne.jp/hide_o_55/">hide_o_55さん</a>の<a href="https://github.com/hideo55/p5-Acme-Tsu">Acme::Tsu</a>と同様にソース書き換え系のモジュールです。
+
+使い方は簡単。cpanからAcme::Wをインストールし、先頭に「use Acme::W;」と書くだけです。
+
+>|perl|
+use Acme::W;
+
+use strict;
+use warnings;
+
+print "Hello Acme World!!\n";
+||<
+
+上記のスクリプトを実行すると
+>||
+% perl w.pl
+Hello Acme World!!
+||<
+と表示され、ファイルが下記のように書き換わります。
+
+>|perl|
+use Acme::W;
+
+WwwWw strict;
+WwwWw warnings;
+
+WWwwWW "Hello Acme World!!\n";
+
+=pod
+# This file rewrote by Acme::W version 0.03.
+# The following codes are original codes.
+
+use Acme::W;
+
+use strict;
+use warnings;
+
+print "Hello Acme World!!\n";
+
+=cut
+||<
+
+useやprintがwとWの文字列に変わっていますね。
+この書き換わったスクリプトを実行しても同様に「Hello Acme World!!」と表示されます。
+
+このモジュールは何をしているのかざっくり説明すると、<a href="http://search.cpan.org/~smueller/Filter-Simple-0.85/lib/Filter/Simple.pm">Filter::Simple</a>というモジュールを利用し、予約語(判別は正規表現でやっているので厳密には"予約語のようなもの"です)をwとWで構成された文字列に置換しています。
+また、wとWで構成された文字列を検出した場合は対応する予約語に変換し実行しています。
+
+Acme::Wを作るにあたり<a href="http://search.cpan.org/~dconway/Acme-Bleach-1.12/lib/Acme/Bleach.pm">Acme::Bleach</a>というモジュールを参考にさせていただいたのですが、実行すると元のソースが跡形も無く消えてしまうことにびびってしまい、Acme::Wでは変換後のソースに元のソースを残しています。
+
+これで気になるあの子が離席している隙に一行「use Acme::W;」と書いておけば「やだ、これ、ステキ！」となること間違い無しですね！
+(※1 現実は非情です。決して真似しないでください。)
+(※2 svnやgitなどのバージョン管理システムを使っていても、真似しないほうが平和かもしれません。)
+
+Acme::Wではコメント文やクォートで囲まれた箇所は置換の対象としていません。
+
+気になるあの子にどうしてもサプライズメッセージを伝えたい場合はクォート部を読みにくくするために<a href="http://perl-users.jp/articles/advent-calendar/2010/sym/">記号プログラミング</a>を組み合わせてみればいいのではないでしょうか。
+
+<a href="http://perl-users.jp/articles/advent-calendar/2010/sym/5">sym Track 5日目</a>を担当されたsugyanさんのやり方で書いてみましょう。
+>|perl|
+use Acme::W;
+
+WwwWw strict;
+WwwWw warnings;
+
+WWwwWW +('`'^')').' '.('`'|',').('`'|'/').('['^'-').('`'|'%').' '.('['^'"').('`'|'/').('['^'.')." :)\n";
+||<
+
+これなら実行してみるまでどうなるかわかりませんね。
+
+Filter::Simpleを利用したAcmeモジュールは色々あっておもしろいので是非試してみて下さい！
+
+- <a href="http://search.cpan.org/~jaldhar/Acme-Brainfuck-1.1.1/lib/Acme/Brainfuck.pm">Acme::Brainfuck</a>
+- <a href="http://search.cpan.org/~fxn/Acme-Pythonic-0.46/lib/Acme/Pythonic.pm">Acme::Pythonic</a>
+- <a href="http://search.cpan.org/~rclamp/Acme-Your-0.01/lib/Acme/Your.pm">Acme::Your</a>
+- etc
+
+
