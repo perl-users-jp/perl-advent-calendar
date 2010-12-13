@@ -1,0 +1,29 @@
+Sub::Throttle - a tiny module for throttling down an operation
+
+<a href="http://search.cpan.org/dist/Sub-Throttle/">Sub::Throttle</a> is a tiny module that is useful for throttling down the load of a certain operation.  For example, it can be used to limit the speed of a batch operation against a database so that other operations (such as requests from the web application) would not slow down too much.
+
+It is easy to modify an existing operation (a for-loop in the case of the example below) to use Sub::Throttle.  The example limits the load factor 0.1, i.e. the loop will be delayed 9x the time it took for performing a single operation, effectively limiting the load of the operation to 1/10.
+
+>|perl|
+# BEFORE
+
+for (...) {
+    # the operation
+    ...
+}
+||<
+
+>|perl|
+# AFTER
+
+use Sub::Throttle qw(throttle);
+
+my $load = 0.1;
+
+for (...) {
+    throttle($load, sub {
+        # the operation
+        ...
+    });
+}
+||<
