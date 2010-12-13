@@ -51,7 +51,7 @@ sub PF_INET {2}
 sub SOCK_STREAM {1}
 sub TCP {6}
 
-multi sub MAIN ($port = '5000', :$host = '0.0.0.0') {
+sub MAIN ($port = '5000', :$host = '0.0.0.0') {
     my $server = IO::Socket::INET.socket( PF_INET, SOCK_STREAM, TCP );
     $server.bind($host, $port);
     $server.listen;
