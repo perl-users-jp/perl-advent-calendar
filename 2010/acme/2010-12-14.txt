@@ -6,7 +6,7 @@ meta-tags: perl, acme
 
 今回紹介させて頂くのは、[https://github.com/hideo55/p5-Acme-Seclusion-JP:title=Acme::Seclusion::JP]です。
 このモジュールを使用すると江戸時代のような鎖国状態を実現できます。
-具体的には日本、中国、韓国、オランダ、ポルトガル以外のモジュールは使用できなくなります。
+具体的には日本、中国、韓国、オランダ以外のモジュールは使用できなくなります。
 
 >|perl|
 use Acme::Seclusion::JP;
@@ -17,7 +17,7 @@ use Moose;
 
 この動作をどのようにして実現しているかというと、[http://perldoc.perl.org/functions/require.html] にも書かれている、@INCに[コードリファレンス|オブジェクト]を入れるテクニックを使用しています。@INCにコードリファレンスが含まれている時にモジュールをロードしようとすると、そのコードリファレンスが実行されます(オブジェクトの場合はINCメソッドが実行されます)。
 
-この機能を利用して、モジュールのロードをフックし、モジュール名からモジュールの作者情報を検索します。そのあと、[http://search.cpan.org/~ishigaki/Acme-CPANAuthors-0.14/lib/Acme/CPANAuthors.pm:title=Acme::CPANAuthors]を利用して、作者がAcme::CPANAuthors::Japanese、Acme::CPANAuthors::Chainese、Acme::CPANAuthors::Korean、Acme::CPANAuthors::Dutch、Acme::CPANAuthors::Portugueseに含まれるか判定し、含まれなければexitします。(ちなみにAcme::CPANAuthors::Dutchのリストは空です。理由はPODを読んでみてください)
+この機能を利用して、モジュールのロードをフックし、モジュール名からモジュールの作者情報を検索します。そのあと、[http://search.cpan.org/~ishigaki/Acme-CPANAuthors-0.14/lib/Acme/CPANAuthors.pm:title=Acme::CPANAuthors]を利用して、作者がAcme::CPANAuthors::Japanese、Acme::CPANAuthors::Chainese、Acme::CPANAuthors::Korean、Acme::CPANAuthors::Dutchに含まれるか判定し、含まれなければexitします。(ちなみにAcme::CPANAuthors::Dutchのリストは空です。理由はPODを読んでみてください)
 
 なお、以下のように "-complete" オプションを指定すると完全鎖国モードになり、日本のモジュール以外は使用できなくなります。((コアモジュールを除く))
 >|perl|
