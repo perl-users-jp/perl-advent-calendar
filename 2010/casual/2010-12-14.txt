@@ -1,0 +1,213 @@
+書き捨てスクリプトを書くときに便利なモジュールとPragmatic Module
+meta-author: punytan <punytan@cpan.org>
+meta-tags: perl
+
+先月末から原稿を書こう書こうと延ばし延ばしきて当日に書いている私こと<a href="http://linknode.net">punytan</a>です。
+
+みなさん、書き捨てスクリプト書いてますか？書いてますよね。
+書き捨てのつもりがいつの間にかオプションを取るようになっていて、使うときに「オプションなんだっけ…?」なんてことよくありますよね。ありますね。
+
+*そんなときは
+Getopt::Long と Pod::Usage を組み合わせて使うと POD で Usage を書く事ができます。便利！
+
+>|perl|
+use Getopt::Long;
+use Pod::Usage;
+
+my $man = 0;
+my $help = 0;
+
+GetOptions('help|?' => \$help, man => \$man) or pod2usage(2);
+pod2usage(1) if $help;
+pod2usage(-exitstatus => 0, -verbose => 2) if $man;
+
+__END__
+
+=head1 NAME
+
+sample - Using Getopt::Long and Pod::Usage
+
+=head1 SYNOPSIS
+
+sample [options] [file ...]
+
+Options:
+-help            brief help message
+-man             full documentation
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-help>
+
+Print a brief help message and exits.
+
+=item B<-man>
+
+Prints the manual page and exits.
+
+=back
+
+=head1 DESCRIPTION
+
+B<This program> will read the given input file(s) and do something
+useful with the contents thereof.
+
+=cut
+||<
+
+とまぁ本題はそこそこに
+
+*use common::sense;
+
+common::sense という便利なモジュールを紹介したいと思います。
+
+>|perl|
+use common::sense;
+||<
+
+とすると
+
+>|perl|
+use utf8;
+use strict qw(vars subs);
+use feature qw(say state switch);
+no warnings;
+use warnings qw(FATAL closed threads internal debugging pack malloc
+                portable prototype inplace io pipe unpack regexp
+                deprecated glob digit printf layer
+                reserved taint closure semicolon);
+no warnings qw(exec newline unopened);
+||<
+
+と同等の機能を、省タイピングかつ省メモリで得ることができる、書き捨てにはもってこいのプラグマです。
+もちろん、書き捨てでないものでも自己責任で使ってもいいと思いますよ！
+
+github で利用数を検索すると<a href="https://github.com/search?langOverride=Perl&language=&q=use+common+sense&repo=&start_value=1&type=Code&x=0&y=0">5177件</a>ほど見つかるので利用率の高いモジュールではないでしょうか。
+
+**実装はどうなっているんだろう
+>||
+perldoc -m common::sense
+||<
+してソースを確認してみると
+
+>|perl|
+package common::sense;
+
+our $VERSION = '3.3';
+
+# overload should be included
+
+sub import {
+   # use warnings
+   ${^WARNING_BITS} ^= ${^WARNING_BITS} ^ "\x3c\x3f\x33\x00\x0f\xf3\x0f\xc0\xf0\xfc\x33\x00";
+   # use strict, use utf8;
+   $^H |= 0x800600;
+   # use feature
+   $^H{feature_switch} =
+   $^H{feature_say}    =
+   $^H{feature_state}  = 1;
+}
+
+1;
+||<
+
+とあります。なんだこれは!
+
+>||
+perldoc -v $^H
+||<
+
+してもよく分からないのですが、 $^H は Perl parser への hints で、よくわからない場合は弄らない方が身のためだと(言う旨が) Programming Perl にかかれています。
+
+**どうやって生成しているのか
+
+答えは<a href="http://cpansearch.perl.org/src/MLEHMANN/common-sense-3.3/sense.pm.PL"> インストール前の dist </a> をみるとわかります
+
+__DATA__ 以下がテンプレートになっており、 printf() を使って sense.pm を出力しています。
+
+これは、$^H の perldoc に
+>||
+Its availability, behavior, and contents are subject to change without notice.
+||<
+と記述があるので、バージョン 3.1 からこれへの対策が入ったようです。
+
+*注意点
+
+warnings プラグマは大量のカテゴリを持っているため、全て把握することは難しいと思います。
+perllexwarn から抜粋するといっぱい！
+
+>||
+ all
+ |
+ +- closure
+ +- deprecated
+ +- exiting
+ +- glob
+ +- io -----------+
+ |                +- closed
+ |                +- exec
+ |                +- layer
+ |                +- newline
+ |                +- pipe
+ |                +- unopened
+ +- imprecision
+ +- misc
+ +- numeric
+ +- once
+ +- overflow
+ +- pack
+ +- portable
+ +- recursion
+ +- redefine
+ +- regexp
+ +- severe -------+
+ |                +- debugging
+ |                +- inplace
+ |                +- internal
+ |                +- malloc
+ +- signal
+ +- substr
+ +- syntax -------+
+ |                +- ambiguous
+ |                +- bareword
+ |                +- digit
+ |                +- illegalproto
+ |                +- parenthesis
+ |                +- precedence
+ |                +- printf
+ |                +- prototype
+ |                +- qw
+ |                +- reserved
+ |                +- semicolon
+ +- taint
+ +- threads
+ +- uninitialized
+ +- unpack
+ +- untie
+ +- utf8
+ +- void
+||<
+
+とくに
+>|perl|
+{
+    use common::sense;
+
+    my $string = 'いろはにほへと';
+    print $string, "\n";
+}
+
+{
+    use strict;
+    use warnings;
+    use utf8;
+
+    my $string = 'いろはにほへと';
+    print $string, "\n";
+}
+||<
+のような適当なコードでも、 common::sense の方では use warnings qw(utf8); となっていないため、 "Wide character in print at" の warnings が出力されないので、この様な違いについては注意をする必要があると思われます。ご利用は計画的に！
+
+明日はモダンPerlの裏側を知り尽くした<a href="http://twitter.com/koba04">koba04</a>さんですっ！
