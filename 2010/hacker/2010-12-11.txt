@@ -1,0 +1,37 @@
+Cache::LRU が速い理由
+
+先日、オンメモリなキャッシュモジュール <a href="http://search.cpan.org/dist/Cache-LRU">Cache::LRU</a> を書きました。<a href="http://blog.kazuhooku.com/2010/11/cachelru-handy-and-fast-in-memory-cache.html">Kazuho's Weblog: Cache::LRU (a handy and fast in-memory cache module in pure-perl)</a> を見ていただければ、Cache::LRU が他のモジュールより速いことは明らかだと思います。速度差の原因としては機能や実装上の差異もあるのですが、設計上の工夫も Cache::LRU が速い理由のひとつです。
+
+LRU (<a href="http://ja.wikipedia.org/wiki/Least_Recently_Used">Least Recently Used</a>) アルゴリズムを備えたキャッシュを実装しようと思うと、
+
+- エントリルックアップのためのハッシュ
+- アクセス順を表現するためのリスト
+
+の２種類を組み合わせる必要があります。リストを表現する手法としては配列を利用するものとリンクリストを利用するものがありますが、Perl だと前者のほうが速い、ということは <a href="http://search.cpan.org/dist/Tie-Cache-LRU/">Tie::Cache::LRU</a> のドキュメントにも触れられているとおりです。そして、配列を使う場合は、
+
+- アクセス順を表現するリストから一切参照されていないエントリをハッシュから削除する
+
+という処理を実装することになります。
+
+Cache::LRU では、Perl の GC を使ってこの処理を自動化することで、高速化を実現しています。ハッシュに格納する値を weak reference とすることで、アクセス順を表現するリストから押し出されたエントリを、自動的に削除するようにしているわけです。
+
+Cache::LRU に、以下のような一見奇妙なコードが含まれるのはそのためです。
+
+>|perl|
+package Cache::LRU;
+...
+
+sub get {
+    my ($self, $key) = @_;
+
+    my $value_ref = $self->{_entries}->{$key};
+    return undef unless $value_ref;             # ← ココ
+
+    $self->_update_fifo($key, $value_ref);
+    $$value_ref;
+}
+||<
+
+自前で参照カウントを管理するよりも、Perl本体の GC を使った方が速いのは言うまでもないことです。
+
+こんな小技を楽しむのも Perl モジュールを書く醍醐味のひとつじゃないかと思います。
