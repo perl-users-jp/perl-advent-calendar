@@ -5,7 +5,7 @@ meta-tags: perl, acme
 こんにちは。Acme Track 2回目の[http://d.hatena.ne.jp/hide_o_55/:title=hide_o55]です。
 
 今回紹介させて頂くのは、[https://github.com/hideo55/p5-Acme-Seclusion-JP:title=Acme::Seclusion::JP]です。
-このモジュールを使用する江戸時代のような鎖国状態を実現できます。
+このモジュールを使用すると江戸時代のような鎖国状態を実現できます。
 具体的には日本、中国、韓国、オランダ、ポルトガル以外のモジュールは使用できなくなります。
 
 >|perl|
