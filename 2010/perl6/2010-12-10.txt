@@ -4,10 +4,14 @@ meta-tag: perl6 rakudo networking
 
 こんにちは、[http://twitter.com/lopnor:title=@lopnor]こと檀上です。と、これまで誰も名乗らずにここまできてしまいましたJPerl Advent Calendar 2010 - perl6 trackですが、ここでこれまでの執筆者をご紹介します。
 
-:[http://twitter.com/risou:title=@risou]さん: [http://perl-users.jp/articles/advent-calendar/2010/perl6/7:title=インタラクティブな実行環境を使おう]
-:[http://twitter.com/uasi:title=@uasi]さん: [http://perl-users.jp/articles/advent-calendar/2010/perl6/8:title=モジュールを公開してみよう]
-:[http://twitter.com/VienosNotes:title=@VienosNotes]さん: [http://perl-users.jp/articles/advent-calendar/2010/perl6/9:title=『Perl6入門』入門]
-:[http://twitter.com/lopnor:title=@lopnor]: 残りの記事
+- [http://twitter.com/risou:title=@risou]さん
+-- [http://perl-users.jp/articles/advent-calendar/2010/perl6/7:title=インタラクティブな実行環境を使おう]
+- [http://twitter.com/uasi:title=@uasi]さん
+-- [http://perl-users.jp/articles/advent-calendar/2010/perl6/8:title=モジュールを公開してみよう]
+- [http://twitter.com/VienosNotes:title=@VienosNotes]さん
+-- [http://perl-users.jp/articles/advent-calendar/2010/perl6/9:title=『Perl6入門』入門]
+- [http://twitter.com/lopnor:title=@lopnor]
+-- 残りの記事
 
 です。まだまだ原稿が足りないので、Perl 6について語っちゃうよ！という方はぜひお声がけください。よろしくお願いします！
 
@@ -104,11 +108,13 @@ $ time (for i in `seq 1 1000`; do echo $i | nc 10.0.87.6 5000 > /dev/null;done)
 >||
 # perl6
 $ time (for i in `seq 1 1000`; do echo $i | nc 10.0.87.6 5000 > /dev/null;done)
-(; for i in `seq 1 1000`; do; echo $i | nc 10.0.87.6 5000 > /dev/null; done; )  0.68s user 2.78s system 19% cpu 17.548 total
+(; for i in `seq 1 1000`; do; echo $i | nc 10.0.87.6 5000 > /dev/null; done; ) 
+0.68s user 2.78s system 19% cpu 17.548 total
 
 # perl5
 $ time (for i in `seq 1 1000`; do echo $i | nc 10.0.87.6 5000 > /dev/null;done)
-(; for i in `seq 1 1000`; do; echo $i | nc 10.0.87.6 5000 > /dev/null; done; )  0.68s user 2.80s system 20% cpu 16.667 total
+(; for i in `seq 1 1000`; do; echo $i | nc 10.0.87.6 5000 > /dev/null; done; ) 
+0.68s user 2.80s system 20% cpu 16.667 total
 
 ||<
 
