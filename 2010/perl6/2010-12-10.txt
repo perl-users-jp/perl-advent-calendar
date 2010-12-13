@@ -1,0 +1,121 @@
+echoサーバーを書こう
+meta-author: Nobuo Danjou <nobuo.danjou@gmail.com>
+meta-tag: perl6 rakudo networking
+
+こんにちは、[http://twitter.com/lopnor:title=@lopnor]こと檀上です。と、これまで誰も名乗らずにここまできてしまいましたJPerl Advent Calendar 2010 - perl6 trackですが、ここでこれまでの執筆者をご紹介します。
+
+- [http://twitter.com/risou:title=@risou]さん
+-- [http://perl-users.jp/articles/advent-calendar/2010/perl6/7:title=インタラクティブな実行環境を使おう]
+- [http://twitter.com/uasi:title=@uasi]さん
+-- [http://perl-users.jp/articles/advent-calendar/2010/perl6/8:title=モジュールを公開してみよう]
+- [http://twitter.com/VienosNotes:title=@VienosNotes]さん
+-- [http://perl-users.jp/articles/advent-calendar/2010/perl6/9:title=『Perl6入門』入門]
+- [http://twitter.com/lopnor:title=@lopnor]
+-- 残りの記事
+
+です。まだまだ原稿が足りないので、Perl 6について語っちゃうよ！という方はぜひお声がけください。よろしくお願いします！
+
+* echoサーバーを書こう
+
+さて、今日はネットワークプログラミングに挑戦です。先日twitterのタイムラインを読んでくるスクリプトがありましたが、やっぱり今時ネットワーク経由でデータをやり取りしてナンボ、というところがあります。前回はクライアントでしたが、今回はサーバーをつくってみようと思います。というとまずはechoサーバーを書かないといけないですね。
+
+echoサーバーの動作イメージはこんな感じです。
+
+>||
+
+$ perl6 echo_server.pl 5000 &
+[1] 4980
+
+$ telnet 127.0.0.1 5000
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+hoge
+hoge
+fuga
+fuga
+^]
+telnet> quit
+Connection closed.
+
+||<
+
+echo_server.plはこんな感じ。
+
+>||
+#!/usr/bin/env perl6
+use v6;
+
+# constants
+sub PF_INET {2}
+sub SOCK_STREAM {1}
+sub TCP {6}
+
+multi sub MAIN ($port = '5000', :$host = '0.0.0.0') {
+    my $server = IO::Socket::INET.socket( PF_INET, SOCK_STREAM, TCP );
+    $server.bind($host, $port);
+    $server.listen;
+    while my $conn = $server.accept {
+        while my $str = $conn.recv {
+            $conn.send($str);
+        }
+        $conn.close;
+    }
+    $server.close;
+}
+
+# vim: ft=perl6 :
+||<
+
+と、何の変哲もないコードでした。これで僕の環境ではちゃんと動きます。で、これ実はほとんどrakudo/t/spec/S32-io/IO-Socket-INET.plからパクったものなんですが、これが[https://github.com/rakudo/rakudo/commit/78b3fcf83ee7f980dc44a0a04f0a0381bb17ce5d:title=spectest.dataからコメントアウトされており]、いくつかの環境で正しく動作しない模様です。はやくなおるといいですね。
+
+* ベンチマーク
+
+さて、このサーバーとperl5で書いたサーバーを比較してみました。
+
+>||
+#!perl
+use strict;
+use warnings;
+
+use IO::Socket;
+
+my $server = IO::Socket::INET->new(
+    LocalPort => 5000,
+    Listen => SOMAXCONN,
+    Reuse => 1,
+);
+
+while (my $conn = $server->accept) {
+    while ($conn->sysread(my $str, 1024)) {
+        $conn->syswrite($str);
+    }
+    $conn->close;
+}
+$server->close;
+
+# from http://d.hatena.ne.jp/naoya/20070311/1173629378
+||<
+
+こんなの。これを、別のマシンから
+
+>||
+$ time (for i in `seq 1 1000`; do echo $i | nc 10.0.87.6 5000 > /dev/null;done)
+||<
+
+としてみました。
+
+>||
+# perl6
+$ time (for i in `seq 1 1000`; do echo $i | nc 10.0.87.6 5000 > /dev/null;done)
+(; for i in `seq 1 1000`; do; echo $i | nc 10.0.87.6 5000 > /dev/null; done; ) 
+0.68s user 2.78s system 19% cpu 17.548 total
+
+# perl5
+$ time (for i in `seq 1 1000`; do echo $i | nc 10.0.87.6 5000 > /dev/null;done)
+(; for i in `seq 1 1000`; do; echo $i | nc 10.0.87.6 5000 > /dev/null; done; ) 
+0.68s user 2.80s system 20% cpu 16.667 total
+
+||<
+
+大差ないですね。つないでやり取りして切る、だけであればそれほど差はないようです。このあと、httpサーバーを書くなどした場合、文字列処理で差が出てくるのだと思います。
