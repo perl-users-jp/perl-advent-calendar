@@ -1,0 +1,339 @@
+Path::Classで簡単ファイル操作
+meta-author: koba04 <koba0004@gmail.com>
+meta-tags: perl
+
+
+こんにちは！モダンPerlの裏側しか知らない<a href="http://twitter.com/koba04">koba04</a>です。
+
+
+今日は、少し前まで「続・初めてのPerl」を読んでいた自分が、遅ればせながらその便利さに感動して使うようになったPath::Classについてを。(ってもう使ってますよね。。)
+多分Casual Trackの中でも最も初心者向けな内容になっているんじゃないかと思います。。
+
+
+何が便利かというと、「File::Spec」や「File::Path」、「IO::Dir」、「IO::File」、「File::stat」などのモジュールにある関数を「Path::Class」をインターフェイスとして使うことが出来ます。
+とりあえず「use Path::Class」でいいので便利ですね！
+
+
+* オブジェクトの作成
+まずはファイルオブジェクトの作成。
+>|perl|
+use Path::Class;
+my $file = file('path', 'to', 'file.txt');
+# or
+my $file = file('path/to/file.txt'); 
+||<
+
+ディレクトリの場合は、
+>|perl|
+my $dir = dir('path', 'to', 'dir');
+# or
+my $dir = dir('path/to/dir'); 
+||<
+
+簡単ですね。
+えっ、Linux上でWindowsのパスに変更したい？
+
+>|perl|
+$file->as_foreign('Win32');
+say $file; # => 'path\to\file.txt'
+
+# 直接作ることも出来ます。
+$file = Path::Class::File->new_foreign('Win32', 'path/to/file.txt');
+say $file; 'path\to\file.txt', 'new_foreign'
+||<
+
+'Win32'の他にも'Unix'や'Mac'、'Cygwin'など指定出来ます。
+
+
+それでは、上記で作成した「Path::Class::File」、「Path::Class::Dir」オブジェクトをもとに色々操作していきましょう。
+
+
+* パス操作
+>|perl|
+# カレントディレクトリを/Users/koba04とします。
+
+# 絶対パスを取得
+$file = file('foo.txt');
+$dir = dir('foo');
+say $file->absolute; # => '/Users/koba04/foo.txt'
+say $dir->absolute;  # => /Users/koba04/foo
+
+# 実行スクリプトのパスやそのディレクトリも簡単に取得出来ます。
+say file(__FILE__)->absolute;       # => 実行スクリプトの絶対パス。 (/path/to/script.pl)
+say file(__FILE__)->absolute->dir;  # => 実行スクリプトがあるディレクトリの絶対パス。(/path/to)
+
+# 相対パスがいい？
+$file = file('/Users/koba04/foo/bar.txt');
+$dir = dir('/Users/koba04/foo/bar');
+say $file->relative;  # => foo/bar.txt
+say $dir->relative;  # => foo/bar
+
+# パスを整理
+$file = file('/Users/koba04/Music////./././../foo/bar.txt');
+$dir = dir('/Users/koba04/Music////./././../foo/bar');
+say $file;  # => /Users/koba04/Music/../foo/bar.txt
+say $dir;  # => /Users/koba04/Music/../foo/bar
+
+# ..も整理される。(Cwd::realpathが使用されている)
+say $file->resolve;  # => /Users/koba04/foo/bar.txt  
+say $dir->resolve;  # => /Users/koba04/foo/bar
+# 実際に存在しないディレクトリやファイルがパスに含まれていると空文字になる。
+say file($test_dir, 'no/../foo/bar.txt')->resolve; # => ''
+
+# ひとつ上のディレクトリオブジェクトが欲しい？
+$up_dir = $file->parent;
+say $up_dir;  # => /Users/koba04/Music/foo
+$up_dir = $dir->parent;
+say $up_dir;  # => /Users/koba04/Music/foo
+
+
+# ディレクトリ以下のファイル、ディレクトリのオブジェクト配列をつくる。
+my @artist_list = dir('/Users/koba04/Music/iTunes/iTunes Media/Music')->children;
+for my $artist ( sort @artist_list ) {
+    say $artist->absolute;
+}
+# /Users/koba04/Music/iTunes/iTunes Media/Music/!!!
+# /Users/koba04/Music/iTunes/iTunes Media/Music/.DS_Store
+# /Users/koba04/Music/iTunes/iTunes Media/Music/22-20s
+# /Users/koba04/Music/iTunes/iTunes Media/Music/AKB48
+# /Users/koba04/Music/iTunes/iTunes Media/Music/ASIAN KUNG-FU GENERATION
+# /Users/koba04/Music/iTunes/iTunes Media/Music/Aimee Mann
+# /Users/koba04/Music/iTunes/iTunes Media/Music/Albert Hammond, Jr_
+# /Users/koba04/Music/iTunes/iTunes Media/Music/Anberlin
+# /Users/koba04/Music/iTunes/iTunes Media/Music/Aphex Twin
+# /Users/koba04/Music/iTunes/iTunes Media/Music/Arab Strap
+# /Users/koba04/Music/iTunes/iTunes Media/Music/Arctic Monkeys
+# /Users/koba04/Music/iTunes/iTunes Media/Music/Arlo
+# /Users/koba04/Music/iTunes/iTunes Media/Music/Ash
+:
+:
+||<
+
+* ファイル情報を取得
+File::statオブジェクトが取得出来るのでそこから色々情報を取得できます。
+>|perl|
+# 更新時間を出力
+say 'modify time => ' . localtime($file->stat->mtime);
+# => modify time => Wed Dec  8 01:31:12 2010
+||<
+
+* ファイルをまとめて処理
+あるディレクトリ以下のファイルに対する処理も、コールバック関数を指定する方法で簡単に出来ます。
+File::Findみたいな感じですね。
+>|perl|
+# テストディレクトリ構成
+# /Users/koba04/list/foo.txt
+# /Users/koba04/list/bar
+# /Users/koba04/list/baz
+# /Users/koba04/list/baz/zzz.txt
+
+dir('/Users/koba04/list')->recurse(callback => sub {
+    my $file = shift;
+    say $file;
+});
+# /Users/koba04/list
+# /Users/koba04/list/bar
+# /Users/koba04/list/baz
+# /Users/koba04/list/foo.txt
+# /Users/koba04/list/baz/zzz.txt
+
+# 探索の順番を変更することもできます。
+# depthfirst = 深さ優先
+# preorder   = 幅優先
+# デフォルト(depthfirst => 0, preorder => 1,)
+dir('/Users/koba04/list')->recurse(
+    depthfirst => 1,
+    preorder => 0,
+    callback => sub {
+         say shift;
+    }
+);
+# /Users/koba04/list/bar
+# /Users/koba04/list/baz/zzz.txt
+# /Users/koba04/list/baz
+# /Users/koba04/list/foo.txt
+# /Users/koba04/list
+||<
+
+ディレクトリ以下のファイルをiteratorで処理することも出来ます。
+（非再帰的なので、ディレクトリ直下のファイル/ディレクトリのみ）
+>|perl|
+# while(my $file = dir('/Users/koba04/list')->next) { とすると無限ループになるので注意！(えっ、しないって！？)
+my $dir = dir('/Users/koba04/list');
+while(my $file = $dir->next) {
+say $file;
+}
+# /Users/koba04/list
+# /Users/koba04/list/..
+# /Users/koba04/list/bar
+# /Users/koba04/list/baz
+# /Users/koba04/list/foo.txt
+
+# カレントディレクトリ以下のファイルのみを処理する
+while(my $file = $dir->next) {
+next if $file eq $dir or $file->resolve eq $dir->parent;  # カレントと１つ上のディレクトリを除外
+say $file;
+}
+# /Users/koba04/list/bar
+# /Users/koba04/list/baz
+# /Users/koba04/list/foo.txt
+||<
+
+* 作りたい？
+ファイルを作成してみます。
+>|perl|
+use Try::Tiny;
+try {
+    $file->touch;  # 存在する場合はアクセス、更新時刻を更新する
+} catch {
+    ...
+};
+||<
+ディレクトリを作成してみます。
+>|perl|
+# これはmkdirコマンドで。
+mkdir $dir or die "Can't mkdir $!";
+
+# 存在しないサブディレクトリも一緒に作成。
+try {
+    $dir->mkpath;
+} catch {
+    ...
+};
+||<
+
+* ファイルを読んだり書いたり
+openやopenr、openw関数により、IO::FileやIO::Dirのオブジェクトを取得することができます。
+
+
+ファイルを読み込みたい？
+>|perl|
+$file = file('path/to/read.txt');
+my $reader;
+try {
+    $reader = $file->openr;
+} catch {
+    die $_;
+};
+# or
+# my $reader = $file->open('r') or die $!;
+
+while (my $line = $reader->getline ) {
+        print $line;
+}
+$reader->close;
+||<
+
+ファイルに書き込みたい？
+>|perl|
+$file = file('path/to/write.txt');
+my $writer;
+try {
+    $writer = $file->openw;
+} catch {
+    die $_;
+};
+# or
+# my $writer = $file->open('w') or die $!;
+
+$writer->print("line1\n");
+$writer->print("line2\n");
+$writer->close;
+||<
+
+ファイルに追記したい？
+>|perl|
+$file = file('path/to/write.txt');
+my $appender = $file->open('a') or die $!;
+$appender->print("line3\n");
+$appender->close;
+||<
+
+* ファイルの内容を一度に読み込みたい？
+>|perl|
+$file = file('path/to/write.txt');
+try {
+    # スカラーに入れたい
+    $lines = $file->slurp;
+    # 配列に入れたい
+    @line_list = $file->slurp;
+    # 改行コード削除したい
+    @line_list = $file->slurp(chomp => 1);
+     # PerlIOレイヤを指定したい。
+    $lines = $file->slurp(iomode => '<:encoding(UTF-8)');
+} catch {
+    die $_;
+};
+||<
+
+* 削除したい？
+ファイルまたはディレクトリを削除してみます。
+>|perl|
+$file->remove or die $!;
+$dir->remove or die $!;
+||<
+ディレクトリ以下のファイル、ディレクトリもまとめて削除してみます。
+>|perl|
+$dir->rmtree or die $!;
+||<
+
+* 拡張したい？
+継承することで独自のファイル、ディレクトリクラスを作ることができます。
+
+openrやopenwメソッドの他に、追記が出来るopenaメソッドを使えるようにしてみます。
+>|perl|
+# 私のファイルクラス
+{
+    package My::File;
+    use Carp;
+    use parent qw(Path::Class::File);
+
+    # 対応するディレクトリクラスを指定
+    sub dir_class { return "My::Dir" }
+    # メソッドを追加してみる。
+    sub opena { $_[0]->open('a') or croak "Can't append $_[0]: $!"  }
+
+}
+# 私のディレクトリクラス
+{
+    package My::Dir;
+    use parent qw(Path::Class::Dir);
+
+    # 対応するファイルクラスを指定
+    sub file_class { return "My::File" }
+}
+
+# My::File or My::dir になっている。
+$file = My::File->new("test.txt");
+$dir = $file->dir;
+say ref $file;  # => My::File
+say ref $dir;  # => My::Dir
+
+# My::Dirから作ったオブジェクトもMy::File or My::Dir になっている。
+say ref $dir->file("bar.txt");  # => My::File
+
+my $writer = $file->openw;
+$writer->print("test\n");
+$writer->close;
+my $appender = $file->opena;    # 拡張したメソッドを使ってみる。
+$appender->print("test2\n");
+$appender->close;
+||<
+
+
+Path::Classは初心者な自分でもコードやテストも読みやすいので、勉強するにもいいモジュールかなと思います。
+
+
+* See Also
+>|perl|
+perldoc Path::Class
+perldoc Path::Class::Dir
+perldoc Path::Class::File
+||<
+
+記事書くのに書いたテスト。
+<a href="https://gist.github.com/730442">https://gist.github.com/730442</a>
+
+
+明日は、<a href="http://twitter.com/usuihiro">usuihiro</a>さんです。楽しみですね！
+
