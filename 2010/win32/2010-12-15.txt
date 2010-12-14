@@ -1,0 +1,93 @@
+Eject your optical drives!
+meta-author: turugina <turugina@cpan.org>
+meta-keywords: perl, win32, win32api, SDL
+
+こんにちはこんにちは、1日仕事を休んだらすっかり土曜日気分になってしまった[http://twitter.com/turugina:turugina]です。
+
+さて、今回は、Windowsにおいて、記憶デバイス(HDDやCDROM等)の制御を行ってくれるAPIのwrapperを提供してくれる[http://search.cpan.org/dist/Win32API-File:Win32API::File]を使ったサンプルを紹介したいと思います。
+
+というわけで、いきなりコードですが
+>|perl|
+# eject.pl
+use strict;
+use warnings;
+
+use v5.10.0;
+
+use Win32API::File qw ( :ALL );
+
+my @drives = do {
+  if ( @ARGV ) {
+    # ドライブが引数で指定されていればそれを使う
+    map uc, grep /^[abcdefghijklmnopqrstuvwxyz]:$/i, @ARGV;
+  }
+  else {
+    # 指定されていなければ有効なドライブを全て列挙する。
+    my $buf = ' ' x (4*26+1);
+    GetLogicalDriveStrings(length($buf), $buf);
+
+    # $bufの中身は "[ドライブレター]:\\\0[ドライブレター]:\\\0..."
+    split /\\\0/, $buf;
+  }
+};
+
+# 光学ドライブだけ取り出す
+my @cddrives = grep { GetDriveType($_) == DRIVE_CDROM } @drives;
+if ( !@cddrives ) {
+  say "no CD/DVD drives!";
+  exit 0;
+}
+
+for my $d ( @cddrives ) {
+  # ドライブのハンドルを取得
+  my $h = createFile("//./$d", 'r', 'r');
+  if ( !$h ) {
+    say $^E, " [$d]";
+    next;
+  }
+
+  # イジェクト！
+  if ( DeviceIoControl( $h, IOCTL_STORAGE_EJECT_MEDIA, [], [], [], [], [], [] ) ) {
+    say "EJECT! [$d]";
+  }
+  else {
+    say $^E, " [$d]";
+  }
+}
+||<
+
+こんな感じで、引数に何も指定せずに実行すると全ての光学ドライブを、引数でドライブを指定するとそれが光学ドライブであればイジェクトしてまわります。
+
+このスクリプトの使い道ですが、日常使いの他、ちょっとコードを書き足して[http://0xcc.net/cdbiff/:メールを受信したらトレイを排出する]とか[http://twitter.com/:Twitter]でmentions_timelineやdirect messagesに新しいメッセージが来たらトレイを排出するとか、トレイの前にピタゴラ装置的な物をこしらえて楽しむとか、色々考えられますね！
+
+ちなみに、Unix系OSにはejectコマンドというものがあって、これで光学ドライブやフロッピーなどのイジェクトを行えるようになっています。もし↑のスクリプトで光学ドライブ以外にイジェクトしたいものがあれば、[http://msdn.microsoft.com/ja-jp/library/cc429310.aspx:GetDriveType API]の戻り値チェックでDRIVE_REMOVABLEも候補に入れてあげれば良いでしょう。(多分(ぇ
+
+
+<hr />
+
+と、ここまで書いてきましたが、実は上記のスクリプト相当のものは[http://search.cpan.org/dist/SDL/:SDL]というモジュールをインストールすれば、
+
+>|perl|
+use strict;
+use warnings;
+
+use SDL;
+use SDL::CDROM;
+use SDL::CD;
+
+SDL::init(SDL_INIT_CDROM);
+
+my @cddrives = 0 .. SDL::CDROM::num_drives() - 1;
+if ( @ARGV ) {
+  my %m = map { SDL::CDROM::name($_) => $_ } @cddrives;
+  @cddrives = grep defined,@m{@ARGV};
+}
+
+SDL::CD->new($_)->eject for @cddrives
+||<
+
+という風にとても短く書けます。 しかもWindows以外の環境でも動作するという優れもの！(白目
+
+
+さて、綺麗に(?)オチがついたところで今回はこの辺で...
+次はどなたでしょうかー。
