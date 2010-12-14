@@ -2,9 +2,9 @@ Eject your optical drives!
 meta-author: turugina <turugina@cpan.org>
 meta-keywords: perl, win32, win32api, SDL
 
-こんにちはこんにちは、1日仕事を休んだらすっかり土曜日気分になってしまった[http://twitter.com/turugina:turugina]です。
+こんにちはこんにちは、1日仕事を休んだらすっかり土曜日気分になってしまった<a href="http://twitter.com/turugina">turugina</a>です。
 
-さて、今回は、Windowsにおいて、記憶デバイス(HDDやCDROM等)の制御を行ってくれるAPIのwrapperを提供してくれる[http://search.cpan.org/dist/Win32API-File:Win32API::File]を使ったサンプルを紹介したいと思います。
+さて、今回は、Windowsにおいて、記憶デバイス(HDDやCDROM等)の制御を行ってくれるAPIのwrapperを提供してくれる<a href="http://search.cpan.org/dist/Win32API-File">Win32API::File</a>を使ったサンプルを紹介したいと思います。
 
 というわけで、いきなりコードですが
 >|perl|
@@ -58,14 +58,14 @@ for my $d ( @cddrives ) {
 
 こんな感じで、引数に何も指定せずに実行すると全ての光学ドライブを、引数でドライブを指定するとそれが光学ドライブであればイジェクトしてまわります。
 
-このスクリプトの使い道ですが、日常使いの他、ちょっとコードを書き足して[http://0xcc.net/cdbiff/:メールを受信したらトレイを排出する]とか[http://twitter.com/:Twitter]でmentions_timelineやdirect messagesに新しいメッセージが来たらトレイを排出するとか、トレイの前にピタゴラ装置的な物をこしらえて楽しむとか、色々考えられますね！
+このスクリプトの使い道ですが、日常使いの他、ちょっとコードを書き足して<a href="http://0xcc.net/cdbiff/">メールを受信したらトレイを排出する</a>とかTwitterでmentions_timelineやdirect messagesに新しいメッセージが来たらトレイを排出するとか、トレイの前にピタゴラ装置的な物をこしらえて楽しむとか、色々考えられますね！
 
-ちなみに、Unix系OSにはejectコマンドというものがあって、これで光学ドライブやフロッピーなどのイジェクトを行えるようになっています。もし↑のスクリプトで光学ドライブ以外にイジェクトしたいものがあれば、[http://msdn.microsoft.com/ja-jp/library/cc429310.aspx:GetDriveType API]の戻り値チェックでDRIVE_REMOVABLEも候補に入れてあげれば良いでしょう。(多分(ぇ
+ちなみに、Unix系OSにはejectコマンドというものがあって、これで光学ドライブやフロッピーなどのイジェクトを行えるようになっています。もし↑のスクリプトで光学ドライブ以外にイジェクトしたいものがあれば、<a href="http://msdn.microsoft.com/ja-jp/library/cc429310.aspx">GetDriveType API</a>の戻り値チェックでDRIVE_REMOVABLEも候補に入れてあげれば良いでしょう。(多分(ぇ
 
 
 <hr />
 
-と、ここまで書いてきましたが、実は上記のスクリプト相当のものは[http://search.cpan.org/dist/SDL/:SDL]というモジュールをインストールすれば、
+と、ここまで書いてきましたが、実は上記のスクリプト相当のものは<a href="http://search.cpan.org/dist/SDL/">SDL</a>というモジュールをインストールすれば、
 
 >|perl|
 use strict;
