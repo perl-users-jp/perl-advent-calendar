@@ -1,0 +1,153 @@
+時にはお伽の話を - Acme::Rumpelstiltskin
+meta-author: makamaka
+meta-tags: perl, acme
+
+(firstly written in Japanese, later in English)
+
+こんにちは、前回2回の記事が受けなく軽く凹み気味の<a href="http://twitter.com/maka2_donzoko">makamaka</a>です。今日はまず最初にお伽話をしましょう。ご存じの方も多いと思いますが、ルンペルシュティルツヒェン（ランペルシュティルツキンなど日本語表記は色々）というドイツの童話です。日本語Wikipediaの<a href="http://ja.wikipedia.org/wiki/%E3%83%AB%E3%83%B3%E3%83%9A%E3%83%AB%E3%82%B7%E3%83%A5%E3%83%86%E3%82%A3%E3%83%AB%E3%83%84%E3%83%92%E3%82%A7%E3%83%B3">ルンペルシュティルツヒェン</a>（英：<a href="http://en.wikipedia.org/wiki/Rumpelstiltskin">Rumpelstiltskin</a>）に細かい説明がありますが、かいつまんでいうと：
+
+
+粉挽屋が「うちの娘は藁を紡いで黄金に変えれるよ」とテキトーなこと言ってたら、王様が「じゃ、明日の朝までにやってみせて。お后にしてあげるから。出来なきゃ首チョンパね」と娘を塔に幽閉。
+娘さん困り果てて泣いていると、小人が出てきてコンニチハ。娘の身につけてるものと交換で藁を金に変えてくれましたとさ。
+
+ところが、できあがった金を見た王様はどんどん要求をエスカレート。とうとう娘は交換するものがなくなってしまうも、小人は生まれてくる子供をもらう条件で藁を金に変えてくれました。そんなこんなで欲望充足した王様と娘さんは結婚。めでたしめでたし。
+……じゃないだろう。はたして王と后の間に生まれた赤ん坊を取りに小人がやってくる。泣いて懇願するお后。可哀想に思った小人は3日以内に自分の名前を当てたら子供は取らないと約束。お后はありとあらゆる名前を挙げるも、当たらない。
+もはやこれまで……のところで、使いの者がたまたま森で「俺の名前はランペルシュティルツキン～」と小人が歌っていたのを報告。ほくそ笑む后。約束の期日にやってきた小人、その名前を告げられ悔しさの余り絶命してしまう。
+
+
+問：一番悪い奴は誰？
+
+
+それはともかく、なんでこの話を取り上げたかといいますと、あれは今から4年ほど前のことです。仕事が暇だった私は「そうだAcmeモジュールつくろう」と思って、<a href="https://github.com/makamaka/Acme-Rumpelstiltskin">Acme::Rumpelstiltskin</a>をつくったのです。でもドイツ語がわからない日本人にとってはRumpelstiltskinってスペルはなかなか難しい。そこでちょっとぐらいスペルを間違えてもuseできるようにしようと考えました。
+
+そこで私がとった戦略は、「似たような名前のファイルを全部インストールする」です。ハラショー！
+
+というわけで、makeすると似たようなファイルが400個以上作られます。
+
+
+
+>|perl|
+$ make
+cp lib/Acme/Runperusteruskin.pm blib/lib/Acme/Runperusteruskin.pm
+cp lib/Acme/Lampelusterustkin.pm blib/lib/Acme/Lampelusterustkin.pm
+cp lib/Acme/Ranperustiltskin.pm blib/lib/Acme/Ranperustiltskin.pm
+cp lib/Acme/Rampelstilstkin.pm blib/lib/Acme/Rampelstilstkin.pm
+cp lib/Acme/Lanpelstelstkin.pm blib/lib/Acme/Lanpelstelstkin.pm
+cp lib/Acme/Runpelustelustkin.pm blib/lib/Acme/Runpelustelustkin.pm
+cp lib/Acme/Rumpelustilustkin.pm blib/lib/Acme/Rumpelustilustkin.pm
+cp lib/Acme/Runperustirutskin.pm blib/lib/Acme/Runperustirutskin.pm
+cp lib/Acme/Rumpelstirutskin.pm blib/lib/Acme/Rumpelstirutskin.pm
+cp lib/Acme/Lunperusteruskin.pm blib/lib/Acme/Lunperusteruskin.pm
+cp lib/Acme/Lanperustelskin.pm blib/lib/Acme/Lanperustelskin.pm
+cp lib/Acme/Lanpelustirustkin.pm blib/lib/Acme/Lanpelustirustkin.pm
+cp lib/Acme/Lumpelustelskin.pm blib/lib/Acme/Lumpelustelskin.pm
+cp lib/Acme/Runpelusterustkin.pm blib/lib/Acme/Runpelusterustkin.pm
+cp lib/Acme/Ramperustilustkin.pm blib/lib/Acme/Ramperustilustkin.pm
+cp lib/Acme/Ranpelstelutskin.pm blib/lib/Acme/Ranpelstelutskin.pm
+cp lib/Acme/Lumpelustiltskin.pm blib/lib/Acme/Lumpelustiltskin.pm
+cp lib/Acme/Rumperustiruskin.pm blib/lib/Acme/Rumperustiruskin.pm
+cp lib/Acme/Rumperustilstkin.pm blib/lib/Acme/Rumperustilstkin.pm
+cp lib/Acme/Rumperustirutskin.pm blib/lib/Acme/Rumperustirutskin.pm
+cp lib/Acme/Rampelstirustkin.pm blib/lib/Acme/Rampelstirustkin.pm
+cp lib/Acme/Lumperusteruskin.pm blib/lib/Acme/Lumperusteruskin.pm
+.....
+||<
+
+
+もりもり出来る。これで多少スペルが間違ってても大丈夫。
+
+
+>|perl|
+use strict;
+use Acme::Rumpelstilskin; # ←間違ってるよ！
+||<
+
+ほら、大丈夫。
+
+ただし、正しくこのモジュール名を指定すると
+
+>|perl|
+use Acme::Rumpelstiltskin;
+||<
+
+
+件の童話さながらにdieしますので、お気をつけください。
+
+なおこのモジュールには何の機能もついていません。また、このモジュールを何のためにつくったかといいますと、忘れました。何しろ昔のことですから。数年ぶりに引っ張りだして<a href="https://github.com/makamaka/Acme-Rumpelstiltskin">githubにあげました</a>ので、興味がございましたらご覧下さい。
+
+また、青空文庫にも<a href="http://www.aozora.gr.jp/cards/001091/files/42310_15932.html">ルンペルシュチルツヒェン（楠山正雄訳）</a>があります。bayashiさんの<a href="https://github.com/bayashi/Net-AozoraBunko">Net::AozoraBunko</a>を使うと良いですね！
+
+
+最後にクイズです。Perl 5.8.8までのコアドキュメントのどこかに、Rumpelstiltskinがいます。検索等を使わず探せば、このお正月のよい暇つぶしになるのではないでしょうか（5.6系にもあったようですが、5.5系以下については確認していません）。
+
+
+
+ * ----------------------------------------------------
+ * English version
+ * ----------------------------------------------------
+
+Hello everyone. I'm <a href="http://twitter.com/maka2_donzoko">makamaka</a>.
+
+I'm going to take a fairy tale, Rumpelstiltskin. 
+
+Pelase see to <a href="http://en.wikipedia.org/wiki/Rumpelstiltskin">Rumpelstiltskin</a>.
+
+
+Ok? Well, I had a paln to make a Acme module 4 year ago. So it is Acme::Rumpelstiltskin.
+But To Japanese who don't know German well, the spelling of Rumpelstiltskin is difficult.
+I thought that this module can be used  even though misspelling.
+Then I decide a strategy - the distribution installs all file names that like Rumpelstiltskin. Great!
+
+You do make, more than 400 files are installed.
+
+>|perl|
+$ make
+cp lib/Acme/Runperusteruskin.pm blib/lib/Acme/Runperusteruskin.pm
+cp lib/Acme/Lampelusterustkin.pm blib/lib/Acme/Lampelusterustkin.pm
+cp lib/Acme/Ranperustiltskin.pm blib/lib/Acme/Ranperustiltskin.pm
+cp lib/Acme/Rampelstilstkin.pm blib/lib/Acme/Rampelstilstkin.pm
+cp lib/Acme/Lanpelstelstkin.pm blib/lib/Acme/Lanpelstelstkin.pm
+cp lib/Acme/Runpelustelustkin.pm blib/lib/Acme/Runpelustelustkin.pm
+cp lib/Acme/Rumpelustilustkin.pm blib/lib/Acme/Rumpelustilustkin.pm
+cp lib/Acme/Runperustirutskin.pm blib/lib/Acme/Runperustirutskin.pm
+cp lib/Acme/Rumpelstirutskin.pm blib/lib/Acme/Rumpelstirutskin.pm
+cp lib/Acme/Lunperusteruskin.pm blib/lib/Acme/Lunperusteruskin.pm
+cp lib/Acme/Lanperustelskin.pm blib/lib/Acme/Lanperustelskin.pm
+cp lib/Acme/Lanpelustirustkin.pm blib/lib/Acme/Lanpelustirustkin.pm
+cp lib/Acme/Lumpelustelskin.pm blib/lib/Acme/Lumpelustelskin.pm
+cp lib/Acme/Runpelusterustkin.pm blib/lib/Acme/Runpelusterustkin.pm
+cp lib/Acme/Ramperustilustkin.pm blib/lib/Acme/Ramperustilustkin.pm
+cp lib/Acme/Ranpelstelutskin.pm blib/lib/Acme/Ranpelstelutskin.pm
+cp lib/Acme/Lumpelustiltskin.pm blib/lib/Acme/Lumpelustiltskin.pm
+cp lib/Acme/Rumperustiruskin.pm blib/lib/Acme/Rumperustiruskin.pm
+cp lib/Acme/Rumperustilstkin.pm blib/lib/Acme/Rumperustilstkin.pm
+cp lib/Acme/Rumperustirutskin.pm blib/lib/Acme/Rumperustirutskin.pm
+cp lib/Acme/Rampelstirustkin.pm blib/lib/Acme/Rampelstirustkin.pm
+cp lib/Acme/Lumperusteruskin.pm blib/lib/Acme/Lumperusteruskin.pm
+.....
+||<
+
+Copy, copy, copy... Now you can misspell Rumpelstiltskin.
+
+
+>|perl|
+use strict;
+use Acme::Rumpelstilskin;
+||<
+
+All right.
+
+But, you call right module name...
+
+>|perl|
+use Acme::Rumpelstiltskin;
+||<
+
+
+The module dies as the story is.
+
+This module has no function and I forgot why this modle was made.
+
+Lastly I give you a quiz.Until Perl 5.8.8, there is Rumpelstiltskin in a core document. If you don't use any search tool, in this winter vacation, it will be a goot to killing time.
+
+

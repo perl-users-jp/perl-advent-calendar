@@ -23,8 +23,8 @@ meta-tags: help, jperl
 例えば、記号トラックの2010年12月5日用の記事であれば、<br/> https://github.com/perl-users-jp/jperl-advent-calendar-2010/tree/master/2010/sym/2010-12-05.txt <br/>として git push することになります。
 
 現在、上記リポジトリへの push 権は各トラックで主要な数名が保持していますので、
-+継続的に記事を書くのであれば tokuhirom, yappo, kan_fushihara, takesako, xaicron, hasegawayosuke, makamaka, yusukebe, kazuho, lestrrat, dankogai, mattn あたりにお願いして権限を与えてもらう
-+すでに記事を push している人(GitHub上で見えますね)にお願いして push してもらう
++githubにアカウントを持っているのであれば tokuhirom, yappo, kan_fushihara, takesako, xaicron, hasegawayosuke, makamaka, yusukebe, kazuho, lestrrat, dankogai, mattn あたりにお願いして権限を与えてもらう。連絡方法はIRC(#perl-casual@freenodeあたり)やTwitterでどうぞ。forkしてpull reqするのは面倒なので禁止です。
++持っていないかアカウントを晒したくない人は、すでに記事を push している人(GitHub上で見えますね)にお願いして push してもらう
 という方法を採って下さい。
 git がよくわからないという方は、自分の書くトラックの誰かにメール等で記事を渡して更新してもらうのが簡単だと思います(頻繁に更新する場合は権限をもらって自分でgitを使いましょう!)。
 
