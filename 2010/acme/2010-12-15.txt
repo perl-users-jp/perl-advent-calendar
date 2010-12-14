@@ -82,6 +82,10 @@ use Acme::Rumpelstiltskin;
 
 
 
+追記：hide_o_55さんに指摘されて気付きましたが、2008年のadvent calendarでantipopさんが<a href="http://perl-users.jp/articles/advent-calendar/2008/17.html">Acme::Class::TypoSafe</a>というモジュールをつくっていました。あーーー……
+
+
+
  * ----------------------------------------------------
  * English version
  * ----------------------------------------------------
@@ -150,4 +154,7 @@ This module has no function and I forgot why this modle was made.
 
 Lastly I give you a quiz.Until Perl 5.8.8, there is Rumpelstiltskin in a core document. If you don't use any search tool, in this winter vacation, it will be a goot to killing time.
 
+
+
+P.S. hide_o_55 pointed that antipop created <a href="http://perl-users.jp/articles/advent-calendar/2008/17.html">Acme::Class::TypoSafe</a> in advent calenda 2008. Oops!
 
