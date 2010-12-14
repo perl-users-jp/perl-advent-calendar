@@ -78,9 +78,12 @@ use SDL::CD;
 SDL::init(SDL_INIT_CDROM);
 
 my @cddrives = 0 .. SDL::CDROM::num_drives() - 1;
+die "no available drives" if !@cddrives;
+
 if ( @ARGV ) {
   my %m = map { SDL::CDROM::name($_) => $_ } @cddrives;
   @cddrives = grep defined,@m{@ARGV};
+  die 'no available drives: choose ', join ', ',grep defined $m{$_},keys %m if !@cddrives;
 }
 
 SDL::CD->new($_)->eject for @cddrives
