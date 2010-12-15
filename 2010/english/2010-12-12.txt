@@ -1,0 +1,23 @@
+Class::Accessor::Lite - yet another accessor builder
+
+Why should accessors modify @ISA? Doesn't it slow down method invocation? <a href="http://search.cpan.org/dist/Class-Accessor-Lite/">Class::Accessor::Lite</a> is a yet-another accessor builder.  The caveats are:
+
+- compatible interface with <a href="http://search.cpan.org/dist/Class-Accessor-Fast/">Class::Accessor::Fast</a>
+- does not alter @ISA
+- no dependencies
+- can set up read-only and / or write-only accessors and constructors
+
+There is also a fancy interface (like <a href="http://search.cpan.org/dist/Object-Tiny/">Object::Tiny</a>) to construct the accessors.  The following code snippet should be self-explanatory.
+
+>|perl|
+package MyClass;
+
+use Class::Accessor::Lite (
+    new => 1,                # create constructor
+    rw  => [ qw(foo bar) ],  # r/w accessor
+    ro  => [ qw(baz) ],
+    wo  => [ qw(hoge) ],
+);
+||<
+
+This entry was written by <a href="http://search.cpan.org/~kazuho/">Kazuho Oku</a>.  His weblog can be found at: <a href="http://blog.kazuhooku.com/">blog.kazuhooku.com</a>.
