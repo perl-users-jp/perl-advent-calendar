@@ -30,12 +30,12 @@ my $dir = dir('path/to/dir');
 簡単ですね。
 えっ、Linux上でWindowsのパスに変更したい？(as_foreign)
 >|perl|
-$file->as_foreign('Win32');
+$file = $file->as_foreign('Win32');
 say $file; # => 'path\to\file.txt'
 
 # 直接作ることも出来ます。(new_foreign)
 $file = Path::Class::File->new_foreign('Win32', 'path/to/file.txt');
-say $file; 'path\to\file.txt', 'new_foreign'
+say $file; # => 'path\to\file.txt'
 ||<
 
 'Win32'の他にも'Unix'や'Mac'、'Cygwin'など指定出来ます。
