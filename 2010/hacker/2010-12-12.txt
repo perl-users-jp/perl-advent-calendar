@@ -58,12 +58,12 @@ use Sub::Args;
 sub new { bless {}, +shift }
 
 sub lookup {
-    my $self = shft;
+    my $self = shift;
     my $args = args({user_id => 1, name => 0}, @_);
 }
 
 package main;
-my $usr = Proj::Api::User->new;
+my $user = Proj::Api::User->new;
 $user->lookup({user_id => 1});
 ||<
 
