@@ -1,0 +1,75 @@
+Using DBI Callbacks
+
+Have you ever used DBI's "Callbacks" (and "ChildCallbacks") attribute? Say we have a code like this:
+
+>|perl|
+#!perl
+use strict;
+use warnings;
+use DBI;
+use Time::Piece;
+
+my $dbh = DBI->connect('dbi:SQLite::memory:');
+$dbh->do('create table foo (id, created_at)');
+
+my $insert = $dbh->prepare('insert into foo values(?, ?)');
+my $select = $dbh->prepare('select created_at from foo where id = ?');
+
+$insert->execute(1, Time::Piece->new);
+$select->execute(1);
+print $select->fetchrow_array;
+||<
+
+You'll get something like "Wed Dec 15 22:59:20 2010" when you run it. It might be okay for you, but I usually don't want to store such a datetime string; I want it to be converted into an epoch time for simplicity.
+
+The "Callbacks" attribute helps in such cases. You can register a callback function (which will be executed before its corresponding method) to a database handler, or to a statement handler, like this:
+
+>|perl|
+(snip)
+
+my $dbh = DBI->connect('dbi:SQLite::memory:');
+$dbh->do('create table foo (id, created_at)');
+
+$dbh->{Callbacks}{ChildCallbacks}{execute} = sub {
+    for (@_) { $_ = $_->epoch if ref $_ eq 'Time::Piece' }
+    return;
+};
+
+(snip)
+||<
+
+Here I register a callback for an "execute" method of all the child statement handles through "ChildCallbacks". You can set a callback directly to a specific statement handle, or you can set callbacks when you connect (through the fourth argument where you often set "AutoCommit" and "RaiseError" attributes). See DBI's pod for details.
+
+Now you can retrieve an epoch time. But you might want it to be a Time::Piece object when you retrieve.
+
+I usually don't think it a good idea to turn a scalar value from a database into an arbitrary object by default. I'd probably add another method to inflate to DBI::st (or specific driver's ::st) class for casual use (don't do that in a serious $job application, though), or, write a plain model class and do necessary inflation there, which I think much better.
+
+>|perl|
+(snip)
+
+no warnings 'once';
+*DBI::st::fetchrow_array_inflated = sub {
+    my $sth = shift;
+    my @got = $sth->fetchrow_array;
+
+    my @cols = @{$sth->{NAME_lc} || []};
+    for (0 .. $#cols) {
+        $got[$_] = Time::Piece->new($got[$_]) if $cols[$_] =~ /_at$/;
+    }
+    return @got;
+};
+
+(snip)
+||<
+
+You might possibly be able to do it through "Callbacks", but as of this writing, there seems something wrong or picky, and I couldn't find a way to do it properly. It's not so cool either to override all of the fetch*/select* methods. If all you want is just a date/time string to embed into a template, you might want to use some built-in SQL function to convert an epoch time to a date/time string. See appropriate documentation for details.
+
+>|perl|
+(snip)
+
+my $select = $dbh->prepare('select datetime(created_at, "unixepoch") from foo where id = ?');
+
+(snip)
+||<
+
+
