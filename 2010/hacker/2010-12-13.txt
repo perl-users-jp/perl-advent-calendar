@@ -1,71 +1,60 @@
 SQL::Makerで動的に SQLを生成する
 
-どうもこんにちは。hacker track がやる気なさすぎるのでもう一回かくよ!と
-いうわけで tokuhirom ですこんにちは。こんにちは。
+どうもこんにちは。hacker track がやる気なさすぎるのでもう一回かくよ!というわけで tokuhirom ですこんにちは。こんにちは。
 
-さて、最近つくった SQL::Maker というモジュールについて紹介します。
-SQL::Maker は、要は SQL::Abstract みたいなやつです。じゃあなんで
-SQL::Abstract じゃなくて SQL::Maker なの？ってことになるわけですが、
-SQL::Abstract は実績があるし、非常に便利なんですが、いかんせんコードが
-まじよみづらいっていうかこれよむの無理じゃね!!ってことをおもうので、あ
-たらしくつくったという次第。
+さて、最近つくった SQL::Maker というモジュールについて紹介します。SQL::Maker は、要は SQL::Abstract みたいなやつです。じゃあなんで SQL::Abstract じゃなくて SQL::Maker なの？ってことになるわけですが、 SQL::Abstract は実績があるし、非常に便利なんですが、いかんせんコードがまじよみづらいっていうかこれよむの無理じゃね!!ってことをおもうので、あたらしくつくったという次第。
 
-また、SQL::Maker は method chain で SELECT 文を構築する機能もついてま
-す。あらべんり。こんなかんじ↓↓
+また、SQL::Maker は method chain で SELECT 文を構築する機能もついてます。あらべんり。こんなかんじ↓↓
 >|perl|
-           my $sql = SQL::Maker::Select−>new()
-                                         −>add_select('foo')
-                                         −>add_select('bar')
-                                         −>add_select('baz')
-                                         −>add_from('table_name')
-                                         −>as_sql;
-           # => "SELECT foo, bar, baz FROM table_name"
+my $sql = SQL::Maker::Select−>new()
+                                −>add_select('foo')
+                                −>add_select('bar')
+                                −>add_select('baz')
+                                −>add_from('table_name')
+                                −>as_sql;
+# => "SELECT foo, bar, baz FROM table_name"
 ||<
 
-WHERE 句の生成とかを、すごいがんばって hashref/arrayref のくみわせで表
-現するのって、馬鹿馬鹿しくね？とおもうので、こんな風に、条件句同士を &
-や | でつなげられるようにしています。
+WHERE 句の生成とかを、すごいがんばって hashref/arrayref のくみわせで表現するのって、馬鹿馬鹿しくね？とおもうので、こんな風に、条件句同士を &や | でつなげられるようにしています。
 >|perl|
-           my $condition = SQL::Maker::Condition−>new(
-               name_sep   => '.',
-               quote_char => '`',
-           );
-           $condition−>add('foo_id' => 3);
-           $condition−>add('bar_id' => 4);
-           $sql = $condition−>as_sql(); # (`foo_id`=?) AND (`bar_id`=?)
-           @bind = $condition−>bind();  # (3, 4)
+my $condition = SQL::Maker::Condition−>new(
+    name_sep   => '.',
+    quote_char => '`',
+);
+$condition−>add('foo_id' => 3);
+$condition−>add('bar_id' => 4);
+$sql = $condition−>as_sql(); # (`foo_id`=?) AND (`bar_id`=?)
+@bind = $condition−>bind();  # (3, 4)
 
-           # composite and
-           my $other = SQL::Maker::Condition−>new(
-               name_sep => '.',
-               quote_char => '`',
-           );
-           $other−>add('name' => 'john');
-           my $comp_and = $condition & $other;
-           $sql = $comp_and−>as_sql(); # ((`foo_id`=?) AND (`bar_id`=?)) AND (`name`=?)
-           @bind = $comp_and−>bind();  # (3, 4, 'john')
+# composite and
+my $other = SQL::Maker::Condition−>new(
+    name_sep => '.',
+    quote_char => '`',
+);
+$other−>add('name' => 'john');
+my $comp_and = $condition & $other;
+$sql = $comp_and−>as_sql(); # ((`foo_id`=?) AND (`bar_id`=?)) AND (`name`=?)
+@bind = $comp_and−>bind();  # (3, 4, 'john')
 ||<
 
 もちろんこんなかんじで、SQL::Abstract っぽくもつかえます。
 >||
-           my $builder = SQL::Maker−>new();
+my $builder = SQL::Maker−>new();
 
-           # SELECT
-           ($sql, @binds) = $builder−>select($table, \@fields, \%where, \%opt);
+# SELECT
+($sql, @binds) = $builder−>select($table, \@fields, \%where, \%opt);
 
-           # INSERT
-           ($sql, @binds) = $builder−>insert($table, \%values);
+# INSERT
+($sql, @binds) = $builder−>insert($table, \%values);
 
-           # DELETE
-           ($sql, @binds) = $builder−>delete($table, \%values);
+# DELETE
+($sql, @binds) = $builder−>delete($table, \%values);
 
-           # UPDATE
-           ($sql, @binds) = $builder−>update($table, \%set, \%where);
+# UPDATE
+($sql, @binds) = $builder−>update($table, \%set, \%where);
 ||<
 
-あと、plugin 機構もそなえています。SQL::Maker のプラギン機構は非常にシ
-ンプル。@EXPORT で定義されている関数が SQL::Maker にはえるだけ。わかり
-やすい。
+あと、plugin 機構もそなえています。SQL::Maker のプラギン機構は非常にシンプル。@EXPORT で定義されている関数が SQL::Maker にはえるだけ。わかりやすい。
 >|perl|
 package SQL::Maker::Plugin::InsertMulti;
 our @EXPORT = qw/insert_multi/;
