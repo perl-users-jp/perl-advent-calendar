@@ -1,6 +1,6 @@
 Class::Accessor::Lite - yet another accessor builder
 
-Why should accessors modify @ISA? Doesn't it slow down method invocation? <a href="http://search.cpan.org/dist/Class-Accessor-Lite/">Class::Accessor::Lite</a> is a yet-another accessor builder.  The caveats are:
+Why does accessor builders modify @ISA? Doesn't it slow down method invocation? <a href="http://search.cpan.org/dist/Class-Accessor-Lite/">Class::Accessor::Lite</a> is a yet-another accessor builder.  The caveats are:
 
 - compatible interface with <a href="http://search.cpan.org/dist/Class-Accessor-Fast/">Class::Accessor::Fast</a>
 - does not alter @ISA
