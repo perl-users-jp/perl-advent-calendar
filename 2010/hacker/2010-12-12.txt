@@ -1,0 +1,83 @@
+Sub::Argsによる高速簡易バリデーション
+
+再登場の<a href="http://twitter.com/#!/nekokak" target="_blank">nekokak</a>です。
+
+みなさん、method引数のチェックってやってますか！
+引数のバリデーションをやりたければCPANに色々転がっています。
+
+一番有名なのは<a href="http://search.cpan.org/dist/Params-Validate/" target="_blank">Params::Validate</a>ですね。
+<a href="http://search.cpan.org/dist/Params-Validate/" target="_blank">Params::Validate</a>を使えば
+引数の有無だけでなく型チェックまで行えたりさらにdefaultの値を設定したり色々便利な昨日が満載てんこ盛りです。
+
+ただ遅い！遅すぎます！日が暮れます！
+
+どういう単位でmethodの引数チェックを行うかは人それぞれプロジェクトそれぞれだと思いますが、
+固くプログラムを書いておりmethodの引数チェックをカッチりやっている場合、
+loopでそのメソッドを呼び出しまくるとその分<a href="http://search.cpan.org/dist/Params-Validate/" target="_blank">Params::Validate</a>がよばれるので
+パフォーマンス的によろしくありません。
+
+とても残念な感じです。
+
+そこで日本のPerlHacker達が立ち上がりました！
+
+<a href="http://search.cpan.org/dist/Smart-Args/" target="_blank">Smart::Args</a>
+<a href="http://search.cpan.org/dist/Data-Validator/" target="_blank">Data::Validator</a>
+
+これらのモジュールは遅すぎる<a href="http://search.cpan.org/dist/Params-Validate/" target="_blank">Params::Validate</a>の代替えとして
+検討するとよいでしょう。
+
+
+<a href="http://search.cpan.org/dist/Smart-Args/" target="_blank">Smart::Args</a>
+<a href="http://search.cpan.org/dist/Data-Validator/" target="_blank">Data::Validator</a>
+
+はどちらも素晴らしいモジュールなのですが、ふとおもったのが、型チェックってそんなに必要か？
+ということでした。
+
+その引数がIntかどうかStrかどうかなんて気にしてたらPerlじゃねぇ！と。
+（もちろん型を気にすべきケースはあります。極論言ってます）
+
+
+そこで作ったのが
+<a href="http://search.cpan.org/dist/Sub-Args/" target="_blank">Sub::Args</a>
+です。
+
+<a href="http://search.cpan.org/dist/Sub-Args/" target="_blank">Sub::Args</a>では型チェックなんてPerlではどうでもいいことは一切やりません。(極論です)
+<a href="http://search.cpan.org/dist/Sub-Args/" target="_blank">Sub::Args</a>では
+バリデーション（必須項目｜オプショナル項目のチェック）かけても高速でチェック。
+型の指定はいらない。
+hashrefで渡した引数をhashrefで受け取るようにし、初心者が混乱するようなマジカルな事をしない。
+
+というのを前提でつくりました。
+
+こんな感じでつかいます。
+
+>||
+package Proj::Api::User;
+use Sub::Args;
+
+sub new { bless {}, +shift }
+
+sub lookup {
+    my $self = shft;
+    my $args = args({user_id => 1, name => 0}, @_);
+}
+
+package main;
+my $usr = Proj::Api::User->new;
+$user->lookup({user_id => 1});
+||<
+
+argsメソッドで受け取る引数の情報を定義します。
+
+
+よくmethodの引数にhashrefを渡すことがおおいですが、
+hashのキーにはuse strictは有効じゃないので、
+このようなチェックを行うのはありだとおもっています。
+まぁ、コレでも存在しないキーにアクセスしてしまうbugはなくなりませんが。
+
+また、methodの冒頭に書くことで、このメソッドが必要としている引数を簡単に読み取ることができ、
+コードの可読性も上がると思っています。
+
+
+型チェックが要らないけど必須チェックはしたいんだよなーってケースにでもお使い頂ければこれ幸いです。
+
