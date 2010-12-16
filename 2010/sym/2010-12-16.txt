@@ -1,0 +1,488 @@
+はじめての80386記号プログラミング
+meta-author: takesako
+meta-tags: sym, x86
+
+こんにちは。<a href="http://developer.cybozu.co.jp/takesako/">id:TAKESAKO</a>です。
+
+そろそろ単純な「Hello, world!」に飽きてきた頃なので、フィボナッチ数列を数えるプログラムをC言語で書いてみたいと思います。
+
+*C言語でフィボナッチ数列を数える
+
+文字列領域にフィボナッチ数列を数えるx86の32bit実行コードを書いて、それを無理やり関数呼び出しの形式にして実行してみたいと思います。
+
+>|c|
+#include <stdio.h>
+
+char x86[] = {
+    0x8B, 0x4C, 0x24, 0x04, //  mov ecx,[esp+0x4]
+    0x31, 0xC0,             //  xor eax,eax
+    0x99,                   //  cdq
+    0x49,                   //  dec ecx
+    0x7F, 0x04,             //  jg 0xe
+    0xE0, 0x01,             //  loopne 0xd
+    0x40,                   //  inc eax
+    0xC3,                   //  ret
+    0x40,                   //  inc eax
+    0x50,                   //  push eax
+    0x01, 0xD0,             //  add eax,edx
+    0x5A,                   //  pop edx
+    0xE2, 0xFA,             //  loop 0xf
+    0xC3,                   //  ret
+};
+
+int fibonacci(int n)
+{
+    int(*x86call)(int) = (void*)x86;
+    return x86call(n);
+}
+
+int main(int argc, char *argv[])
+{
+    int n;
+    int N = (argc > 1) ? atoi(argv[1]) : 46;
+    for (n = 0; n <= N; n++) {
+        int f = fibonacci(n);
+        printf("f[%d] = %d\n", n, f);
+    }
+}
+||<
+
+このファイルをa.cで保存し、gccでコンパイルして実行すると、フィボナッチ数列が高速に出力されます。
+
+>||
+$ gcc a.c
+$ ./a.out 46
+f[0] = 0
+f[1] = 1
+f[2] = 1
+f[3] = 2
+f[4] = 3
+f[5] = 5
+f[6] = 8
+f[7] = 13
+f[8] = 21
+f[9] = 34
+f[10] = 55
+f[11] = 89
+f[12] = 144
+f[13] = 233
+f[14] = 377
+f[15] = 610
+f[16] = 987
+f[17] = 1597
+f[18] = 2584
+f[19] = 4181
+f[20] = 6765
+f[21] = 10946
+f[22] = 17711
+f[23] = 28657
+f[24] = 46368
+f[25] = 75025
+f[26] = 121393
+f[27] = 196418
+f[28] = 317811
+f[29] = 514229
+f[30] = 832040
+f[31] = 1346269
+f[32] = 2178309
+f[33] = 3524578
+f[34] = 5702887
+f[35] = 9227465
+f[36] = 14930352
+f[37] = 24157817
+f[38] = 39088169
+f[39] = 63245986
+f[40] = 102334155
+f[41] = 165580141
+f[42] = 267914296
+f[43] = 433494437
+f[44] = 701408733
+f[45] = 1134903170
+f[46] = 1836311903
+||<
+
+全くエラーがでないのがすごいですね。
+
+*問題点
+
+使用している文字がバイナリを含んでいるので、どうせならUS-ASCIIの範囲内で、さらに記号だけで書いてみたいですね。
+このプログラムはx86が実行できるCコンパイラ（IA-32環境）でしか動作しませんが、フィボナッチ数列を計算するときに<a href="http://siyobik.info/index.php?module=x86&id=68">1byte命令のcdq(0x99)</a>を個人的に使ってみたいだけでした。すみません。
+
+*記号だけのmain関数で「Hello, world!」を書いてみる
+
+これを踏まえて、記号だけのmain関数で「Hello, world!」を書いてみます。
+
+>|c|
+char main[] =
+"`%@@@@%!!!!----!-:(*}-[:,>-|;|``[[[[[[[%@@@@%!!!!-"
+"====-<;;;-{{{{-|{{{`[[[[[[[%@@@@%!!!!------***[-.,"
+"^{-{|}{`[[[[[[[%@@@@%!!!!------}#**-{{+,-[{{|`[[[["
+"[[[%@@@@%!!!!------****-.,,^-{||}`[[[[[[[%@@@@%!!!"
+"!------**!*-!.{^-~!|;`[[[[[[[%@@@@%!!!!-!----+$**-"
+"!!!^-!!#)`[[[[[[[%@@@@%!!!!----!-**~$->^}&-?*`$`[["
+"[[[[[%@@@@%!!!!------*$$!-!!!!-#!!!`[[[[[[[%@@@@%!"
+"!!!------****-.,,;-{||%`[[[[[[[%@@@@%!!!!------***"
+"*-.,`^-{|`;`[[[[[[[%@@@@%!!!!------*!**-.{+,-{{{|`"
+"[[[[[[[%@@@@%!!!!------%***-{&,,-{}||`[[[[[[[%@@@@"
+"%!!!!------*~**-.}&#-)?}}`^^^^^^^^%@@@@%!!!!------"
+"****-^^^^-*)))`________!~!%@@@@%!!!!------****-;;;"
+";-.---`________!~!%@@@@%!!!!------****-===^-?>>)`_"
+"_______)~!%@@@@%!!!!------***~-^^!|-!%][`________)"
+"~!%@@@@%!!!!------*~**-=|^;->](/`________)~!%@@@@%"
+"!!!!------~***-|&^#-]$%%`________)~!'/``````";
+||<
+
+*デモ
+
+<a href="http://ttyshare.com/rec/takesako/107004826/">Linux x86 no-alnum Hello world! - TTYShare</a>
+<embed type="application/x-shockwave-flash" src="http://ttyshare.com/t/eeb225946f4a3517ef4e8b4bb674858e1c5f19e5" width="480" height="288"/>
+
+※プログラム中の絶対アドレスにアクセスしてint 80hのシステムコールを直接使用しているので筆者のLinux x86環境のgccでしか動作しません。
+
+*80386コードリーディング
+
+objdump -D a.out して、実行バイナリをディスアセンブルした結果を読んでみましょう。
+
+>||
+08049560 <main>:
+ 8049560:       60                      pusha
+ 8049561:       25 40 40 40 40          and    $0x40404040,%eax
+ 8049566:       25 21 21 21 21          and    $0x21212121,%eax
+ 804956b:       2d 2d 2d 2d 21          sub    $0x212d2d2d,%eax
+ 8049570:       2d 3a 28 2a 7d          sub    $0x7d2a283a,%eax
+ 8049575:       2d 5b 3a 2c 3e          sub    $0x3e2c3a5b,%eax
+ 804957a:       2d 7c 3b 7c 60          sub    $0x607c3b7c,%eax
+ 804957f:       60                      pusha
+ 8049580:       5b                      pop    %ebx
+ 8049581:       5b                      pop    %ebx
+ 8049582:       5b                      pop    %ebx
+ 8049583:       5b                      pop    %ebx
+ 8049584:       5b                      pop    %ebx
+ 8049585:       5b                      pop    %ebx
+ 8049586:       5b                      pop    %ebx
+ 8049587:       25 40 40 40 40          and    $0x40404040,%eax
+ 804958c:       25 21 21 21 21          and    $0x21212121,%eax
+ 8049591:       2d 3d 3d 3d 3d          sub    $0x3d3d3d3d,%eax
+ 8049596:       2d 3c 3b 3b 3b          sub    $0x3b3b3b3c,%eax
+ 804959b:       2d 7b 7b 7b 7b          sub    $0x7b7b7b7b,%eax
+ 80495a0:       2d 7c 7b 7b 7b          sub    $0x7b7b7b7c,%eax
+ 80495a5:       60                      pusha
+ 80495a6:       5b                      pop    %ebx
+ 80495a7:       5b                      pop    %ebx
+ 80495a8:       5b                      pop    %ebx
+ 80495a9:       5b                      pop    %ebx
+ 80495aa:       5b                      pop    %ebx
+ 80495ab:       5b                      pop    %ebx
+ 80495ac:       5b                      pop    %ebx
+ 80495ad:       25 40 40 40 40          and    $0x40404040,%eax
+ 80495b2:       25 21 21 21 21          and    $0x21212121,%eax
+ 80495b7:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 80495bc:       2d 2a 2a 2a 5b          sub    $0x5b2a2a2a,%eax
+ 80495c1:       2d 2e 2c 5e 7b          sub    $0x7b5e2c2e,%eax
+ 80495c6:       2d 7b 7c 7d 7b          sub    $0x7b7d7c7b,%eax
+ 80495cb:       60                      pusha
+ 80495cc:       5b                      pop    %ebx
+ 80495cd:       5b                      pop    %ebx
+ 80495ce:       5b                      pop    %ebx
+ 80495cf:       5b                      pop    %ebx
+ 80495d0:       5b                      pop    %ebx
+ 80495d1:       5b                      pop    %ebx
+ 80495d2:       5b                      pop    %ebx
+ 80495d3:       25 40 40 40 40          and    $0x40404040,%eax
+ 80495d8:       25 21 21 21 21          and    $0x21212121,%eax
+ 80495dd:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 80495e2:       2d 7d 23 2a 2a          sub    $0x2a2a237d,%eax
+ 80495e7:       2d 7b 7b 2b 2c          sub    $0x2c2b7b7b,%eax
+ 80495ec:       2d 5b 7b 7b 7c          sub    $0x7c7b7b5b,%eax
+ 80495f1:       60                      pusha
+ 80495f2:       5b                      pop    %ebx
+ 80495f3:       5b                      pop    %ebx
+ 80495f4:       5b                      pop    %ebx
+ 80495f5:       5b                      pop    %ebx
+ 80495f6:       5b                      pop    %ebx
+ 80495f7:       5b                      pop    %ebx
+ 80495f8:       5b                      pop    %ebx
+ 80495f9:       25 40 40 40 40          and    $0x40404040,%eax
+ 80495fe:       25 21 21 21 21          and    $0x21212121,%eax
+ 8049603:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 8049608:       2d 2a 2a 2a 2a          sub    $0x2a2a2a2a,%eax
+ 804960d:       2d 2e 2c 2c 5e          sub    $0x5e2c2c2e,%eax
+ 8049612:       2d 7b 7c 7c 7d          sub    $0x7d7c7c7b,%eax
+ 8049617:       60                      pusha
+ 8049618:       5b                      pop    %ebx
+ 8049619:       5b                      pop    %ebx
+ 804961a:       5b                      pop    %ebx
+ 804961b:       5b                      pop    %ebx
+ 804961c:       5b                      pop    %ebx
+ 804961d:       5b                      pop    %ebx
+ 804961e:       5b                      pop    %ebx
+ 804961f:       25 40 40 40 40          and    $0x40404040,%eax
+ 8049624:       25 21 21 21 21          and    $0x21212121,%eax
+ 8049629:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 804962e:       2d 2a 2a 21 2a          sub    $0x2a212a2a,%eax
+ 8049633:       2d 21 2e 7b 5e          sub    $0x5e7b2e21,%eax
+ 8049638:       2d 7e 21 7c 3b          sub    $0x3b7c217e,%eax
+ 804963d:       60                      pusha
+ 804963e:       5b                      pop    %ebx
+ 804963f:       5b                      pop    %ebx
+ 8049640:       5b                      pop    %ebx
+ 8049641:       5b                      pop    %ebx
+ 8049642:       5b                      pop    %ebx
+ 8049643:       5b                      pop    %ebx
+ 8049644:       5b                      pop    %ebx
+ 8049645:       25 40 40 40 40          and    $0x40404040,%eax
+ 804964a:       25 21 21 21 21          and    $0x21212121,%eax
+ 804964f:       2d 21 2d 2d 2d          sub    $0x2d2d2d21,%eax
+ 8049654:       2d 2b 24 2a 2a          sub    $0x2a2a242b,%eax
+ 8049659:       2d 21 21 21 5e          sub    $0x5e212121,%eax
+ 804965e:       2d 21 21 23 29          sub    $0x29232121,%eax
+ 8049663:       60                      pusha
+ 8049664:       5b                      pop    %ebx
+ 8049665:       5b                      pop    %ebx
+ 8049666:       5b                      pop    %ebx
+ 8049667:       5b                      pop    %ebx
+ 8049668:       5b                      pop    %ebx
+ 8049669:       5b                      pop    %ebx
+ 804966a:       5b                      pop    %ebx
+ 804966b:       25 40 40 40 40          and    $0x40404040,%eax
+ 8049670:       25 21 21 21 21          and    $0x21212121,%eax
+ 8049675:       2d 2d 2d 2d 21          sub    $0x212d2d2d,%eax
+ 804967a:       2d 2a 2a 7e 24          sub    $0x247e2a2a,%eax
+ 804967f:       2d 3e 5e 7d 26          sub    $0x267d5e3e,%eax
+ 8049684:       2d 3f 2a 60 24          sub    $0x24602a3f,%eax
+ 8049689:       60                      pusha
+ 804968a:       5b                      pop    %ebx
+ 804968b:       5b                      pop    %ebx
+ 804968c:       5b                      pop    %ebx
+ 804968d:       5b                      pop    %ebx
+ 804968e:       5b                      pop    %ebx
+ 804968f:       5b                      pop    %ebx
+ 8049690:       5b                      pop    %ebx
+ 8049691:       25 40 40 40 40          and    $0x40404040,%eax
+ 8049696:       25 21 21 21 21          and    $0x21212121,%eax
+ 804969b:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 80496a0:       2d 2a 24 24 21          sub    $0x2124242a,%eax
+ 80496a5:       2d 21 21 21 21          sub    $0x21212121,%eax
+ 80496aa:       2d 23 21 21 21          sub    $0x21212123,%eax
+ 80496af:       60                      pusha
+ 80496b0:       5b                      pop    %ebx
+ 80496b1:       5b                      pop    %ebx
+ 80496b2:       5b                      pop    %ebx
+ 80496b3:       5b                      pop    %ebx
+ 80496b4:       5b                      pop    %ebx
+ 80496b5:       5b                      pop    %ebx
+ 80496b6:       5b                      pop    %ebx
+ 80496b7:       25 40 40 40 40          and    $0x40404040,%eax
+ 80496bc:       25 21 21 21 21          and    $0x21212121,%eax
+ 80496c1:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 80496c6:       2d 2a 2a 2a 2a          sub    $0x2a2a2a2a,%eax
+ 80496cb:       2d 2e 2c 2c 3b          sub    $0x3b2c2c2e,%eax
+ 80496d0:       2d 7b 7c 7c 25          sub    $0x257c7c7b,%eax
+ 80496d5:       60                      pusha
+ 80496d6:       5b                      pop    %ebx
+ 80496d7:       5b                      pop    %ebx
+ 80496d8:       5b                      pop    %ebx
+ 80496d9:       5b                      pop    %ebx
+ 80496da:       5b                      pop    %ebx
+ 80496db:       5b                      pop    %ebx
+ 80496dc:       5b                      pop    %ebx
+ 80496dd:       25 40 40 40 40          and    $0x40404040,%eax
+ 80496e2:       25 21 21 21 21          and    $0x21212121,%eax
+ 80496e7:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 80496ec:       2d 2a 2a 2a 2a          sub    $0x2a2a2a2a,%eax
+ 80496f1:       2d 2e 2c 60 5e          sub    $0x5e602c2e,%eax
+ 80496f6:       2d 7b 7c 60 3b          sub    $0x3b607c7b,%eax
+ 80496fb:       60                      pusha
+ 80496fc:       5b                      pop    %ebx
+ 80496fd:       5b                      pop    %ebx
+ 80496fe:       5b                      pop    %ebx
+ 80496ff:       5b                      pop    %ebx
+ 8049700:       5b                      pop    %ebx
+ 8049701:       5b                      pop    %ebx
+ 8049702:       5b                      pop    %ebx
+ 8049703:       25 40 40 40 40          and    $0x40404040,%eax
+ 8049708:       25 21 21 21 21          and    $0x21212121,%eax
+ 804970d:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 8049712:       2d 2a 21 2a 2a          sub    $0x2a2a212a,%eax
+ 8049717:       2d 2e 7b 2b 2c          sub    $0x2c2b7b2e,%eax
+ 804971c:       2d 7b 7b 7b 7c          sub    $0x7c7b7b7b,%eax
+ 8049721:       60                      pusha
+ 8049722:       5b                      pop    %ebx
+ 8049723:       5b                      pop    %ebx
+ 8049724:       5b                      pop    %ebx
+ 8049725:       5b                      pop    %ebx
+ 8049726:       5b                      pop    %ebx
+ 8049727:       5b                      pop    %ebx
+ 8049728:       5b                      pop    %ebx
+ 8049729:       25 40 40 40 40          and    $0x40404040,%eax
+ 804972e:       25 21 21 21 21          and    $0x21212121,%eax
+ 8049733:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 8049738:       2d 25 2a 2a 2a          sub    $0x2a2a2a25,%eax
+ 804973d:       2d 7b 26 2c 2c          sub    $0x2c2c267b,%eax
+ 8049742:       2d 7b 7d 7c 7c          sub    $0x7c7c7d7b,%eax
+ 8049747:       60                      pusha
+ 8049748:       5b                      pop    %ebx
+ 8049749:       5b                      pop    %ebx
+ 804974a:       5b                      pop    %ebx
+ 804974b:       5b                      pop    %ebx
+ 804974c:       5b                      pop    %ebx
+ 804974d:       5b                      pop    %ebx
+ 804974e:       5b                      pop    %ebx
+ 804974f:       25 40 40 40 40          and    $0x40404040,%eax
+ 8049754:       25 21 21 21 21          and    $0x21212121,%eax
+ 8049759:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 804975e:       2d 2a 7e 2a 2a          sub    $0x2a2a7e2a,%eax
+ 8049763:       2d 2e 7d 26 23          sub    $0x23267d2e,%eax
+ 8049768:       2d 29 3f 7d 7d          sub    $0x7d7d3f29,%eax
+ 804976d:       60                      pusha
+ 804976e:       5e                      pop    %esi
+ 804976f:       5e                      pop    %esi
+ 8049770:       5e                      pop    %esi
+ 8049771:       5e                      pop    %esi
+ 8049772:       5e                      pop    %esi
+ 8049773:       5e                      pop    %esi
+ 8049774:       5e                      pop    %esi
+ 8049775:       5e                      pop    %esi
+ 8049776:       25 40 40 40 40          and    $0x40404040,%eax
+ 804977b:       25 21 21 21 21          and    $0x21212121,%eax
+ 8049780:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 8049785:       2d 2a 2a 2a 2a          sub    $0x2a2a2a2a,%eax
+ 804978a:       2d 5e 5e 5e 5e          sub    $0x5e5e5e5e,%eax
+ 804978f:       2d 2a 29 29 29          sub    $0x2929292a,%eax
+ 8049794:       60                      pusha
+ 8049795:       5f                      pop    %edi
+ 8049796:       5f                      pop    %edi
+ 8049797:       5f                      pop    %edi
+ 8049798:       5f                      pop    %edi
+ 8049799:       5f                      pop    %edi
+ 804979a:       5f                      pop    %edi
+ 804979b:       5f                      pop    %edi
+ 804979c:       5f                      pop    %edi
+ 804979d:       21 7e 21                and    %edi,0x21(%esi)
+ 80497a0:       25 40 40 40 40          and    $0x40404040,%eax
+ 80497a5:       25 21 21 21 21          and    $0x21212121,%eax
+ 80497aa:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 80497af:       2d 2a 2a 2a 2a          sub    $0x2a2a2a2a,%eax
+ 80497b4:       2d 3b 3b 3b 3b          sub    $0x3b3b3b3b,%eax
+ 80497b9:       2d 2e 2d 2d 2d          sub    $0x2d2d2d2e,%eax
+ 80497be:       60                      pusha
+ 80497bf:       5f                      pop    %edi
+ 80497c0:       5f                      pop    %edi
+ 80497c1:       5f                      pop    %edi
+ 80497c2:       5f                      pop    %edi
+ 80497c3:       5f                      pop    %edi
+ 80497c4:       5f                      pop    %edi
+ 80497c5:       5f                      pop    %edi
+ 80497c6:       5f                      pop    %edi
+ 80497c7:       21 7e 21                and    %edi,0x21(%esi)
+ 80497ca:       25 40 40 40 40          and    $0x40404040,%eax
+ 80497cf:       25 21 21 21 21          and    $0x21212121,%eax
+ 80497d4:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 80497d9:       2d 2a 2a 2a 2a          sub    $0x2a2a2a2a,%eax
+ 80497de:       2d 3d 3d 3d 5e          sub    $0x5e3d3d3d,%eax
+ 80497e3:       2d 3f 3e 3e 29          sub    $0x293e3e3f,%eax
+ 80497e8:       60                      pusha
+ 80497e9:       5f                      pop    %edi
+ 80497ea:       5f                      pop    %edi
+ 80497eb:       5f                      pop    %edi
+ 80497ec:       5f                      pop    %edi
+ 80497ed:       5f                      pop    %edi
+ 80497ee:       5f                      pop    %edi
+ 80497ef:       5f                      pop    %edi
+ 80497f0:       5f                      pop    %edi
+ 80497f1:       29 7e 21                sub    %edi,0x21(%esi)
+ 80497f4:       25 40 40 40 40          and    $0x40404040,%eax
+ 80497f9:       25 21 21 21 21          and    $0x21212121,%eax
+ 80497fe:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 8049803:       2d 2a 2a 2a 7e          sub    $0x7e2a2a2a,%eax
+ 8049808:       2d 5e 5e 21 7c          sub    $0x7c215e5e,%eax
+ 804980d:       2d 21 25 5d 5b          sub    $0x5b5d2521,%eax
+ 8049812:       60                      pusha
+ 8049813:       5f                      pop    %edi
+ 8049814:       5f                      pop    %edi
+ 8049815:       5f                      pop    %edi
+ 8049816:       5f                      pop    %edi
+ 8049817:       5f                      pop    %edi
+ 8049818:       5f                      pop    %edi
+ 8049819:       5f                      pop    %edi
+ 804981a:       5f                      pop    %edi
+ 804981b:       29 7e 21                sub    %edi,0x21(%esi)
+ 804981e:       25 40 40 40 40          and    $0x40404040,%eax
+ 8049823:       25 21 21 21 21          and    $0x21212121,%eax
+ 8049828:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 804982d:       2d 2a 7e 2a 2a          sub    $0x2a2a7e2a,%eax
+ 8049832:       2d 3d 7c 5e 3b          sub    $0x3b5e7c3d,%eax
+ 8049837:       2d 3e 5d 28 2f          sub    $0x2f285d3e,%eax
+ 804983c:       60                      pusha
+ 804983d:       5f                      pop    %edi
+ 804983e:       5f                      pop    %edi
+ 804983f:       5f                      pop    %edi
+ 8049840:       5f                      pop    %edi
+ 8049841:       5f                      pop    %edi
+ 8049842:       5f                      pop    %edi
+ 8049843:       5f                      pop    %edi
+ 8049844:       5f                      pop    %edi
+ 8049845:       29 7e 21                sub    %edi,0x21(%esi)
+ 8049848:       25 40 40 40 40          and    $0x40404040,%eax
+ 804984d:       25 21 21 21 21          and    $0x21212121,%eax
+ 8049852:       2d 2d 2d 2d 2d          sub    $0x2d2d2d2d,%eax
+ 8049857:       2d 7e 2a 2a 2a          sub    $0x2a2a2a7e,%eax
+ 804985c:       2d 7c 26 5e 23          sub    $0x235e267c,%eax
+ 8049861:       2d 5d 24 25 25          sub    $0x2525245d,%eax
+ 8049866:       60                      pusha
+ 8049867:       5f                      pop    %edi
+ 8049868:       5f                      pop    %edi
+ 8049869:       5f                      pop    %edi
+ 804986a:       5f                      pop    %edi
+ 804986b:       5f                      pop    %edi
+ 804986c:       5f                      pop    %edi
+ 804986d:       5f                      pop    %edi
+ 804986e:       5f                      pop    %edi
+ 804986f:       29 7e 21                sub    %edi,0x21(%esi)
+ 8049872:       27                      daa
+ 8049873:       2f                      das
+ 8049874:       60                      pusha
+ 8049875:       60                      pusha
+ 8049876:       60                      pusha
+ 8049877:       60                      pusha
+ 8049878:       60                      pusha
+ 8049879:       60                      pusha
+||<
+
+pushaとpopとandとsubの4命令しかでてこないので、簡単ですね。
+
+*スタック上に展開されるコード
+
+0x804974e まで実行されると、スタック上に以下のコードが展開されます
+
+>||
+0XXXXX00 <.text>:
+ XXXXX00:       b8 04 00 00 00          mov    $0x4,%eax
+ XXXXX05:       bb 01 00 00 00          mov    $0x1,%ebx
+ XXXXX0a:       e8 0e 00 00 00          call   0xXXXXX1d
+ XXXXX0f:       48 65 6c 6c 6f 2c 20    ; "Hello, "
+ XXXXX16:       77 6f 72 6c 64 21 0a    ; "world!\n"
+ XXXXX1d:       59                      pop    %ecx
+ XXXXX1e:       ba 0e 00 00 00          mov    $0xe,%edx
+ XXXXX23:       cd 80                   int    $0x80
+ XXXXX25:       b8 01 00 00 00          mov    $0x1,%eax
+ XXXXX2a:       cd 80                   int    $0x80
+||<
+
+*自己書き換え
+
+0x804986fにあるsub %edi,0x21(%esi)命令が実行されると、次の0x8049872番地がcall espを実行するコードに書き変わります。
+
+>||
+ 8049872:       90                      nop
+ 8049873:       ff d4                   call esp
+ 8049875:       90                      nop
+||<
+
+これで無事Linuxのシステムコールで「Hello, world!」の文字が標準出力に出力され（int80h,eax=4）、プログラムの終了（int80h,eax=1）も行うことができました。
+
+簡単ですね。
+
+*次回予告
+
+今度は、文字列のmain関数に使用できる記号の文字種を何文字まで減らせるのか試してみたいと思います。
