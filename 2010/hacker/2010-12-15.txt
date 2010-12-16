@@ -36,7 +36,7 @@ use warnings;
 use Cocoa::Growl ':all';
 
 growl_register(
-    name          => 'Advent Calendar Notify',
+    app           => 'Advent Calendar Notify',
     notifications => ['記号プログラミング'],
 );
 
@@ -115,7 +115,7 @@ my $config = pit_get(
 AnyEvent::HTTP::set_proxy $ENV{HTTP_PROXY} if $ENV{HTTP_PROXY};
 
 growl_register(
-    name          => 'twitter stream notifier',
+    app           => 'twitter stream notifier',
     notifications => ['twitter stream'],
 );
 
