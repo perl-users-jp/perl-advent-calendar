@@ -1,4 +1,4 @@
-HTML::Shaknでフォーム生成・バリデーションからモデル作成まで
+HTML::Shakanでフォーム生成・バリデーションからモデル作成まで
 meta-author: usuihiro <usuihiro@twitter.com>
 meta-tags: perl
 
