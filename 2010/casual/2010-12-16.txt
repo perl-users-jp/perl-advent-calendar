@@ -1,1 +1,245 @@
-empty
+HTML::Shaknでフォーム生成・バリデーションからモデル作成まで
+meta-author: usuihiro <usuihiro@twitter.com>
+meta-tags: perl
+
+こんにちは！先日のYAPC2010では<a href="http://twitter.com/hiratara">hiratara</a>さんと共にgihyo.jpでレポータをさせていただいた<a href="http://twitter.com/usuihiro">usuihiro</a>です。
+
+フォーム処理とかバリデーションっていつも面倒だなぁと思っていたのですが、今日はtokuhiromさんが作成されているHTML::Shakanが便利そうだったので試してみました。
+
+HTML::Shakanはフォームタグの生成とバリデーションを行ってくれるモジュールです。
+コンセプトは作者のtokuhiromさんが書かれている<a href="http://search.cpan.org/dist/HTML-Shakan/lib/HTML/Shakan/Doc.ja.pod">こちら</a>を参照。
+
+
+* フォーム生成とバリデーション
+
+よくあるログインフォームだと、こんな感じでフォームの生成の入力値のバリデーションが行えます。
+
+>|perl|
+
+my $req = shift; # CGIとかPlack::Requestとか
+# フォームオブジェクトを作る
+my $form = HTML::Shakan->new(
+    fields => [
+        EmailField(
+            name => 'mail',
+            label => 'E-mail address', # labelタグをつける
+            filters => ['WhiteSpace'], # 空白を取り除く
+            required => 1
+        ),
+        PasswordField(
+            name => 'password',
+            label => 'Password',
+            filters => ['WhiteSpace'],
+            required => 1,
+        )
+    ],
+    request => $req,
+);
+
+# 日本語デフォルトメッセージをロード。SEE ALSO FormValidator::Lite
+$form->load_function_message('ja');
+# バリデーションチェック
+if ($form->submitted_and_valid) {
+    # フィルター済かつバリデーション済みの値を取得
+    my $mail = $form->param('mail');
+    my $password = $form->param('password');
+    say "mail = '$mail', password = '$password'";
+    # DB問い合わせなど
+} else {
+    # エラーの場合
+    my $errors = $form->get_error_messages();
+    say Dump( $errors );
+    # こんな感じでエラーメッセージが取得出来る
+    # ---
+    # - E-mail address にはメールアドレスを入力してください
+    # - Password を入力してください
+}
+# フォームタグ生成
+say $form->render;
+
+||<
+
+
+* Declareスタイルで書いてみる
+
+あらかじめフォーム定義を別で行っておくと使い回しやすくなります。パフォーマンス上もこちらのほうが高速だそうです。
+複数の画面でフォームを共有したい場合などもこちらのほうが便利かと思います。
+
+>|perl|
+# フォームを定義しておく
+package MyForm;
+use utf8;
+use Encode;
+use HTML::Shakan::Declare;
+
+form 'post' => (
+    TextField(
+        name => 'body',
+        label => 'Body:',
+        widget => 'textarea',
+        required => 1,
+        filters => ['WhiteSpace'],
+        constraints => [
+            [ 'LENGTH', 1, 30 ],
+        ]
+    ),
+    # selectタグ
+    ChoiceField(
+        name => 'tag',
+        label => 'Tag:',
+        choices => [ map { ( encode_utf8 $_ ) x 2 } 
+                    qw(ネタ これはヒドイ)],
+    ),
+    # type="file"なタグ。content_typeのバリデーション付き
+    ImageField(
+        name => 'image',
+        label => 'Image:'
+    ),
+);
+
+# 定義したフォームオブジェクトを取得する
+my $form = MyForm->get( 'post', request => $req );
+
+||<
+
+
+* モデルと連携してみる
+
+フォームオブジェクト作成時にmodelを指定すると、バリデーションした結果を使ったモデルの作成／更新が簡単に行えます。たとえばDBIx::Skinnyと連携する場合はこんな感じになります。
+
+>|perl|
+
+# DBIx::Skinnyのモデル定義
+package MyModel;
+use DBIx::Skinny connect_info => {
+    dsn => 'dbi:SQLite:',
+};
+
+# テーブル作成。コメントと画像が投稿できるミニブログのようななにかのつもり
+__PACKAGE__->dbh->do( q{
+    create table if not exists blog (
+        id integer primary key,
+        body varchar(14),
+        tag varchar(30),
+        image varchar(255),
+        created_at date
+    )
+});
+
+package MyModel::Schema;
+use DBIx::Skinny::Schema;
+use DBIx::Skinny::InflateColumn::DateTime;
+use DateTime;
+
+# テーブルに対するモデル定義
+install_table blog => schema {
+    pk 'id';
+    columns qw/id body tag image created_at updated_at/;
+    trigger pre_insert => sub {
+        my ( $class, $args ) = @_;
+        $args->{created_at} ||= DateTime->now( time_zone => 'Asia/Tokyo');
+        $args->{updated_at} ||= $args->{created_at};
+    };
+    trigger pre_update => sub {
+        my ( $class, $args ) = @_;
+        $args->{updated_at} ||= DateTime->now( time_zone => 'Asia/Tokyo');
+    }
+};
+
+# フォームオブジェクトを取ってくるときにmodelを指定する。
+my $form = MyForm->get(
+   'post', 
+   request => $req,  
+   model => HTML::Shakan::Model::DBIxSkinny->new(),
+);
+
+# DBIx::Skinnyオブジェクト
+my $model = MyModel->new;
+# $formのバリデーション結果を使って、blogテーブルのレコードが作成される
+if ( $form->submitted_and_valid) {
+    $form->model->create( $model => 'blog');
+}
+
+||<
+
+
+* 表示をカスタマイズしてみる
+
+$form->renderでタグを生成してくれますが必要最小限のためそのままだと見づらいので、Django Formsのas_pのようにpタグをつけてくれるようなRendererをつくってみます。
+
+>|perl|
+package MyRenderer;
+use Any::Moose;
+use HTML::Shakan::Utils;
+
+has 'id_tmpl' => (
+    is => 'ro',
+    isa => 'Str',
+    default => 'id_%s',
+);
+
+sub render {
+    my ($self, $form) = @_;
+
+    my @res;
+    for my $field ($form->fields) {
+        my @row;
+        unless ($field->id) {
+            $field->id(sprintf($self->id_tmpl(), $field->{name}));
+        }
+        if ($field->label) {
+            push @row, sprintf( q{<label for="%s">%s</label>},
+                $field->{id}, encode_entities( $field->{label} ) );
+        }
+        push @row, $form->widgets->render( $form, $field );
+        push @res, join '', @row;
+    }
+
+    '<p>' . (join '</p><p>', @res) . '</p>';
+}
+
+no Any::Moose;
+__PACKAGE__->meta->make_immutable;
+
+my $form = MyForm->get(
+    'post', 
+    request => $req,  
+    # rendererオプションを渡す
+    renderer => MyRenderer->new,
+);
+
+||<
+
+こんな感じでrenderメソッドを持つオブジェクトを用意しておいて、フォームオブジェクト作成時にrendererオプションを渡してやると、作成したrenderメソッドを使うことができます。このコード自体はデフォルトのrendererであるHTML::Shakan::Renderer::HTMLをコピペしてタグを付けただけなので、これを参考にすればdlバージョンなども簡単につくれるでしょう。
+
+
+* 作ったサンプルコード
+
+こんな感じでサンプルとして短いつぶやきのような本文と画像をアップロード出来る斬新なWEBサービスもどきを作ってみたコードが<a href="https://github.com/usuihiro/jpac2010-casual-16/tree/master/TinyBlog">こちら</a>になります。
+
+
+* サンプル作成でハマった・・・
+
+ImageFieldのバリデーションが効かなくてハマってしまいました。CGIオブジェクトだとparamメソッドでファイル名が取れますが、Plack::Requestの場合$req->param('image')が取れないらしく、そのせいかtypeによるバリデーションが効かなかったので、以下のようなコードで誤魔化すことうまくいきました。((casualな私にはこれが精一杯でしたがここに書いておけばきっとHacker Trackなちゃんとした方法を教えてくれると信じています!))
+
+>|perl|
+if ($req->upload('image')) {
+    $req->parameters->add('image', $req->upload('image')->filename);
+}
+
+||<
+
+
+* リファレンス
+
+- まずはperldoc <a href="http://search.cpan.org/perldoc?HTML::Shakan">HTML::Shakan</a>
+- Fieldの種類は<a href="http://search.cpan.org/perldoc?HTML::Shakan::Fields">HTML::Shakan::Fields</a>
+- Filterの種類はHTML::Shakan::Filters::以下
+- constraintsの種類は<a href="http://search.cpan.org/dist/FormValidator-Lite">FormValidator-Lite</a>からConstraint以下
+- 独自バリデーションの作成はperldoc <a href="http://search.cpan.org/perldoc?HTML::Shakan">HTML::Shakan</a>のcustom_validation
+- DBIx::Skinnyについては去年の<a href="http://perl-users.jp/articles/advent-calendar/2009/dbix-skinny/">DBIx::Skinny - JPerl Advent Calendar 2009</a>を参照
+
+
+* Next...
+
+次は<a href="http://twitter.com/#!/dragon3">dragon3</a>さんです。お楽しみに！
