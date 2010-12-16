@@ -1,7 +1,7 @@
 Acvent Calendar Applicationを高速化する
 
 10日になったので最適化しましょう。
-まず手始めにいろいろキャッシュしましょうね。[http://github.org/p5-app-advent-calendar/p5-app-adventcalendar:title=p5-app-adventcalendar]でキャッシュできそうなものはいろいろありますが、今回はRouter、Template Engine、Formatterをキャッシュします。このアプリではそれぞれ[http://search.cpan.org/dist/Router-Simple/:title=Router::Simple]、[http://search.cpan.org/dist/Text-Xslate/:title=Text::Xslate]、[http://search.cpan.org/dist/Text-Xatena/:title=Text::Xatena]を使います((Text::XslateとText::Xatenaは見た目が似ていて紛らわしいですね。))。
+まず手始めにいろいろキャッシュしましょうね。[https://github.com/p5-app-adventcalendar/p5-app-adventcalendar/blob/master/lib/App/AdventCalendar.pm:title=p5-app-adventcalendar]でキャッシュできそうなものはいろいろありますが、今回はRouter、Template Engine、Formatterをキャッシュします。このアプリではそれぞれ[http://search.cpan.org/dist/Router-Simple/:title=Router::Simple]、[http://search.cpan.org/dist/Text-Xslate/:title=Text::Xslate]、[http://search.cpan.org/dist/Text-Xatena/:title=Text::Xatena]を使います((Text::XslateとText::Xatenaは見た目が似ていて紛らわしいですね。))。
 
 もともとこの三つのオブジェクトはhandler()無いでいちいちnew()していたのでした。これでは効率が悪い！ということでhandler()の外に出したりidごとにキャッシュしたりするようにしたのでした。
 
