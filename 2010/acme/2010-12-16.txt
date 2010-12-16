@@ -1,0 +1,260 @@
+Acme合体で猫-トースト装置をつくる
+meta-author: makamaka
+meta-tags: perl, acme
+
+(firstly written in Japanese, later in English)
+
+ワタシハ　<a href="http://twitter.com/maka2_donzoko">makamaka</a>　コンゴトモヨロシク・・・
+
+皆さん、<a href="http://ja.uncyclopedia.info/wiki/%E7%8C%AB-%E3%83%88%E3%83%BC%E3%82%B9%E3%83%88%E8%A3%85%E7%BD%AE">猫-トースト装置</a>（<a href="http://ja.wikipedia.org/wiki/%E3%83%90%E3%82%BF%E3%83%BC%E7%8C%AB%E3%81%AE%E3%83%91%E3%83%A9%E3%83%89%E3%83%83%E3%82%AF%E3%82%B9">バター猫のパラドックス</a>）ってご存じですよね？
+
+>>
+A - バターの塗られたトーストを落とすとバターの面が下になって床に落ちる
+B - 猫を高いところから落とすと足から着地する
+
+AとBより、猫の背中にバターの塗られた面を上にしたトーストをつけて落とすと永久に床に着地しない
+<<
+
+今日はこの猫-トースト装置のAcmeモジュールをつくってみたいと思います。ご用意するものは
+
+<ul>
+<li>猫　1Acme</li>
+<li>トースト　1Acme</li>
+</ul>
+
+CPANには猫に関するモジュールがいくつかありますが、本日は<a href="http://search.cpan.org/dist/Acme-Meow/">Acme::Meow</a>を使いましょう。このモジュール、機能は少ないですがPerl上で子猫が飼える優れもの。
+
+しかしここで残念なお知らせ。CPANにはAcme::Toastが今のところ存在しません。どうする！？
+
+そこでバター云々の話は、いわゆる<a href="http://ja.wikipedia.org/wiki/%E3%83%9E%E3%83%BC%E3%83%95%E3%82%A3%E3%83%BC%E3%81%AE%E6%B3%95%E5%89%87">マーフィーの法則</a>であることを思い出しましょう。そうすると<a href="http://search.cpan.org/dist/Acme-Murphy/">Acme::Murphy</a>があります。このモジュール、「うまくいかなそうなことはなんであれ、うまくいかない」というマーフィーの法則に従い、useすると必ず失敗（die）する優れもの。
+
+
+両者を合体させれば、猫-トースト装置になるんじゃないの！？
+
+
+>|perl|
+package Acme::CatToastDevice;
+
+use warnings;
+use strict;
+use Sex qw( Acme::Murphy Acme::Meow );
+
+our $VERSION = '0.01';
+
+1;
+||<
+
+合体には<a href="http://perl-users.jp/articles/advent-calendar/2009/casual/05.html">昨年のアドベントカレンダー</a>でも取り上げられた<a href="http://search.cpan.org/dist/Sex/">Sex</a>を使います。いざAcme合体！
+
+>|perl|
+$ perl -I./lib -MAcme::CatToastDevice
+||<
+
+
+>|perl|
+MORE! Baby. There! Let's talk about our relationship. YEAH! OOOooooh... Baseball... I thought eight inches was longer than that. OOOooooh... YES! There! OOOooooh... Harder! Recursive inheritance detected in package 'Exporter' at ......../Sex.pm line 71.
+BEGIN failed--compilation aborted at lib/Acme/CatToastDevice.pm line 5.
+Compilation failed in require.
+BEGIN failed--compilation aborted.
+||<
+
+
+
+エラーが出て失敗。終わった……
+
+
+
+
+悔しいのでAcme::MeowのExport部分をコメントアウトします。
+
+
+
+>|perl|
+package Acme::Meow;
+
+use warnings;
+use strict;
+
+#require Exporter;
+#use base qw[ Exporter ];
+....
+||<
+
+でもよく考えたら（よく考えなくても）Acme::Meow、Acme::Murphyどちらのモジュールも落下に関する機能がありません。そこで、ついでにAcme::CatToastDeviceにfallというメソッドを用意しましょう。呼ぶと無限ループします。
+
+>|perl|
+package Acme::CatToastDevice;
+
+use warnings;
+use strict;
+use Sex qw( Acme::Murphy Acme::Meow );
+
+our $VERSION = '0.01';
+
+
+sub fall {
+    sleep 1 while 1;
+}
+
+1;
+||<
+
+
+下記のようなサンプルコードをつくって、再チェレンジ。
+
+>|perl|
+use strict;
+use Acme::CatToastDevice;
+
+print "This is a cat-toast device!\n";
+
+Acme::CatToastDevice->new->fall;
+
+print "With which side did it fall?\n";
+||<
+
+
+コンゴトモヨロシク・・・
+
+
+>|perl|
+$ perl test.pl
+MORE! Does it get bigger? Yes! Does it get bigger? Mmmmmm... Mmmmmm... OOOooooh... YES! Does it get bigger? OOOooooh... Yes!
+This is a cat-toast device!
+||<
+
+よし、成功！　ずっと着地しない！　……むなしいですね！！！
+
+
+そんなこんなで、このお正月はあなたもAcme合体で新しいモジュールを創造してみては如何でしょうか。
+
+
+
+ * ----------------------------------------------------
+ * English version
+ * ----------------------------------------------------
+TITLE: Make a cat-toast device from Acme-union.
+
+I AM <a href="http://twitter.com/maka2_donzoko">makamaka</a>. NICE TO MEET YOU...
+
+Do you know <a href="http://uncyclopedia.wikia.com/wiki/Murphy%27s_law_application_for_antigravitatory_cats">cat-toast device</a>(<a href="http://en.wikipedia.org/wiki/Buttered_cat_paradox">Buttered cat paradox</a>)?
+
+
+>>
+A - If you throw a slice of buttered toast into the air it will always fall with the buttered side down.
+B - A Cat will always land on its foots.
+
+From A and B, a slice of toast with butter to a cat's back may just not fall. (from uncyclopedia)
+<<
+
+I'm going to make this device. Preparation:
+
+<ul>
+<li>cat 1Acme</li>
+<li>toast 1Acme</li>
+</ul>
+
+
+There are some modules about cats on CPAN and I take <a href="http://search.cpan.org/dist/Acme-Meow/">Acme::Meow</a> today. It has a only few functions but a nice module becase of keeping a kitten in Perl.
+
+Regrettable information: Acme::Toast currently does not exist on CPAN.
+Well, we remember the story of a sliec of toast with butter is the so-called Murphy's law. And <a href="http://search.cpan.org/dist/Acme-Murphy/">Acme::Murphy</a> on CPAN. It is a nice module because it always fails (die) to the letter 'if anything can go wrong, it will'.
+
+Those two modules are combined, is it a cat-toast device!?
+
+
+>|perl|
+package Acme::CatToastDevice;
+
+use warnings;
+use strict;
+use Sex qw( Acme::Murphy Acme::Meow );
+
+our $VERSION = '0.01';
+
+1;
+||<
+
+We can use <a href="http://search.cpan.org/dist/Sex/">Sex</a> module which was taken in <a href="http://perl-users.jp/articles/advent-calendar/2009/casual/05.html">last yeat advent calendar</a>. Let's Acme-unite!
+
+>|perl|
+$ perl -I./lib -MAcme::CatToastDevice
+||<
+
+
+>|perl|
+MORE! Baby. There! Let's talk about our relationship. YEAH! OOOooooh... Baseball... I thought eight inches was longer than that. OOOooooh... YES! There! OOOooooh... Harder! Recursive inheritance detected in package 'Exporter' at ......../Sex.pm line 71.
+BEGIN failed--compilation aborted at lib/Acme/CatToastDevice.pm line 5.
+Compilation failed in require.
+BEGIN failed--compilation aborted.
+||<
+
+
+Error.... Good-bye!
+
+
+
+
+How disappointing! I comment out lines about Export in Acme::Meow!
+
+
+
+>|perl|
+package Acme::Meow;
+
+use warnings;
+use strict;
+
+#require Exporter;
+#use base qw[ Exporter ];
+....
+||<
+
+But I thought deeply, both Acme::Meow and Acme::Murphy do not have a method relates to fall. So we added fall method into Acme::CatToastDevice. Calling it will cause an infinite loop.
+
+>|perl|
+package Acme::CatToastDevice;
+
+use warnings;
+use strict;
+use Sex qw( Acme::Murphy Acme::Meow );
+
+our $VERSION = '0.01';
+
+
+sub fall {
+    sleep 1 while 1;
+}
+
+1;
+||<
+
+
+Retry with the below sample code.
+
+>|perl|
+use strict;
+use Acme::CatToastDevice;
+
+print "This is a cat-toast device!\n";
+
+Acme::CatToastDevice->new->fall;
+
+print "With which side did it fall?\n";
+||<
+
+
+NICE TO MEET YOU...
+
+
+>|perl|
+$ perl test.pl
+MORE! Does it get bigger? Yes! Does it get bigger? Mmmmmm... Mmmmmm... OOOooooh... YES! Does it get bigger? OOOooooh... Yes!
+This is a cat-toast device!
+||<
+
+Successful!  It never land! It's in vain!!!
+
+
+Well, in this winter vacation, would you like to unite Acme modules into a new Acme.
+
