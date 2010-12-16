@@ -1,0 +1,159 @@
+Perl から Growl をちゃんと使おう
+meta-author: typester
+meta-tags: osx, perl, growl
+
+こんにちわ。Growl 大好きっ子 <a href="http://unknownplace.org/">typester</a> です。
+
+重たいバッチジョブを走らせている間、別の作業をする。ジョブが終わったらデスクトップに Growl を表示させて処理の完了を知る。
+その合間にもRSSから配信されたニュースや自分への Mention を Growl 表示し、あっという間に情報を操作する。
+
+誰もが憧れる Hackish な作業風景ですね。Mac ユーザであればその他の活用方法を知ってる人も数多くいるでしょう。
+
+<em><strong>でもperlbrewで64bit perlいれてるからMac::Growlがうまくインストールできないし...</strong></em>
+
+そんな風に思っていた頃が僕にもありました。
+
+* Cocoa::Growl
+
+http://search.cpan.org/dist/Cocoa-Growl/
+
+そんな不満を打破するべく僕は Cocoa::Growl を書いた。
+XS で Objective-C をつかい、直接 Growl.framework を使う Growl モジュールだ。
+
+Growl.framework が同封されていてデフォルトではそれをロードするが、/Library/Frameworks に Growl.framework を置いてあれば、
+
+>|perl|
+perl Makefile.PL USE_LOCAL_GROWL_FRAMEWORK=1
+||<
+
+とすることで、そちらのライブラリにリンクするようビルドすることも出来る。
+
+使い方は簡単。
+
+>|perl|
+use strict;
+use warnings;
+use Cocoa::Growl ':all';
+
+growl_register(
+    name          => 'Advent Calendar Notify',
+    notifications => ['記号プログラミング'],
+);
+
+growl_notify(
+    name        => '記号プログラミング',
+    title       => 'ライター募集のお知らせ',
+    description => '君も記号プログラミングしてみないか？ ｳﾎｯ',
+    icon        => 'http://api.dan.co.jp/twicon/hasegawayosuke/bigger',
+);
+||<
+
+アプリケーションを register で登録して、notify を呼び出すだけ。
+これだけで
+
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-12/growl1.png" />
+
+こんな通知アプリケーションが書けます。
+
+しかしこれだけではまだ全然満足できない。
+Growl通知のクリックイベントがとりたいぃぃぃい！！！ というわけで AnyEvent::Impl::NSRunLoop と言うやつも作ったのだ。
+
+http://search.cpan.org/dist/AnyEvent-Impl-NSRunLoop/
+
+これを use しておくと Cocoa アプリケーションで使われているイベントループ上で AnyEvent アプリケーションを書くことが出来る。
+つまり、このモジュールを併用することで Cocoa::Growl はクリックイベントをハンドリングすることができるのだ！
+
+>|perl|
+use AnyEvent;
+use AnyEvent::Impl::NSRunLoop;
+
+my $cv = AE::cv;
+
+growl_notify(
+    name        => '記号プログラミング',
+    title       => 'ライター募集のお知らせ',
+    description => '君も記号プログラミングしてみないか？ ｳﾎｯ',
+    icon        => 'http://api.dan.co.jp/twicon/hasegawayosuke/bigger',
+    on_click    => sub {
+        `open http://perl-users.jp/articles/advent-calendar/2010/sym/`;
+        $cv->send;
+    },
+    on_timeout => sub {
+        $cv->send;
+    },
+);
+
+$cv->recv;
+||<
+
+このサンプルはGrowl通知がクリックされたらURLをブラウザで開くというものだ。
+
+on_click は通知がクリックされた時に呼ばれるコールバック、on_timeout はそれ以外の理由で通知が消えたときに呼ばれるコールバックで、
+この例ではどちらかが起こったときにスクリプトが終了するように $cv->send しているというわけだ。
+
+この様にして自分専用のコールバック関数が定義することで、Growl をクリックした瞬間に処理が走らせられるので、例えば家族からの「お腹すいた」のネットワーク Growl をトリガーに <a href="http://e8y.net/blog/2006/07/25/p126.html">Plagger でピザを注文する</a>なんて事も出来るのです。
+
+さて今日はシンプルに Twitter Stream を Growl に垂れ流すアプリケーションを書きましょう。
+
+>|perl|
+use strict;
+use warnings;
+use Config::Pit;
+use AnyEvent::Twitter::Stream;
+use AnyEvent::Impl::NSRunLoop;
+use Cocoa::Growl ':all';
+use Encode;
+
+my $config = pit_get(
+    "twitter.com",
+    require => {
+        "username" => "your username on twitter",
+        "password" => "your password on twitter",
+    }
+);
+
+AnyEvent::HTTP::set_proxy $ENV{HTTP_PROXY} if $ENV{HTTP_PROXY};
+
+growl_register(
+    name          => 'twitter stream notifier',
+    notifications => ['twitter stream'],
+);
+
+my $cv = AnyEvent->condvar;
+
+my $streamer = AnyEvent::Twitter::Stream->new(
+    username => $config->{username},
+    password => $config->{password},
+    method   => 'filter',
+    track    => 'twitter',
+    on_tweet => sub {
+        my $tweet = shift;
+        growl_notify(
+            name        => 'twitter stream',
+            title       => encode_utf8( $tweet->{user}{screen_name} ),
+            description => encode_utf8( $tweet->{text} ),
+            icon        => encode_utf8( $tweet->{user}{profile_image_url} ),
+            on_click    => sub {
+                my $url = encode_utf8("http://twitter.com/$tweet->{user}{screen_name}");
+                `open $url`;
+            },
+        );
+    },
+    on_error => sub { warn shift; $cv->send },
+    on_eof => $cv,
+);
+
+$cv->recv;
+||<
+
+いろんなブログで A::T::Stream なコードは既出なので誰でも書けるかと思います。
+ちなみに、twitter という検索語でフィルタを実行したら、画面がとんでもない事になりました。
+
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-12/growl2.png" width="400" />
+
+ぜひ皆さんもやってみて下さい！
+
+その他 Perl と Growl の組み合わせとしては、Gearman を使いサーバ側で云々という話もありますが、長くなるので省略します。
+詳しくは <a href="http://perl-users.jp/articles/advent-calendar/2010/win32/12">Win32 のトラック</a>を参照してください。
+
+次は... 誰かな？
