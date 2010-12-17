@@ -1,0 +1,195 @@
+Perl で Amazon S3 をあつかう Net::Amazon::S3
+meta-author: dragon3 <ryuzo.yamamoto@gmail.com>
+meta-tags: perl, linux, mac
+
+<a href="http://blog.yappo.jp/yappo/archives/000727.html">もつ鍋で有名な福岡</a>から来ました <a href="http://twitter.com/dragon3">@dragon3</a> です。
+
+
+<a href="http://aws.amazon.com/jp/s3/">Amazon S3</a> はみなさんご存知かと思いますが、流行りのクラウドなストレージサービスですね。
+最近1ファイルで5TBまでOKになったのですが、5TBってどんなファイルや？...と悩む日々です。
+
+その Amazon S3 を Perl からあつかうためのモジュール Net::Amazon::S3 を紹介します。
+
+
+* クライアントを準備する
+ファイルをアップロードやダウンロードするために、
+まずは接続するためのクライアントオブジェクトを準備します。
+
+>|perl|
+use Net::Amazon::S3;
+
+my $aws_access_key_id     = 'XXXXXXXXXXXXXXXXXXXX';
+my $aws_secret_access_key = 'WwWwWwWwWwWwWwWwWwWw';
+
+my $s3 = Net::Amazon::S3->new({
+    aws_access_key_id => $aws_access_key_id,
+    aws_secret_access_key => $aws_secret_access_key,
+    retry => 1,
+});
+my $client = Net::Amazon::S3::Client->new( s3 => $s3 );
+||<
+
+aws_access_key_id と aws_secret_access_key は、それぞれ自分のアカウントのものを指定してくださいね。
+(コード内に含めたくない場合はConfig::Pitとか使うといいですね)
+
+
+Net::Amazon::S3 のインスタンスを使うこともできるようですが、
+PODを見ると、Net::Amazon::S3::Client を使うのがいいみたいです
+
+
+* バケットを作る
+次にファイルを入れるための バケット を作ります。
+以下の例ではバケット名として "ore-no-backet" を指定しています。
+
+>|perl|
+my $bucket = $client->create_bucket(
+    name                => "ore-no-backet",
+    acl_short           => 'private',
+    location_constraint => 'US',
+);
+||<
+
+acl_short はバケットのアクセス設定で、以下の３つが指定できます。
+
+- private : 自分だけが読み書きできる
+- public-read : 自分の読み書きとだれでも読める
+- public-read-write : だれでも読み書きできる
+
+location_constraint には、Amazon のどのリージョンに置くかを指定します。
+
+- US : アメリカ (US East)
+- EC : ヨーロッパ (EU West)
+
+あれ、US West と Asia Pasific は指定できないの？
+
+* バケットの一覧
+バケットの一覧を取得してその名前を出力する例が以下です。
+
+>|perl|
+my @buckets = $client->buckets;
+foreach my $bucket (@buckets) {
+  print $bucket->name . "\n";
+}
+||<
+
+* バケットへファイルをアップロード
+たとえば、手元にある ore.jpg という画像ファイルをバケット内の images/ore.jpg というパスにアップロードするには、次のようにします。
+
+>|perl|
+my $object = $bucket->object(
+  key          => 'images/ore.jpg',
+  content_type => 'image/jpeg', 
+);
+$object->put_filename('ore.jpg');
+||<
+
+$bukect->object で対象を作って、$object->put_filename で実際の中身をアップロードする感じですね。
+
+
+* バケット中のファイルを操作
+バケットの中身を取得するには、list メソッドを使い、
+その戻り値から以下のようにして取得します。
+
+>|perl|
+my $stream = $bucket->list;
+until ( $stream->is_done ) {
+  foreach my $object ( $stream->items ) {
+    print "key  : " . $object->key  . "\n";  # キー (バケット内のパス)
+    print "size : " . $object->size . "\n";  # サイズ
+    print "uri  : " . $object->uri  . "\n";  # publicにアクセス可能な場合のURL
+  }
+}
+||<
+
+ファイルをダウンロードして手元に保存するには、次のようにします。
+>|perl|
+my $object = $bucket->object( key => 'images/motsunabe.jpg' );
+$object->get_filename('motsunabe.jpg');
+||<
+
+ファイルを消すの delete します。簡単ですね。
+>|perl|
+$object->delete;
+||<
+
+ファイルを更新アップードするには、上のアップロードと同じで put_filename すればOKです。簡単ですん!
+
+
+* ファイルにいろいろ属性をつけてアップード
+S3はストレージなのですが、Webサイトの静的コンテンツ配信の用途としてもよく利用されます。
+で、その時、いろんな属性を付けておくとうれしいことがあったり、なかったりします。
+
+** expire
+パフォーマンスのため、静的コンテンツは積極的にブラウザにキャッシュさせたいですよね？
+そんな時は expire を付けて S3 にアップしておくと、HTTPレスポンスヘッダにも付けてくれるのでうれしくなります。
+
+>|perl|
+my $object = $bucket->object(
+  key          => 'images/motsunabe.jpg',
+  acl_short    => 'public-read',
+  content_type => 'image/jpeg',
+  expires      => '2011-01-31',
+);
+$object->put_filename('motsunabe.jpg');
+||<
+
+こうすると、このJPEGファイルをHTTPで取得すると次のようなヘッダが付きますよ！
+>||
+Expires: Mon, 1 Jan 2011 00:00:00 GMT
+||<
+
+** gzip圧縮
+さらにパフォーマンスのため、CSSやJSファイルはgzip圧縮転送したいですよね？
+そんな時は、ファイルをあらかじめ gzip圧縮した状態で、次のようにアップロードすると、gzip圧縮転送されてうれしくなります。
+
+>|perl|
+use IO::Compress::Gzip qw(gzip $GzipError);
+
+my $object = $bucket->object(
+  key              => 'images/motsunabe.css',
+  acl_short        => 'public-read',
+  content_type     => 'text/css',
+  expires          => '2011-01-31',
+  content_encoding => 'gzip',
+);
+gzip 'motsunabe.css' => 'motsunabe.css.gz' or die "zip failed: $GzipError\n";
+$object->put_filename('motsunabe.css.gz');
+||<
+
+
+Amazon には <a href="http://aws.amazon.com/jp/cloudfront/">CloudFront</a> という CDNサービスがあります。
+これは S3 に格納されているファイルを、アクセスされるクライアントの最寄りのエッジ経由で配信できるサービスです。
+アメリカの S3 に追いているファイルが、日本からのアクセスの場合に日本のエッジから配信されるようになって、スピードアップ！です。
+
+上記の S3 の設定は、CloudFront からの配信でも有効になりますので、
+さらにパフォーマンスアップで最高です！
+
+( ちなみに自分はAmazonの人ではありません )
+
+
+* バケットを消す
+いらなくなったバケット ore-no-bucket を消しちゃいます。
+
+>|perl|
+my @buckets = $client->buckets;
+foreach my $bucket (@buckets) {
+  if ($bucket->name eq 'ore-no-bucket') {
+    $bucket->delete;
+  }
+}
+||<
+
+
+* まとめ
+Perl で Amazon S3 をあつかうのは簡単ですね！
+同じ機能をもつモジュールとして Amazon::S3 がありますので、試して比較してみるのもいいかもですね。
+(Amazon::S3 のほうが依存モジュールが少ないようです)
+
+
+最後に余談ですが、Net::Amazon::S3 の Author の github アカウント名は <a href="https://github.com/acme">acme</a> ですね！
+Acme Track にすべきだったかと思ったり、思わなかったり...
+
+
+
+明日は<a href="http://twitter.com/hatyuki">hatyuki</a>さんです！
+FindBin::* てきなこと、超期待です！
