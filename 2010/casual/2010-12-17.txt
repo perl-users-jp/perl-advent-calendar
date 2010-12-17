@@ -1,6 +1,6 @@
 Perl で Amazon S3 をあつかう Net::Amazon::S3
 meta-author: dragon3 <ryuzo.yamamoto@gmail.com>
-meta-tags: perl, linux, mac
+meta-tags: perl
 
 <a href="http://blog.yappo.jp/yappo/archives/000727.html">もつ鍋で有名な福岡</a>から来ました <a href="http://twitter.com/dragon3">@dragon3</a> です。
 
