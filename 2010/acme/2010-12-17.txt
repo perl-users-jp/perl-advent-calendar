@@ -1,0 +1,293 @@
+Acme::BrainfucktoryでBrainf*ckをもっと簡単に
+meta-author: makamaka
+meta-tags: perl, acme
+
+(firstly written in Japanese, later in English)
+
+こんにちは。もうだいたい持っているネタは尽きかけてる<a href="http://twitter.com/maka2_donzoko">makamaka</a>です。
+
+今日は以前作った<a href="https://github.com/makamaka/p5-acme-brainfucktory">Acme::Brainfucktory</a>について記事を書きます。このモジュールはAcme::Brainfuck系のモジュールをお手軽につくるためのモジュールです。なお、Brainf*ckについては素晴らしいことに<a href="http://perl-users.jp/articles/advent-calendar/2010/sym/1">sym track 1日目</a>でも取り上げられていますので、そちらをご参照ください。
+
+さて、CPANには<a href="http://search.cpan.org/dist/Acme-Brainfuck/">Acme::Brainfuck</a>、<a href="http://search.cpan.org/dist/Acme-Ook/">Acme::Ook</a>などのbrainfuck系Acmeモジュールがいくつかあります。またAcmeではなくLanguage系モジュールとして<a href="http://search.cpan.org/dist/Language-BF/">Language::BF</a>（brainfuckを扱う）さえあります。
+
+で、これらは基本的に8種類のコードとオペレーションが対応しているだけですから、もっと汎用的なものにしておけば、わざざ新しいものをつくる必要もないですね。そこでBrainfuckの工場、Acme::Brainfucktoryの登場です（なおインタフェースと基本コードの多くはLanguage::BFのコピペです）。
+
+>|perl|
+use strict;
+use Acme::Brainfucktory;
+
+my $bf = Acme::Brainfucktory->new();
+
+$bf->code(<<CODE);
+++++++++++[>+++++++>++++++++++>+++>+<<<<-]
+>++.>+.+++++++..+++.>++.<<+++++++++++++++.>
+.+++.------.--------.>+.>.
+CODE
+
+$bf->run; # "Hello World!\n"
+||<
+
+これは、基本形ですね。
+しかし、ちょっと引数に値を渡してあげるだけで
+
+>|perl|
+my $ook = Acme::Brainfucktory->new( {
+    preprocess => sub {
+        my $code_ref = shift;
+        $$code_ref =~ s{Ook(.) Ook(.)}{$1$2}g;
+    },
+    optable => {
+        '.?' => '>',
+        '?.' => '<',
+        '..' => '+',
+        '!!' => '-',
+        '!.' => '.',
+        '.!' => ',',
+        '!?' => '[',
+        '?!' => ']',
+    },
+} );
+
+$ook->code(<<CODE);
+Ook. Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook! Ook? Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook? Ook! Ook! Ook? Ook! Ook? Ook.
+Ook! Ook. Ook. Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook! Ook? Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook?
+Ook! Ook! Ook? Ook! Ook? Ook. Ook. Ook. Ook! Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook! Ook. Ook! Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook! Ook. Ook. Ook? Ook. Ook? Ook. Ook? Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook! Ook? Ook? Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook? Ook! Ook! Ook? Ook! Ook? Ook. Ook! Ook.
+Ook. Ook? Ook. Ook? Ook. Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook! Ook? Ook? Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook? Ook! Ook! Ook? Ook! Ook? Ook. Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook.
+Ook? Ook. Ook? Ook. Ook? Ook. Ook? Ook. Ook! Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook! Ook. Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook.
+Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook!
+Ook! Ook. Ook. Ook? Ook. Ook? Ook. Ook. Ook! Ook. 
+CODE
+
+$ook->run; # "Hello World!";
+||<
+
+Acme::Ook（オランウータン用言語）に早変わり。さらにNekoMimiF*ck((tokuhirom氏の<a href="http://d.hatena.ne.jp/tokuhirom/20041015/p14">NekoMimiFu**</a>で知りました))もご覧の通り。
+
+>|perl|
+my $nekomimi = Acme::Brainfucktory->new( {
+    optable => {
+        'ネコミミ！'                    => '>',
+        'ネコミミモード'                => '<',
+        'おにいさま'                    => '+',
+        '私のしもべー'                  => '-',
+        'や・く・そ・く・よ'            => '.',
+        'フルフルフルムーン'            => ',',
+        'キスキス…'                    => '[',
+        'キス…したくなっちゃった…'    => ']',
+    },
+} );
+
+$nekomimi->code(<<CODE);
+おにいさまおにいさまおにいさまおにいさまキスキス…
+ネコミミ！おにいさまおにいさま
+おにいさまおにいさまキスキス…ネコミミ！
+おにいさまおにいさまおにいさまおにいさま
+ネコミミ！おにいさまおにいさまおにいさま
+おにいさまおにいさまおにいさまネコミミ！
+おにいさまおにいさまネコミミモードネコミミモード
+ネコミミモード私のしもべー
+キス…したくなっちゃった…ネコミミ！
+おにいさまおにいさまネコミミ！
+おにいさま
+ネコミミモードネコミミモードネコミミモード
+私のしもべーキス…したくなっちゃった…
+ネコミミ！ネコミミ！や・く・そ・く・よネコミミ！
+おにいさまや・く・そ・く・よ
+おにいさまおにいさまおにいさまおにいさまおにいさま
+おにいさまおにいさま
+や・く・そ・く・よや・く・そ・く・よ
+おにいさまおにいさまおにいさま
+や・く・そ・く・よ
+ネコミミ！や・く・そ・く・よ
+ネコミミモードネコミミモード私のしもべー
+ネコミミモード
+おにいさまおにいさまおにいさまおにいさまキスキス…ネコミミ！
+おにいさまおにいさまおにいさまおにいさまネコミミモード
+私のしもべーキス…したくなっちゃった…ネコミミ！
+や・く・そ・く・よネコミミ！や・く・そ・く・よおにいさまおにいさま
+おにいさま
+や・く・そ・く・よ私のしもべー私のしもべー私のしもべー私のしもべー
+私のしもべー
+私のしもべーや・く・そ・く・よ私のしもべー私のしもべー私のしもべー
+私のしもべー
+私のしもべー私のしもべー私のしもべー私のしもべーや・く・そ・く・よ
+ネコミミ！
+おにいさまや・く・そ・く・よ
+CODE
+
+$nekomimi->run; # "Hello World!";
+||<
+
+
+また、このモジュールはデフォルトでbrainf*ckというファンクションをエクスポートします。
+
+>|perl|
+use strict;
+use Acme::Brainfucktory;
+
+$bf = brainf*ck; # = Acme::Brainfucktory->new
+||<
+
+ちょっと嬉しい機能ですね！
+
+はい、このお正月はこたつに入ってbrainf*ckな新言語を……どうでもいいや。
+
+
+
+
+ * ----------------------------------------------------
+ * English version
+ * ----------------------------------------------------
+TITLE: Easy Brainf*ck with Acme::Brainfucktory
+
+Hello, this is <a href="http://twitter.com/maka2_donzoko">makamaka</a>.
+
+I introduce <a href="https://github.com/makamaka/p5-acme-brainfucktory">Acme::Brainfucktory</a> today. It is a module for making Acme::Brainfuck-like module easily. For Brainf*ck detail, please see to <a href="http://perl-users.jp/articles/advent-calendar/2010/sym/1">sym track 1st day</a>.
+
+On CPAN, there are <a href="http://search.cpan.org/dist/Acme-Brainfuck/">Acme::Brainfuck</a>, <a href="http://search.cpan.org/dist/Acme-Ook/">Acme::Ook</a> and so on. And <a href="http://search.cpan.org/dist/Language-BF/">Language::BF</a> even exists.
+
+Since thoese languages have basically only eight commands, we don't need new modules by the generalizatoin.
+It is Acme::Brainfucktory, a factory of Brainfuck (its interface and many codes are copied from Language::BF).
+
+
+>|perl|
+use strict;
+use Acme::Brainfucktory;
+
+my $bf = Acme::Brainfucktory->new();
+
+$bf->code(<<CODE);
+++++++++++[>+++++++>++++++++++>+++>+<<<<-]
+>++.>+.+++++++..+++.>++.<<+++++++++++++++.>
+.+++.------.--------.>+.>.
+CODE
+
+$bf->run; # "Hello World!\n"
+||<
+
+Basic. And you can pass options to the constructor.
+
+
+>|perl|
+my $ook = Acme::Brainfucktory->new( {
+    preprocess => sub {
+        my $code_ref = shift;
+        $$code_ref =~ s{Ook(.) Ook(.)}{$1$2}g;
+    },
+    optable => {
+        '.?' => '>',
+        '?.' => '<',
+        '..' => '+',
+        '!!' => '-',
+        '!.' => '.',
+        '.!' => ',',
+        '!?' => '[',
+        '?!' => ']',
+    },
+} );
+
+$ook->code(<<CODE);
+Ook. Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook! Ook? Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook? Ook! Ook! Ook? Ook! Ook? Ook.
+Ook! Ook. Ook. Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook! Ook? Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook?
+Ook! Ook! Ook? Ook! Ook? Ook. Ook. Ook. Ook! Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook! Ook. Ook! Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook! Ook. Ook. Ook? Ook. Ook? Ook. Ook? Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook! Ook? Ook? Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook? Ook! Ook! Ook? Ook! Ook? Ook. Ook! Ook.
+Ook. Ook? Ook. Ook? Ook. Ook? Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook! Ook? Ook? Ook. Ook. Ook.
+Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook. Ook? Ook! Ook! Ook? Ook! Ook? Ook. Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook.
+Ook? Ook. Ook? Ook. Ook? Ook. Ook? Ook. Ook! Ook. Ook. Ook. Ook. Ook. Ook. Ook.
+Ook! Ook. Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook.
+Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook! Ook!
+Ook! Ook. Ook. Ook? Ook. Ook? Ook. Ook. Ook! Ook. 
+CODE
+
+$ook->run; # "Hello World!";
+||<
+
+It was changed to Acme::Ook(orang-utans language). And NekoMimiF*ck((I know this language from tokuhirom's <a href="http://d.hatena.ne.jp/tokuhirom/20041015/p14">NekoMimiFu**</a>.))!
+
+>|perl|
+my $nekomimi = Acme::Brainfucktory->new( {
+    optable => {
+        'ネコミミ！'                    => '>',
+        'ネコミミモード'                => '<',
+        'おにいさま'                    => '+',
+        '私のしもべー'                  => '-',
+        'や・く・そ・く・よ'            => '.',
+        'フルフルフルムーン'            => ',',
+        'キスキス…'                    => '[',
+        'キス…したくなっちゃった…'    => ']',
+    },
+} );
+
+$nekomimi->code(<<CODE);
+おにいさまおにいさまおにいさまおにいさまキスキス…
+ネコミミ！おにいさまおにいさま
+おにいさまおにいさまキスキス…ネコミミ！
+おにいさまおにいさまおにいさまおにいさま
+ネコミミ！おにいさまおにいさまおにいさま
+おにいさまおにいさまおにいさまネコミミ！
+おにいさまおにいさまネコミミモードネコミミモード
+ネコミミモード私のしもべー
+キス…したくなっちゃった…ネコミミ！
+おにいさまおにいさまネコミミ！
+おにいさま
+ネコミミモードネコミミモードネコミミモード
+私のしもべーキス…したくなっちゃった…
+ネコミミ！ネコミミ！や・く・そ・く・よネコミミ！
+おにいさまや・く・そ・く・よ
+おにいさまおにいさまおにいさまおにいさまおにいさま
+おにいさまおにいさま
+や・く・そ・く・よや・く・そ・く・よ
+おにいさまおにいさまおにいさま
+や・く・そ・く・よ
+ネコミミ！や・く・そ・く・よ
+ネコミミモードネコミミモード私のしもべー
+ネコミミモード
+おにいさまおにいさまおにいさまおにいさまキスキス…ネコミミ！
+おにいさまおにいさまおにいさまおにいさまネコミミモード
+私のしもべーキス…したくなっちゃった…ネコミミ！
+や・く・そ・く・よネコミミ！や・く・そ・く・よおにいさまおにいさま
+おにいさま
+や・く・そ・く・よ私のしもべー私のしもべー私のしもべー私のしもべー
+私のしもべー
+私のしもべーや・く・そ・く・よ私のしもべー私のしもべー私のしもべー
+私のしもべー
+私のしもべー私のしもべー私のしもべー私のしもべーや・く・そ・く・よ
+ネコミミ！
+おにいさまや・く・そ・く・よ
+CODE
+
+$nekomimi->run; # "Hello World!";
+||<
+
+Additionally, this module exports brainf*ck function by default.
+
+>|perl|
+use strict;
+use Acme::Brainfucktory;
+
+$bf = brainf*ck; # = Acme::Brainfucktory->new
+||<
+
+Good?
+
+Well, in this winter vacation, would you like to invent new languages.... I don't care.
+
