@@ -73,7 +73,7 @@ DLLの各種APIを絶対アドレスで呼び出しています。
 -user32.dll の MessageBoxA は 0x773fea71
 -kernel32.dll の ExitProcess は 0x76252aef
 
-ですよね。わかります。
+ですよね。わかります。試験に出るので暗記しておきましょう。
 
 *引き算SUB命令のopcode表
 
