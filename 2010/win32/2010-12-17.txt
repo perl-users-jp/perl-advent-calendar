@@ -1,0 +1,77 @@
+Cygwin Perlに関する小ネタ
+
+[http://github.org/gfx/:title=gfx]と申します。
+Strawberry PerlやActive Perlばかりが取り沙汰される今日この頃ですが、Windowsで使えるPerlはこれらだけではありません。そう、Cygwin Perlです。
+[http://www.cygwin.com/:title=Cygwin]とは、Linuxライクな環境をWindowsに提供するシステムです。VMWareやVirtual BoxのようなCPUのエミュレーションではなく、単にPOSIX APIを提供することで実現しているため、Windowsのプロセスやファイルと直接やりとりできるのが特徴です。Perl本体のビルドがStrawberry PerlやActive Perlと比べて圧倒的に簡単であるため、bleadperlを触ってみたいときなどはCygwin Perlが楽でしょう((ただし、テストが全てパスすることは稀です。しかし経験上はテストをスルーしてインストールしても問題はあったことはありません。))。
+ただ欠点もあります。よく指摘されるのが、速度でしょうか。たとえば、Mouseのmake testを同じマシンのVMWare Player/Strawberry Perl/Cygwinで実行すると以下の要になります((テストの条件が統制されてませんが、大差ないので目をつぶってください…。))。
+VMWare Player (Ubuntsu, Perl 5.12.2-multi-threaded):
+>||
+Mouse-0.88$ make test
+(snip)
+Files=279, Tests=6095, 49 wallclock secs ( 0.45 usr  6.34 sys + 24.44 cusr 16.94 csys = 48.17 CPU)
+Result: PASS
+||<
+Strawberry Perl (Windows Vista, Perl 5.12.2-multi-threaded)
+>||
+Files=279, Tests=5952, 72 wallclock secs ( 6.41 usr +  1.48 sys =  7.89 CPU)
+Result: PASS
+||<
+Cygwin Perl (Windows 7, cygwin 1.7.7, Perl 5.10.1-multi-threaded)
+>||
+Files=279, Tests=5956, 93 wallclock secs ( 1.31 usr  0.83 sys + 47.17 cusr 32.04
+ csys = 81.34 CPU)
+Result: PASS
+||<
+CygwinだとVMWareのほぼ2倍の時間がかかってしまいます。Strawberry Perlはその中間くらい。ネイティブアプリケーションであるStrawberry PerlよりもVM上で走らせた方が速いというのは意外ですね。
+というわけで、Cygwin Perlを快適に使うための小ネタを紹介します。
+
+** perldoc perlcygwin
+
+まず基本ですが、Cygwin Perl固有の問題や特徴などはドキュメントとして提供されているため、適宜参考にするといいでしょう。以下のコマンドでドキュメントを読むことができます。
+>|sh|
+$ perldoc perlcygwin
+||<
+
+** Pathの変換
+
+Cygwinではファイルパスが専用の内部形式で表現されます。したがって、CygwinのパスをWindowsのネイティブアプリケーションに渡しても認識されません。そこで、Cygwin APIを使ってパスを変換する必要があります。これは、Cygwin::win_to_posix_path()とCygwin::posix_to_win_path()を使います。
+>|perl|
+#!perl -w
+use 5.10.0;
+use strict;
+
+say 'path:';
+my $posix = '/posix/path';
+my $win   = 'C:\win\path';
+
+say Cygwin::posix_to_win_path($posix); # => C:\posix\path
+say Cygwin::win_to_posix_path($win);   # => /win32/path
+__END__
+||<
+ネイティブアプリケーションにパスを渡すときは、posix_to_win_path()で変換して渡しましょう。
+その他のCygwin APIはperldoc perlcygwinに列挙してあります。
+
+** Cygwinランチャ
+
+Cygwin shellを起動すると、最初のカレントディレクトリは$ENV{HOME}になりますね((Cygwinに限りませんが。))。どうせならそのとき作業しているディレクトリで起動してほしいものです。じゃあそうしましょう。まずcygwinのルートディレクトリ(cygwin.batがあるところ)に以下のバッチファイルを置きます。
+>|bat|
+@echo off
+@rem $CYGWIN/shell.bat
+
+set _PWD=%*
+C:
+chdir C:\cygwin\bin
+bash --login -i
+||<
+そして.bashrcに以下のコマンドを加えます。
+>|sh|
+# in $HOME/.bashrc
+if [ -n "$_PWD" ] ; then
+    cd "`cygpath "$_PWD"`"
+    unset _PWD
+fi
+||<
+あとは使っているファイラの設定でshell.batにディレクトリ名を渡して起動するコマンドを登録すればOK！簡単に任意のディレクトリでCygwin shellを起動できるようになりました。ちなみに、Cygwinからはcygstart(1)コマンドで任意のディレクトリをエクスプローラで開くことができます。Perlの話ではないですね。
+
+いじょ。Enjoy Cygwin!
+
