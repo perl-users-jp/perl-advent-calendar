@@ -1,0 +1,39 @@
+Acme::CPANAuthors::British
+
+こんにちは<a href="http://e8y.net/blog/">トミール</a>です。
+
+<a href="http://search.cpan.org/perldoc?Acme::CPANAuthors::British">Acme::CPANAuthors::British</a>は、イギリス人のCPAN Authorがまとまってるモジュールです。イングランド、ウェールズ、スコットランド、北アイルランド全部含んでいるみたいです。
+
+CPANのIDを取る時はとくに国とか所属は申告しないので国籍不明ですが、手動でそれをまとめてしまえっていうAcme::CPANAuthorsモジュールファミリーのBritish版です。
+
+日本人からみるとみんな外人にみえてしまうけど、中にはフランス人やイタリア人とかもいるわけで、もしCPANのPODを英語の参考にしよう、と思ったらAcme::CPANAuthors::Britishな人のPODが参考になるかも？
+
+>|perl|
+use Acme::CPANAuthors;
+
+my $british = Acme::CPANAuthors->new("British");
+
+my @ids = $british->id;
+||<
+
+という感じでBritishなCPAN Authorの方々のIDを見れます。
+
+まあ普通に<a href="http://cpansearch.perl.org/src/BARBIE/Acme-CPANAuthors-British-0.04/lib/Acme/CPANAuthors/British.pm">Acme::CPANAuthors::Britishのソース</a>みると列挙されているのでそうやって見たほうが速いですけど。
+
+Acme::CPANAuthors::Britishはソースが楽しくて、最後のtrue返すところがロックバンドの歌詞？だったり。
+
+ちょっといいのは、亡くなった方のところです。
+
+>||
+    # Gone, but not forgotten
+    
+    IVORW       => 'Ivor Williams (RIP)',
+    'NI-S'      => 'Nick Ing-Simmons (RIP)',
+||<
+
+あとAcme::CPANAuthors::Britishは他の国にない点として、イギリスの企業でPAUSE ID持っているところを列挙してあるところです（<a href="http://search.cpan.org/perldoc?Acme::CPANAuthors::British::Companies">Acme::CPANAuthors::British::Companies</a>）。けっこうありますね。
+
+BBCとか昔からperl使っているんですよね。<a href="http://www.bbc.co.uk/doctorwho">ドクターフー</a>だいすきです。あと最近3話だけつくられた、「シャーロックホームズが現代にいたら～」っていう<a href="http://www.bbc.co.uk/sherlock">Sherlock</a>もDVD買いましたがすっごい楽しいです。電報のかわりにSMSを、馬車の代わりにタクシーを使うホームズ。原作へのオマージュたっぷりで見ごたえあります。
+
+日本では企業でPAUSE IDとっているところもちらほらありますが、実際のモジュールはUPされていないようです。もちろん、個人のIDでUPされているもののいくつかが企業での活動の成果であるケースはたくさん見受けられます（COPYRIGHTのところに企業名が併記されているパターン）。
+
