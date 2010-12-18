@@ -1,0 +1,121 @@
+ファイル操作にまつわるエトセトラ
+meta-author: xaicron <xaicron@cpan.org>
+meta-tags: perl, win32
+
+最近なぜかタクティスクオウガを2個買った xaicron です。そういえば持っているのは PSP-1000 なので、そろそろ 3000 か Go が欲しいです。サンタさんはまだ僕のところに来るのかな？
+
+今日は Windows でより便利かつポータブルにファイル操作をする方法とかをつらつらと書いていこうと思います。
+思いついた順に適当に書いていくので、悪しからず。
+
+** 実は / が使える
+
+Windows の path 区切りは 「\」 であることは周知のとおりですが、実は 「/」 も扱えます。
+「\」だとダブルクォートの時に重ね打ちしないといけないし、正規表現での変数展開でもよろしくない動きをしたりしてちょっと悲しいです。
+
+>|perl|
+say "C:\nekomimi-mode"; # C:{改行}ekomimi-mode
+say "C:\\nekomimi-mode"; # C:\nekomimi-mode
+my $reg = 'C:\test';
+say 'C:\test\foo' =~ /^$reg/ ? 1 : 0; # 0
+||<
+
+2つ目の奴が 0 になってしまうのは \t が正規表現の中でタブとして扱われてしまうのでそうなってしまいます。
+もし、path を含むようなものを正規表現に使いたい場合は、以下のように quotemeta を使うとよいです。
+
+>|perl|
+my $reg = quotemeta 'C:\test';
+say 'C:\test\foo' =~ /^$reg/ ? 1 : 0; # 1
+||<
+
+「/」ならこういった心配もなくて安心ですね。
+
+** PATH を加工したい
+
+$ENV{PATH} の中身が欲しい時は File::Spec->path で行けますが、こいつになんか追加したり削除したりしてもう一度 $ENV{PATH} 形式にしたい場合はどうするか。
+Windwos の PATH 区切りは 「;」ですから、
+
+>|perl|
+use File::Spec;
+my @path = File::Spec->path;
+unshift @path, 'C:\foo\bar\bin';
+$ENV{PATH} = join ';', @path;
+||<
+
+こうすればいいでしょうか？
+でもそれだと Windows でしか動きませんね。こういうときは $Config{path_sep} を使いましょう。
+
+>|perl|
+use File::Spec;
+use Config;
+my @path = File::Spec->path;
+unshift @path, 'C:\foo\bar\bin';
+$ENV{PATH} = join $Config{path_sep}, @path;
+||<
+
+これで、linux でも動きます。
+
+** which とか /dev/null とかないです。。。
+
+Windows の「三大ないです問題」に数えられる which, /dev/null をどうすればいいのか。
+
+とあるコマンドがあるか調べたいときはよく
+
+>|perl|
+if (!system 'which sl 2&>1 /dev/null') {
+    say 'sl command is installed. you are crazy??';
+}
+||<
+
+のように書いてしまうと思いますが、Windows には which コマンドが標準でないですし、/dev/null もありません。
+こういうときは、File::Which や File::Spec->devnull を使いましょう。
+
+>|perl|
+use File::Spec;
+use File::Which qw(which);
+
+if (which 'sl') {
+    say 'sl command is installed. you are crazy??';
+}
+
+system 'foo > ' . File::Spec->devnull;
+||<
+
+** /tmp とかないです。。。
+
+「三大ないです問題」に数えられる（ry
+
+/tmp とか無いので、以下のコードは動きません。
+
+>|perl|
+system "echo foo > /tmp/$$.lock";
+||<
+
+こういうときは、File::Sepc->tmpdir を使いましょう。
+
+>|perl|
+use File::Spec;
+system "echo foo >" . File::Spec->catfile(File::Spec->tmpdir, "$$.lock");
+||<
+
+また、一時ファイルを作りたい場合などは、File::Temp を使いましょう。
+
+>|perl|
+use File::Temp qw(tempfile tempdir);
+my $tmpdir = tempdir CLEANUP => 1;
+my ($fh, $filename) = tempfile(DIR => $tmpdir);
+||<
+
+こんな感じにしておくと、スコープが抜けたときにお掃除してくれたりして便利です。
+
+** 機種依存文字を含んだファイルがどうやっても開けません
+
+Win32API::File を頑張って使えば開けますが、そんなに人生は長くないので、Win32::Unicode::Native を書きました。
+詳しくは、[http://perl-users.jp/articles/advent-calendar/2009/hacker/20.html:title=去年の記事]を参照ください。
+内部的には全く変わってますが、インターフェースは一緒なのできっと大丈夫！
+
+ちなみに、これを使うと全くポータブルじゃなくなりますのでご注意ください。
+
+** まとめ
+
+こんな感じのことをある程度気にして置くと、ポータブルなコードになるんじゃないかと思います！
+さらに、「CPAN にあげたモジュールがなんか Windows だけこけるんだけど！！！！」ってことも減るんじゃないかとおもいます。
