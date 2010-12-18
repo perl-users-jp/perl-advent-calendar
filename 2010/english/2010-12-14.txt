@@ -1,0 +1,43 @@
+Testing TCP servers with Test::TCP
+
+Hi, I'm tokuhirom.
+
+Test::TCP is a very useful library to testing TCP servers and/or clients.
+
+Yesterday, I released Test::TCP 1.08! And so, the version contains new OO-ish interface support.
+
+>||
+use Test::TCP;
+
+my $server = Test::TCP->new(
+    code => sub {
+        my $port = shift;
+        ...;
+    },
+);
+my $client = MyClient->new( host => '127.0.0.1', port => $server->port );
+undef $server;    # kill server process on DESTROY
+||<
+
+Also, you can run the multiple servers in one script.
+
+>||
+use Test::TCP;
+
+my $server = Test::TCP->new(
+    code => sub {
+        my $port = shift;
+        ...;
+    },
+);
+my $server2 = Test::TCP->new(
+    code => sub {
+        my $port = shift;
+        ...;
+    },
+);
+my $client = MyClient->new( host => '127.0.0.1', port => $server->port );
+undef $server;    # kill child process on DESTROY
+||<
+
+Enjoy!
