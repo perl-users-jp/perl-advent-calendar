@@ -2,8 +2,8 @@ Cygwin Perlに関する小ネタ
 
 [http://github.org/gfx/:title=gfx]と申します。
 Strawberry PerlやActive Perlばかりが取り沙汰される今日この頃ですが、Windowsで使えるPerlはこれらだけではありません。そう、Cygwin Perlです。
-[http://www.cygwin.com/:title=Cygwin]とは、Linuxライクな環境をWindowsに提供するシステムです。VMWareやVirtual BoxのようなCPUのエミュレーションではなく、単にPOSIX APIを提供することで実現しているため、Windowsのプロセスやファイルと直接やりとりできるのが特徴です。Perl本体のビルドがStrawberry PerlやActive Perlと比べて圧倒的に簡単であるため、bleadperlを触ってみたいときなどはCygwin Perlが楽でしょう((ただし、テストが全てパスすることは稀です。しかし経験上はテストをスルーしてインストールしても問題はあったことはありません。))。
-ただ欠点もあります。よく指摘されるのが、速度でしょうか。たとえば、Mouseのmake testを同じマシンのVMWare Player/Strawberry Perl/Cygwinで実行すると以下の要になります((テストの条件が統制されてませんが、大差ないので目をつぶってください…。))。
+[http://www.cygwin.com/:title=Cygwin]とは、Linuxライクな環境をWindowsに提供するシステムです。VMWareやVirtual BoxのようなCPUのエミュレーションではなく、単にPOSIX APIを提供することで実現しているため、Windowsのプロセスやファイルと直接やりとりできるのが特徴です。Perl本体のビルドがStrawberry PerlやActive Perlと比べて圧倒的に簡単であるため、bleadperlを触ってみたいときなどはCygwin Perlが楽でしょう((ただし、テストが全てパスすることは稀です。しかしテストをスルーしてインストールしても問題はないでしょう。))。
+ただ欠点もあります。よく指摘されるのが、速度でしょうか。たとえば、Mouseのmake testを同じマシンのVMWare Player/Strawberry Perl/Cygwinで実行すると以下のようになりました((テストの条件が統制されてませんが、大差ないので目をつぶってください…。))。
 VMWare Player (Ubuntsu, Perl 5.12.2-multi-threaded):
 >||
 Mouse-0.88$ make test
