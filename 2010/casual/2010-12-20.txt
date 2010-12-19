@@ -1,0 +1,134 @@
+proveをうまく使ってテスト実行を効率化しよう
+meta-author: yaotti <yaotti@gmail.com>
+meta-tags: perl, test, prove
+
+こん(にちは|ばんは)．最近は卒論でC/アセンブラ，アルバイトでPerl/Objective-Cと高低レイヤーを行ったり来たりな[http://d.hatena.ne.jp/yaotti/:title=yaotti]です．
+このエントリでは，テストを実行する時に便利なproveコマンド(App::Prove)の便利な機能+αについて紹介します．
+
+**基本的な使い方
+>|sh|
+prove t/foo.t
+||<
+のようにして使います．perlと同じように-lや-Idir，-v, -MModule::Nameなども使えます．
+>|sh|
+prove -l -Ilib -v t/foo.t
+||<
+
+-Pオプションでプラグインを利用することもできます．
+例えばmotemenさんの書いた[https://github.com/motemen/App-Prove-Plugin-ProgressBar-Each/blob/master/lib/App/Prove/Plugin/ProgressBar/Each.pm:title]は大量のテストを実行するときに便利です．
+>|sh|
+cpanm https://github.com/motemen/App-Prove-Plugin-ProgressBar-Each/tarball/master
+prove -PProgressBar::Each t/*
+||<
+
+またproveの機能ではないですが，Test::Classを使っていて特定のテストのみを実行したいときは
+>|sh|
+TEST_METHOD=_foo prove t/foo.t
+||<
+とすると_fooというテストのみ実行されます．
+
+
+**stateオプション
+テストをperlで実行する(perl t/foo.t)のとproveで実行する一番の違い(だと個人的に思っている)のがこのstateオプションです．
+>|sh|
+prove --state=save t/**/*.t
+||<
+とするとテストの実行結果の色々(詳細は後述)を.proveに保存してくれます．そして
+>|sh|
+prove --state=failed # ファイル名の指定はいらない!
+||<
+を実行すると，前回失敗したテストのみ((ファイル単位))実行されます．
+stateオプションは複数指定できるので，--state~failed,saveを指定すれば
+>||
+edit ...
+prove --state=failed,save
+edit ...
+prove --state=failed,save
+...
+||<
+のように編集→テストを繰り返せます．
+
+なお，以上のオプションは毎回指定しなくても~/.provercに書いておけば毎回読んでくれます．
+>||
+-v --state=failed,save -l -It/lib
+||<
+
+
+**.proveについて
+これだけだとpodの翻訳でしかないのでちょっと追加を．
+prove --state=saveのときのテスト結果は.proveに保存されます．これは以下のようにYAML形式で保存されています．
+>|sh|
+$ less .prove
+---
+generation: 4
+last_run_time: 1292740101.18576
+tests:
+  t/foo.t:
+    elapsed: 3.55887389183044
+    gen: 5
+    last_pass_time: 1292740829.4212
+    last_result: 0
+    last_run_time: 1292740829.4212
+    last_todo: 0
+    seq: 5
+    total_passes: 1
+  t/bar.t:
+    elapsed: 5.02774810791016
+    gen: 4
+    last_fail_time: 1292740101.18414
+    last_result: 3
+    last_run_time: 1292740101.18414
+    last_todo: 0
+    mtime: 1292315958
+    seq: 4
+    total_failures: 4
+version: 1
+...
+||<
+これを利用すると，「前回失敗したテスト」「TODOのあるテスト」などの情報を得ることができます．以下でその一例を紹介します．
+
+
+**.prove利用の例
+>|perl|
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use Cwd;
+use Term::ANSIColor;
+use YAML::Any;
+
+my $prove_file = Cwd::getcwd() . "/.prove";
+if (-f $prove_file) {
+    my $test_results = YAML::Any::LoadFile($prove_file)->{tests};
+    my $failed_tests = [];
+    for my $file (keys %$test_results) {
+        push @$failed_tests, $file if $test_results->{$file}->{last_result} > 0;
+    }
+    if (@$failed_tests) {
+        print colored 'NG: ', 'red';
+        print join ", ", map { sprintf "%s", $_ } @$failed_tests;
+    }else {
+        print colored 'OK', 'green';
+    }
+}
+
+||<
+このコードを適当な場所に保存し，~/.zshrcへ
+>|sh|
+function precmd() {
+    PROMPT+="$(perl ~/path/to/the/script.pl)"
+}
+||<
+を追記します(precmdが定義済みなら適当に追加してください)．すると，
+<img src="https://img.skitch.com/20101219-qnay1sygc51fb9mh1aa7jd3f7e.jpg" alt="terminal" />
+のように落ちたテストを表示させることができます．全部通っていると緑でOKと出ます．ちょっと嬉しいですね!
+.proveに保存される情報についての詳細はperldoc App::Prove::State::Result::Testを見てください．
+
+
+**まとめ
+proveには~/.provercや--stateのような便利な機能があるので，普段使ってる人も一度じっくりperldoc App::Prove::*を読んでみることをオススメします．
+また，自分でApp::Prove::Plugin::*を書いてみるのも楽しいかもしれません．
+proveを便利に使って，頑張ってテストを書きましょう!((自戒も込めて…))
+
+
+明日はkamipoさんです!お楽しみに:)
