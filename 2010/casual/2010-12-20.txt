@@ -106,7 +106,7 @@ if (-f $prove_file) {
     }
     if (@$failed_tests) {
         print colored 'NG: ', 'red';
-        print join ", ", map { sprintf "%s", $_ } @$failed_tests;
+        print join ", ", @$failed_tests;
     }else {
         print colored 'OK', 'green';
     }
