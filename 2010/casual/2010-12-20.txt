@@ -14,8 +14,8 @@ prove t/foo.t
 prove -l -Ilib -v t/foo.t
 ||<
 
--Pオプションでプラグインを利用することもできます．
-例えばmotemenさんの書いた[https://github.com/motemen/App-Prove-Plugin-ProgressBar-Each/blob/master/lib/App/Prove/Plugin/ProgressBar/Each.pm:title]は大量のテストを実行するときに便利です．
+他にも，-Pオプションでプラグインを利用することもできます．
+例えばmotemenさんの書いた[https://github.com/motemen/App-Prove-Plugin-ProgressBar-Each:title]は大量のテストを実行するときに便利です．
 >|sh|
 cpanm https://github.com/motemen/App-Prove-Plugin-ProgressBar-Each/tarball/master
 prove -PProgressBar::Each t/*
