@@ -1,0 +1,153 @@
+AcmeなるモジュールをCPANに求めて
+meta-author: makamaka
+meta-tags: perl, acme
+
+(firstly written in Japanese, later in English)
+
+こんにちは。<a href="http://twitter.com/maka2_donzoko">makamaka</a>です。
+書く人がいないので埋め草的な記事です。Acme大全2010の使い回しです。
+
+CPANでも割とユニークだと私が感じるモジュールを紹介しましょう。十分Acmeなモノです。
+<a href="http://search.cpan.org/dist/Text-CSV-UniqueColumns/">Text::CSV::UniqueColumns</a>。CSVファイルから重複しない値を持ったカラムを探すモジュールです。
+
+>|perl|
+# ヘッダを持ったCSVファイル
+#------- foo.csv ------
+col1,col2,col3,col4
+1,a,1,a
+2,b,1,b
+3,a,2,c
+4,a,2,d
+#-----------------------
+
+use strict;
+use Text::CSV::UniqueColumns;
+
+$csv  = Text::CSV::UniqueColumns->new( 'foo.csv' );
+
+print $csv->checkUniq('col1'); # => 1
+
+print $csv->getUniqCols();     # => col1,col4
+||<
+
+で、まあ、<a href="http://search.cpan.org/dist/Text-CSV/">Text::CSV</a>を使って値を調べたりするのかなと思ってソースを見たのですよ。そしたら
+
+>|perl|
+sub getUniqCols {
+（中略）
+    my $sCmd = "cut -f$iField -d , $self->{'_file'} | sed s/' '//g | wc -l;";
+    $sCmd .= "cut -f$iField -d ,  $self->{'_file'} | sed s/' '//g | sort | uniq | wc -l";
+    my ($iCount1, $iCount2) = split("\n",`$sCmd`);
+||<
+
+あー……
+
+
+>|perl|
+sub checkUniq {
+（中略）
+    my $sCmd = "paste  -d , $sPasteFiles > pasteOutput ";
+    push (@cleanup, 'pasteOutput');
+    $sPasteOutput = `$sCmd`;
+    my $iCount1 =  `cat pasteOutput | sed s/' '//g | wc -l`;
+    my $iCount2 =  `cat pasteOutput | sed s/' '//g | sort | uniq |  wc -l`;
+||<
+
+
+あー……
+
+
+>|perl|
+sub cleanUp {
+    foreach my $sFile (@cleanup){
+        `rm -f $sFile`;
+    }
+}
+||<
+
+↑そこはかとなく不安感を醸し出すコード
+
+
+はい、なんだか不思議な気持ちになりましたね？　十分Acmeなモノです。
+
+というわけで、このお正月はAcme的なモノを求めて夢の世界に……
+
+
+
+
+
+ * ----------------------------------------------------
+ * English version
+ * ----------------------------------------------------
+TITLE: The Acme-Quest of Unknown CPAN
+
+Hello everyone. I'm <a href="http://twitter.com/maka2_donzoko">makamaka</a>.
+As no one writes articles, I worte.
+
+I introduce a module felt as a unique module on CPAN. Enough Acme.
+<a href="http://search.cpan.org/dist/Text-CSV-UniqueColumns/">Text::CSV::UniqueColumns</a>.
+It finds columns which have unique values.
+
+
+>|perl|
+# a csv file which has its header.
+#------- foo.csv ------
+col1,col2,col3,col4
+1,a,1,a
+2,b,1,b
+3,a,2,c
+4,a,2,d
+#-----------------------
+
+use strict;
+use Text::CSV::UniqueColumns;
+
+$csv  = Text::CSV::UniqueColumns->new( 'foo.csv' );
+
+print $csv->checkUniq('col1'); # => 1
+
+print $csv->getUniqCols();     # => col1,col4
+||<
+
+Firstly I thought using <a href="http://search.cpan.org/dist/Text-CSV/">Text::CSV</a>.
+And I look at the source.
+
+>|perl|
+sub getUniqCols {
+...
+    my $sCmd = "cut -f$iField -d , $self->{'_file'} | sed s/' '//g | wc -l;";
+    $sCmd .= "cut -f$iField -d ,  $self->{'_file'} | sed s/' '//g | sort | uniq | wc -l";
+    my ($iCount1, $iCount2) = split("\n",`$sCmd`);
+||<
+
+
+Ah....
+
+
+>|perl|
+sub checkUniq {
+...
+    my $sCmd = "paste  -d , $sPasteFiles > pasteOutput ";
+    push (@cleanup, 'pasteOutput');
+    $sPasteOutput = `$sCmd`;
+    my $iCount1 =  `cat pasteOutput | sed s/' '//g | wc -l`;
+    my $iCount2 =  `cat pasteOutput | sed s/' '//g | sort | uniq |  wc -l`;
+||<
+
+
+Ah....
+
+
+>|perl|
+sub cleanUp {
+    foreach my $sFile (@cleanup){
+        `rm -f $sFile`;
+    }
+}
+||<
+
+↑somehow anxious code. Enough Acme.
+
+
+Well, in this winter vacation, would you like to travel to dream land for Acme...
+
