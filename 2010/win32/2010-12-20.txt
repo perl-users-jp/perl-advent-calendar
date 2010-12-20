@@ -1,0 +1,134 @@
+Perl で電卓を作る(win32旅情編)
+meta-tags: perl, win32, API
+meta-author mattn.jp@gmail.com (mattn)
+
+こんにちわ。寒いですね。ネタも財布も寒いと噂の <a href="http://mattn.kaoriya.net/">mattn</a> です。
+突然ですが Perl で電卓作れと言われれば、どう作りますか？
+構文木つくって、括弧とか対応して...うざったいですよね。
+
+せっかく Windows には最初から電卓が入っているのですから、これ 使っちゃいましょう。
+どうやるか...
+
+電卓を起動して、ボタンを押しちゃえばいいのです。
+Win32::API を使って FindWindow でウィンドウを探し、数字ボタンのウィンドウ探し、SendMessage でボタンクリックのイベントを送り、最後に GetWindowText でテキストを取得してしまえばいいのです。
+
+Win32::API は各 DLL と関数名、引数シグネチャ、戻り値シグネチャを指定すればエクスポートされている関数が取り出せます。
+
+>|perl|
+use Win32::API;
+$function = Win32::API->new(
+    'mydll, 'int sum_integers(int a, int b)',
+);
+$return = $function->Call(3, 2);
+||<
+
+簡単ですね。シグネチャはPerldocによると
+
+>|perl|
+"I": value is an integer (int)
+"N": value is a number (long)
+"F": value is a floating point number (float)
+"D": value is a double precision number (double)
+"C": value is a char (char)
+"P": value is a pointer (to a string, structure, etc...)
+"S": value is a Win32::API::Struct object (see below)
+"K": value is a Win32::API::Callback object (see Win32::API::Callback)
+||<
+
+となっているので頑張ればコールバックも呼び出せますね。今日は FindWindow(FindWindowEx) と SendMessage 、GetWindowText だけ使うので
+
+>|perl|
+my $FindWindow    = Win32::API->new( "user32", "FindWindowA",    'PP',   'N' );
+my $FindWindowEx  = Win32::API->new( "user32", "FindWindowExA",  'NNPP', 'N' );
+my $SendMessage   = Win32::API->new( "user32", "SendMessageA",   'NNNP', 'N' );
+my $GetWindowText = Win32::API->new( "user32", "GetWindowTextA", 'NPN',  'N' );
+||<
+
+こうして準備しておきます。
+起動は system を使いますが、ウィンドウが現れるまで FindWindow を投げても失敗してしまいます。
+そこで
+
+>|perl|
+my $window;
+my $timeout = 100;
+while ( $timeout-- && !$window ) {
+    $window = $FindWindow->Call( 0, '電卓' );
+    usleep 10000;
+}
+die '404 電卓 Not Found' unless $window;
+||<
+
+こうやって待機してあげましょう。そうですね！かっこ悪いですね。Window が見つかったら次は子ウィンドウハンドルを取得しましょう。
+
+>|perl|
+my $button = $FindWindowEx->Call( $window, 0, 0, '7' );
+$SendMessage->Call( $button, BM_CLICK, 0, 0 );
+||<
+
+これで「7」のボタンが押せました。
+あとはこれをスクリプトに仕上げて
+
+>|perl|
+use strict;
+use warnings;
+use Win32::API;
+
+use constant BM_CLICK   => hex('F5');
+use constant WM_GETTEXT => hex('0D');
+use constant WM_CLOSE   => hex('10');
+
+my $FindWindow    = Win32::API->new( "user32", "FindWindowA",    'PP',   'N' );
+my $FindWindowEx  = Win32::API->new( "user32", "FindWindowExA",  'NNPP', 'N' );
+my $SendMessage   = Win32::API->new( "user32", "SendMessageA",   'NNNP', 'N' );
+my $GetWindowText = Win32::API->new( "user32", "GetWindowTextA", 'NPN',  'N' );
+
+sub push_button {
+    my ( $hwnd, $caption ) = @_;
+    my $button = $FindWindowEx->Call( $hwnd, 0, 0, $caption );
+    $SendMessage->Call( $button, BM_CLICK, 0, 0 );
+}
+
+sub get_text {
+    my ( $hwnd, $caption ) = @_;
+    my $edit = $FindWindowEx->Call( $hwnd, 0, 'Edit', 0 );
+    my $buf = "\0" x 1024;
+    $SendMessage->Call( $edit, WM_GETTEXT, length($buf), $buf );
+    $buf =~ s/\0.*$//;
+    $buf;
+}
+
+system( 1, "calc.exe" );
+
+my $window;
+my $timeout = 100;
+while ( $timeout-- && !$window ) {
+    $window = $FindWindow->Call( 0, '電卓' );
+    usleep 10000;
+}
+die '404 電卓 Not Found' unless $window;
+
+for ( split //, 'CE' . (shift || '') . '=' ) {
+    push_button( $window, $_ ) if $_ ne ' ';
+}
+my $result = get_text($window);
+$result =~ s!\. $!!;
+
+$SendMessage->Call( $window, WM_CLOSE, 0, 0 );
+
+warn $result if defined $result;
+||<
+
+こうですね。簡単ですね。これならば
+
+>||
+C:\> perl calc.pl 1+2+3+4+5+6+7+8+9+10
+55
+||<
+
+なんて事も出来ますよね。一見中で calc.exe を使ってるなんて誰も気付かないですよね！
+さて、このスクリプトを実行するよい子とのお約束
+
+- 大事な計算中の電卓を起動しておかない事
+- 一瞬見えちゃうウィンドウは見なかった事にしておく事
+
+この2つだけ守れば君も明日から win32 perl hacker だよ！
