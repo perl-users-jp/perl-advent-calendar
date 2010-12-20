@@ -1,0 +1,141 @@
+Text::MeCab（日本語変換系Acmeモジュールを支える偉大なモジュール）
+meta-author: tomi-ru
+meta-tags: perl, acme, mecab
+
+こんにちは、とみた<a href="http://twitter.com/tomita">トミール</a>です。
+
+<a href="http://deps.cpantesters.org/depended-on-by.pl?dist=Text-MeCab">Text::MeCabに依存しているモジュールリスト</a>がAcmeばかり、しかもかなりぼくのモジュールじゃないかｗと気づいたので、この偉大な日本語変換系Acmeモジュールを支えるText::MeCab様についてあらためて使い方を紹介してみます。
+
+<h3>mecabとは</h3>
+
+<a href="http://mecab.sourceforge.net/">mecab</a>とは、日本語形態素解析を高速に、未知語もいい感じで補足してくれるよくできたライブラリです。作者の方はGoogleにいて（今も、たぶん。）エイプリルフールに日本語お笑い系機能を出したりしています（それが本職じゃないと思いますけど）。
+
+インストールすると入るmecabコマンドから、コマンドラインではこんな感じに使います。mecabを起動してから、文を入力してエンターです。
+
+>||
+$ mecab
+わたしはたわしをわたしました。
+わたし  名詞,代名詞,一般,*,*,*,わたし,ワタシ,ワタシ
+は      助詞,係助詞,*,*,*,*,は,ハ,ワ
+たわし  名詞,一般,*,*,*,*,たわし,タワシ,タワシ
+を      助詞,格助詞,一般,*,*,*,を,ヲ,ヲ
+わたし  動詞,自立,*,*,五段・サ行,連用形,わたす,ワタシ,ワタシ
+まし    助動詞,*,*,*,特殊・マス,連用形,ます,マシ,マシ
+た      助動詞,*,*,*,特殊・タ,基本形,た,タ,タ
+。      記号,句点,*,*,*,*,。,。,。
+EOS
+||<
+
+たとえば、「わたし」（英語のI）を「それがし」に変換した意図した場合、普通に
+
+>||
+$text =~ s/わたし/それがし/g;
+||<
+
+すると、「わたします」みたいな別の単語にも影響してしまうので、形態素に区切って、その上で処理をしたりできるわけです。すばらしい。
+
+ちなみにYahooのウェブサービスでもさいきん形態素のやつありますね。あれの方がウェブサービスを使い慣れている場合（WebService::Simpleとかで）は楽かもしれません。
+
+ただ、毎回ネットワーク越しにリクエストが走るという厳しさと、あと後述するmecabのみの機能があるため、ネタ日本語変換で形態素解析使うならText::MeCabは必須でしょう。
+
+
+<h3>Text::MeCabとは</h3>
+
+Text::MeCabはそのPerlインターフェースです。mecabのページでMeCabっていうperlモジュールも提供されているのですが、これはいかにもSWIGで自動生成しました！っていうインターフェースなので、Text::MeCabの方がいいです。
+
+mecabを先にインストールしておく必要があります。<a href="http://search.cpan.org/perldoc?Alien::MeCab">Alien::MeCab</a>っていうCPANの機能を利用してインストールできるパッケージもありますが、mecabの利用には本体だけじゃなくて辞書も必要です。
+
+辞書はAlien::MeCabについてこないので、普通にmecabのページに書いている方法で本体と辞書をインストールするといいです。辞書はutf-8でコンパイルするのが好みです。
+
+Text::MeCabは、前はDevel::CheckLibが事前に入ってないと入らない、という話がありましたが昨日のアップデートで解消された模様です。あと、LD_LIBRARY_PATH環境変数が設定されてなくてこける、ということがありました。
+
+>||
+LD_LIBRARY_PATH=/usr/local/lib
+||<
+
+
+<h3>使いかたとtips 基本編</h3>
+
+「わたし」を「それがし」にするならこんな感じでしょうかね。
+
+>|perl|
+use utf8;
+use Encode;
+use Text::MeCab;
+
+my $parser = Text::MeCab->new();
+my $encoding = Encode::find_encoding( Text::MeCab::ENCODING ); # ポイントその１
+
+my $input = "わたしはたわしをわたしました。";
+
+my @result;
+for my $text (split /(\s+)/, $input) { # ポイントその２
+    if ($text =~ /\s/) {
+        push @result, $text;
+        next;
+    }
+
+    # ポイントその３
+    foreach (
+        my $node = $parser->parse($encoding->encode($text));
+        $node;
+        $node = $node->next
+    ) {
+        # ポイントその４
+        next if $node->stat =~ /[23]/; # skip MECAB_(BOS|EOS)_NODE
+        
+        my $surface = $encoding->decode($node->surface);
+        my $feature = $encoding->decode($node->feature);
+        my @feature = split ',', $feature;
+        
+        if ($surface eq 'わたし' and $feature[0] eq '名詞') {
+            push @result, 'それがし';
+        } else {
+            push @result, $surface;
+        }
+    }
+}
+
+print join '', @result;
+||<
+
+ポイントその１
+
+Text::MeCabは現状バイト列を受け取ってバイト列を返すため、parse()にはencodeしたものを、結果を受け取るsurface()やfeature()の結果はdecodeしてやる必要がある点です。Text::MeCab::ENCODINGで辞書のエンコーディングが取れるので、それを元にencode/decodeすればＯＫです。
+
+この辺はオーバーヘッドを考慮してということなので、気が向いたらText::MeCabやYahoo形態素APIを同じAPIで使えるLingua::JA::MAParserみたいなのを作ってそれがうまいことラップするような感じにしようかなあとか思ってます。ネタモジュール作りたいだけなので文句言いません。どんなインターフェースでも喜んで使います。
+
+ポイントその２
+
+二重にforを回しているように見えるのですが、mecabは改行を文の区切りとして判断するため、内側だけのループでまわして、surfaceをくっつけると改行が消えてしまいます。それで、事前にwhitespaceで区切って、whitespace以外のものをmecabに渡しています。ネタモジュール作りたいだけなので文句言いません。どんなインターフェースでも喜んで使います。
+
+ポイントその３
+
+Text::MeCabのparseは各形態素ごとにText::MeCab::Nodeオブジェクトを返します。nextで次の形態素に進み、最後にfalseを返すので、Cスタイルのforでループするのが良く使われます。
+
+ポイントその４
+
+Text::MeCab::Nodeオブジェクトのメソッドでよく使うのはこんなかんじです。
+
+>|perl|
+$node->stat;    # 0 MECAB_NOR_NODE ふつうのノード
+                # 1 MECAB_UNK_NODE 未知語ノード（未知語ONで使った場合）
+                #         ^ unknownの意味であってウンコの意味ではない
+                # 2 MECAB_BOS_NODE 最初フラグ（surfaceはない）
+                # 3 MECAB_EOS_NODE 最後フラグ（surfaceはない）
+             
+$node->surface; # 「わたし」とか、もともねされてします）以下のような追加をしています。
+
+>||
+<,6,6,1000,記号,一般（GESO可）,*,*,*,*,<,<,<
+>,6,6,1000,記号,一般（GESO可）,*,*,*,*,>,>,>
+</,6,6,1000,記号,一般（GESO可）,*,*,*,*,</,</,</
+||<
+
+一般（GESO可）っていう分類は、記号は記号でも直前要素にGESOルールを適用するかどうか、っていう勝って要素としてつくったものです。
+
+オリジナル辞書の作り方は、公式ページの資料と、実際のipadicの中のcsvを研究するといいです。
+
+
+mecab作者の工藤さん、Text::MeCab作者の牧さん、おかげでだいぶ楽してネタモジュールを作れています。ありがとうございます。
+
