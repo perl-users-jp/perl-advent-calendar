@@ -1,4 +1,4 @@
-CPAN愛のモジュール 
+CPAN愛のモジュール - Acmeから始まらない物語
 meta-author: makamaka
 meta-tags: perl, acme
 
@@ -59,6 +59,7 @@ Acmeの名前を持たなくてもAcme臭あふれるCPANモジュールもあ�
  * ----------------------------------------------------
  * English version
  * ----------------------------------------------------
+TITLE: CPAN Love module - A stroy not started from Acme
 
 Hello everyone. I'm <a href="http://twitter.com/maka2_donzoko">makamaka</a>, want to be not a love explorer but  a love planter.
 
