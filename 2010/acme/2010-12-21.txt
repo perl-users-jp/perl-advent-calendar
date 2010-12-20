@@ -6,9 +6,10 @@ meta-tags: perl, acme, mecab
 
 <a href="http://deps.cpantesters.org/depended-on-by.pl?dist=Text-MeCab">Text::MeCabに依存しているモジュールリスト</a>がAcmeばかり、しかもかなりぼくのモジュールじゃないかｗと気づいたので、この偉大な日本語変換系Acmeモジュールを支えるText::MeCab様についてあらためて使い方を紹介してみます。
 
+
 <h3>mecabとは</h3>
 
-<a href="http://mecab.sourceforge.net/">mecab</a>とは、日本語形態素解析を高速に、未知語もいい感じで補足してくれるよくできたライブラリです。作者の方はGoogleにいて（今も、たぶん。）エイプリルフールに日本語お笑い系機能を出したりしています（それが本職じゃないと思いますけど）。
+<a href="http://mecab.sourceforge.net/">mecab</a>とは、日本語形態素解析を高速に、未知語もいい感じで補足してくれるよくできたライブラリです。作者の方はGoogleにいて（今も、たぶん。）<a href="http://googlejapan.blogspot.com/2008/04/inside-google.html">エイプリルフールに日本語お笑い系機能を出したり</a>しています（それが本職じゃないと思いますけど）。
 
 インストールすると入るmecabコマンドから、コマンドラインではこんな感じに使います。mecabを起動してから、文を入力してエンターです。
 
@@ -26,7 +27,7 @@ $ mecab
 EOS
 ||<
 
-たとえば、「わたし」（英語のI）を「それがし」に変換した意図した場合、普通に
+たとえば、「わたし」を「それがし」に変換したいとした場合、普通に
 
 >||
 $text =~ s/わたし/それがし/g;
@@ -41,16 +42,14 @@ $text =~ s/わたし/それがし/g;
 
 <h3>Text::MeCabとは</h3>
 
-Text::MeCabはそのPerlインターフェースです。mecabのページでMeCabっていうperlモジュールも提供されているのですが、これはいかにもSWIGで自動生成しました！っていうインターフェースなので、Text::MeCabの方がいいです。
+<a href="http://search.cpan.org/perldoc?Text::MeCab">Text::MeCab</a>はmecabのPerlインターフェースです。mecabのページでMeCab.pmっていうperlモジュールも提供されているのですが、それはいかにもSWIGで自動生成しました！っていうインターフェースなので、Text::MeCabの方がいいです。
 
-mecabを先にインストールしておく必要があります。<a href="http://search.cpan.org/perldoc?Alien::MeCab">Alien::MeCab</a>っていうCPANの機能を利用してインストールできるパッケージもありますが、mecabの利用には本体だけじゃなくて辞書も必要です。
+mecabを先にインストールしておく必要があります。<a href="http://search.cpan.org/perldoc?Alien::MeCab">Alien::MeCab</a>っていうCPANの機能を利用してインストールできるパッケージもありますが、mecabの利用には本体だけじゃなくて辞書も必要です。辞書はAlien::MeCabについてこないので、普通にmecabのページに書いている方法で本体と辞書をインストールするといいです。辞書はutf-8でコンパイルするのが好みです。
 
-辞書はAlien::MeCabについてこないので、普通にmecabのページに書いている方法で本体と辞書をインストールするといいです。辞書はutf-8でコンパイルするのが好みです。
-
-Text::MeCabは、前はDevel::CheckLibが事前に入ってないと入らない、という話がありましたが昨日のアップデートで解消された模様です。あと、LD_LIBRARY_PATH環境変数が設定されてなくてこける、ということがありました。
+Text::MeCabは、前はDevel::CheckLibが事前に入ってないと入らない、という話がありましたが昨日のアップデートで解消された模様です。あと、LD_LIBRARY_PATH環境変数が設定されてなくてこける、ということがありましたがぼくだけかもしれません。
 
 >||
-LD_LIBRARY_PATH=/usr/local/lib
+export LD_LIBRARY_PATH=/usr/local/lib
 ||<
 
 
@@ -99,15 +98,16 @@ for my $text (split /(\s+)/, $input) { # ポイントその２
 print join '', @result;
 ||<
 
+
 ポイントその１
 
-Text::MeCabは現状バイト列を受け取ってバイト列を返すため、parse()にはencodeしたものを、結果を受け取るsurface()やfeature()の結果はdecodeしてやる必要がある点です。Text::MeCab::ENCODINGで辞書のエンコーディングが取れるので、それを元にencode/decodeすればＯＫです。
+Text::MeCabは現状バイト列を受け取ってバイト列を返すため、parse()にはencodeしたものを、結果を受け取るsurface()やfeature()の結果はdecodeしてやる必要があります。Text::MeCab::ENCODINGで辞書のエンコーディングが取れるので、それを元にencode/decodeすればＯＫです。
 
-この辺はオーバーヘッドを考慮してということなので、気が向いたらText::MeCabやYahoo形態素APIを同じAPIで使えるLingua::JA::MAParserみたいなのを作ってそれがうまいことラップするような感じにしようかなあとか思ってます。ネタモジュール作りたいだけなので文句言いません。どんなインターフェースでも喜んで使います。
+これはオーバーヘッドを考慮してということなので、気が向いたらText::MeCabやYahoo形態素APIを同じAPIで使えるLingua::JA::MAParserみたいなのを作ってそれがうまいことラップするような感じにしようかなあとか思ってます。ネタモジュール作りたいだけなので文句言いません。どんなインターフェースでも喜んで使います。
 
 ポイントその２
 
-二重にforを回しているように見えるのですが、mecabは改行を文の区切りとして判断するため、内側だけのループでまわして、surfaceをくっつけると改行が消えてしまいます。それで、事前にwhitespaceで区切って、whitespace以外のものをmecabに渡しています。ネタモジュール作りたいだけなので文句言いません。どんなインターフェースでも喜んで使います。
+二重にforを回しているように見えるのですが、mecabは改行を文の区切りとして判断するため、改行が含まれているテキストを内側だけのループでまわして、surfaceをくっつけると改行が消えてしまいます。それで、事前にwhitespaceで区切って、whitespace以外のものをmecabに渡しています。ネタモジュール作りたいだけなので文句言いません。どんなインターフェースでも喜んで使います。
 
 ポイントその３
 
