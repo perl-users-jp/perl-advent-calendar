@@ -1,0 +1,27 @@
+Sub::SingletonBuilder - a tiny module to create singletons
+
+There are times when you want to make a certain object a singleton.  It is not at all difficult to write a function that creates a singleton object (the example below wraps a DBI handle using the singleton pattern), however the code is not self-explanatory enough so in general you would need to add comments, write tests, and so on.
+
+>|perl|
+*dbh = sub {
+    my $dbh;
+    sub {
+        unless ($dbh) {
+            $dbh = DBI->connect(...)
+                or die $DBI::errstr;
+        }
+        $dbh;
+    }
+}->();
+||<
+
+That's when the tiny module <a href="http://search.cpan.org/dist/Sub-SingletonBuilder/">Sub::SingletonBuilder</a> comes in.  As can be seen in the following code snippet the meaning of the code becomes clear and concise.
+
+>|perl|
+use Sub::SingletonBuilder;
+
+*dbh = build_singleton(sub {
+    DBI->connect(...)
+        or die $DBI::errstr;
+});
+||<
