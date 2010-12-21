@@ -1,0 +1,46 @@
+モジュールのバージョンを確認するときどうやってますか？
+
+もう恋なんてしないなんて、言わないよ絶対kamipoです。
+
+ときに皆さん、Perlのモジュールのバージョンを確認するときどうしてますか？
+僕はPerlをはじめた最初のころ、ずっとこうやっていました。
+
+>||
+$ perl -MAcme::Hidek -le 'print $Acme::Hidek::VERSION'
+40.0
+||<
+
+こうやってたの、僕だけじゃないですよね！？
+
+いまでは以下のワンライナーにaliasを張っているので毎回がんばってワンライナーを打たなくてよくなりました。
+
+>||
+$ alias pmversion='perl -le '"'"'for $module (@ARGV) { eval "use $module"; print "$module ", ${"$module\::VERSION"} || "not found" }'"'"
+$ pmversion Acme::Hidek Acme::AKB48
+Acme::Hidek 40.0
+Acme::AKB48 not found
+||<
+
+複数のモジュールを指定できて、まだインストールされてないモジュールのときは「not found」を表示してくれるのでとっても親切ですね！
+
+このワンライナーを書いたときは知らなかったんですが、同様のことをするpmversというモジュールもCPANにはありました。
+
+>||
+$ cpanm -v pmvers
+$ pmvers Acme::Hidek
+40.0
+||<
+
+また、typesterさんに教えてもらった方法で以下のやり方もあります。
+
+>||
+$ perl -MAcme::Hidek\ 9999
+Acme::Hidek version 9999 required--this is only version 40.0.
+BEGIN failed--compilation aborted.
+||<
+
+他にもおもしろい方法があったらぜひ教えてください！
+
+
+明日はAcme大全が大人気のまかまか先生です！楽しみですね！
+
