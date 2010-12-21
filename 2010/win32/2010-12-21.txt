@@ -51,6 +51,7 @@ glutIdleFunc(sub{glutPostRedisplay();}); # displayFuncを呼び出し続けて�
 glutMainLoop();                          # メッセージループに入る
 ||<
 
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-21/clear.jpg" />
 
 　説明が後回しになってしまいましたが、上のプログラムでは OpenGL の他に GLUT というライブラリが使われています。というかほとんど GLUT の関数です。 OpenGL の関数は glClear() のみです。以下は簡単な命名規則です。
 
@@ -91,6 +92,7 @@ glutIdleFunc(sub{glutPostRedisplay();}); # displayFuncを呼び出し続けて�
 glutMainLoop();                          # メッセージループに入る
 ||<
 
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-21/triangle.jpg" />
 
 　はい、真ん中へんに5行くらい追加されました。 glBegin()～glEnd() の間に、描画する図形の頂点を glVertex2f() で次々と指定してやる、というのが OpenGL のプログラムの基本になります。 glVertex2f() の '2f' って何？って話ですが、「二次元の頂点をfloatで指定する」の意味です。他に glVertex3f() とかもありますが、今は気にしないでおきましょう。二次元の頂点 (x, y) を指定した場合、自動的に z = 0 であると見做されます。
 
@@ -129,6 +131,7 @@ sub displayFunc
 }
 ||<
 
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-21/colors.jpg" />
 
 　と、このように glColor3f() を使うと、頂点の色を指定することができます。 OpenGL では、色は頂点ごとに指定します。三角形の頂点ごとに違う色を指定した場合は、その間は滑らかに補間されます。glColor3f() の三つの引数には、R,G,Bの値を 0.0～1.0 の間で指定してください。最初のうちは思い通りの色を指定するのが難しいかもしれませんが、慣れてくれば、風景を見ただけでRGB値が思い浮かぶようになります。そうすると例えば、 「ここの色どうする？」 「宗伝唐茶がいいなぁ」 「は？」 「だから、宗伝かr」 「分かんねェよ！」 と言った会話も、 「ここの色どうする？」 「0.63/0.43/0.36で」 「いいねぇ」 といった具合にスマートになる訳です。あなたのコミュニケーションに役立つ OpenGL です。まぁ、相手を考えて使わないと、「・・・」と黙られてしまう場合もあるので要注意ですが。（経験談）
 
@@ -160,6 +163,7 @@ sub displayFunc
 }
 ||<
 
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-21/animation.jpg" />
 
 　glTranslatef() という関数を使うと、それ以降に描画される図形は全て(x, y, z)だけ移動されます。 glVertex と違って 2f とかのバージョンはありませんので、いつでも引数が三つ必要ですが、二次元の場合は z = 0 にしておくと良いと思います。 glTranslatef() のような座標変換は、それ以降の全ての描画に影響します・・・それ以降というのはつまり、次のフレームになっても影響が残っているということです。なので、こまめに座標変換をリセットしてやる必要があります。リセットしないで座標変換を複数回実行すると、その座標変換が全て合成して適用されてしまいます。座標変換を、元の何もしない状態に戻すのが glLoadIdentity() という関数です。（覚え辛い名前ですね！）
 
@@ -214,6 +218,7 @@ sub displayFunc
 }
 ||<
 
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-21/transforms.jpg" />
 
 　こんな風に複数の座標変換を組み合わせることで、複雑な動きをさせることができます。ちなみに glScalef() と glRotatef() は以下のような働きをします。どれも末尾に f が付いているので、引数には浮動小数を使います。
 
@@ -635,7 +640,7 @@ glutMainLoop();                                # メッセージループに入�
 ||<
 　この内容で「スカッシュ」とか言って許されるのは30代より上だけかもしれない・・・。
 
-
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-21/squash.jpg" />
 
 *時計
 >|perl|
@@ -822,7 +827,7 @@ glutMainLoop();                                # メッセージループに入�
 ||<
 　センス無くてごめんなさい。
 
-
+<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-21/clock.jpg" />
 
 *資料とか
 
