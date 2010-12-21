@@ -1,0 +1,847 @@
+* Perl でお手軽 OpenGL
+
+　みなさま初めましてこんにちは。ハガと申します。
+
+　のっけから言うのもナンですが、僕はほとんど Perl を使った事がありません。というかこの前初めて触りました。普段は C++ で OpenGL 関係のプログラムを書いている事が多いのですが、周りには Perl 使いしかいないという状況で、寂しい思いをしております。みんなに C++ を使ってもらうのは無理くさい（というか意味が無い）ので、それならせめて OpenGL を広めてやろう・・・ということで、 Perl でも OpenGL は簡単に扱えるよ！という事をご紹介したいと思います。
+
+
+*そもそも OpenGL って何でしょう
+
+　Open Graphics Library の略で、三次元の絵を描くための API です。ライブラリって名前だけどライブラリじゃなかったり、オープンって書いてあるけど実装はオープンじゃなかったりと、まぁ色々ありますけど、細かい事は放っておいてください。 OpenGL を使う→ 三次元の絵がぐりぐり動く→ 超Cool ! ! って事だけ押さえておけばオーケーです。
+
+　あ、別に OpenGL だからって、無理に三次元の絵を出す必要はありません。x,y,z軸のうちのz軸を無視すれば、二次元の絵ももちろん扱えます。というかこのエントリではスペースが足りないので二次元までしか扱いません。三次元に興味の無いアニヲタさんでも安心です！
+
+
+* Perl で OpenGL を使うには？
+
+　POGL というモジュールを使います。よく分かりませんが多分「ぽぐる」と読みます。 「この後どうする？ぽぐる？」 「俺まだぽぐってないんだよ・・・」 「えー？ダッセー！」 とかそんな感じです。というかすいません、サラッと「 POGL というモジュールを使います」とか言いましたが、これ用語の使い方合ってるんでしょうか。 Perl 界の言葉が本当に分かってません。意味不明な事を書いてたらごめんなさい、適当に解釈してください。
+
+　で、 POGL モジュールですが、
+
+-Strawberry Perl をお使いの方： CPAN からインストール→ install OpenGL
+-ActivePerl 5.6.xをお使いの方： コマンドラインで→ ppm install http://graphcomp.com/opengl/ppm56/OpenGL.ppd
+-ActivePerl 5.8.xをお使いの方： コマンドラインで→ ppm install http://graphcomp.com/opengl/ppm58/OpenGL.ppd
+
+　これで準備終了です。簡単ですね。 C だとパスの設定やら何やらと色々面倒臭いんですけど。 Perl すげぇ。
+
+
+*OpenGL のプログラムを書く！
+
+**画面を出す
+
+　何はともあれ、まずは OpenGL を使ったプログラムを動かしてみましょう。以下に、最小限の OpenGL プログラムを書いてみました。これを Perl で実行してやると、ウィンドウが一個出て、中が黒く消去されます。黒く消去するのに OpenGL を使いました。よく目を凝らさないと分からないと思うのですが、 CPU で画面を消去するのと比べると数十倍の速さでウィンドウの内容が消去されています。ウィンドウを高速に真っ黒にしたいと思ったら OpenGL しかないという事です。 OpenGL 万歳！
+
+>|perl|
+use strict;
+use OpenGL ':all';                       # OpenGLを使いますよー
+
+# GLを使って絵を作る関数
+sub displayFunc
+{
+	glClear(GL_COLOR_BUFFER_BIT);        # ←OpenGL命令（色バッファを消去する）
+	
+	glutSwapBuffers();                   # GLで書きこんだ結果を画面に反映させる
+}
+
+glutInit();                              # GLUTの準備
+glutInitDisplayMode(GLUT_DOUBLE);        # ダブルバッファを使うよう指示する
+glutCreateWindow($0);                    # ウィンドウ生成（引数はウィンドウタイトル）
+glutDisplayFunc(\&displayFunc);          # 描画に使う関数(上で書いたdisplayFunc)を登録する
+glutIdleFunc(sub{glutPostRedisplay();}); # displayFuncを呼び出し続けてもらうためのおまじない
+glutMainLoop();                          # メッセージループに入る
+||<
+
+
+　説明が後回しになってしまいましたが、上のプログラムでは OpenGL の他に GLUT というライブラリが使われています。というかほとんど GLUT の関数です。 OpenGL の関数は glClear() のみです。以下は簡単な命名規則です。
+
+-OpenGL: 関数は 'gl' で始めてCamelCase、定数は 'GL_' で始めて全て大文字の単語をアンダーバーでつなぐ
+-GLUT: 関数は 'glut' で始めてCamelCase、定数 'GLUT_' で始めて全て大文字の単語をアンダーバーでつなぐ
+
+　実は、 OpenGL は「絵を描く」以外の事が何もできません。絵を描くためのウィンドウを出したり、描画対象のサーフェスを用意したり、ウィンドウシステムからの各種イベントへの応答を記述するのは存外面倒なものですが、その辺をまとめて面倒見てくれるのが GLUT(OpenGL Utility Toolkit) というライブラリです。 Windows と Linux と 各種 Unix で動きます。多分。最近流行りの iOS や Android では割と簡単に OpenGL(ES) が扱えるようになってるので GLUT の出番は少なくなってきましたが、とりあえず簡単なのでここでは GLUT を使っておきます。 GLUT の UT は「ゆとり」の UT ！
+
+　さて、上記プログラムの displayFunc の中に printf とかでメッセージ出力を仕込んでやると分かるのですが、 displayFunc はものすごい勢いで繰り返し実行されています。画面の設定とPCの性能にもよりますが、vsyncありの場合で1秒間に60回(あるいは画面のリフレッシュレート)、vsync無しだと1秒間に1000回以上も実行されたりします。ということは、 diaplayFunc が呼ばれるたびに違う絵を描いてやれば、そのままアニメーションが実現できるわけです。
+
+**三角形を一つ描く
+
+　OpenGL の達人になるとフレームバッファが秒間1000回もクリアされているところを想像するだけで御飯三杯はイケルという噂ですが、そうでない我々にとっては何も描かれないウィンドウ（巨大な鯨と言い張る事も可能ですが）を見ても面白くありませんから、とりあえず何か描いてみましょうか。
+
+>|perl|
+use strict;
+use OpenGL ':all';                       # OpenGLを使いますよー
+
+# GLを使って絵を作る関数
+sub displayFunc
+{
+	glClear(GL_COLOR_BUFFER_BIT);        # 絵を消去する
+	
+	glBegin(GL_TRIANGLES);               # 三角形を描き始める
+	glVertex2f(-0.5, 0.5);               # 一つ目の頂点は(-0.5, 0.5)
+	glVertex2f(-0.5, -0.5);              # 二つ目の頂点は(-0.5, -0.5)
+	glVertex2f(0.9, 0);                  # 三つ目の頂点は(0.9, 0)
+	glEnd();                             # 描画を終える
+	
+	glutSwapBuffers();                   # GLで書きこんだ結果を画面に反映させる
+}
+
+glutInit();                              # GLUTの準備
+glutInitDisplayMode(GLUT_DOUBLE);        # ダブルバッファを使うよう指示する
+glutCreateWindow($0);                    # ウィンドウ生成（引数はウィンドウタイトル）
+glutDisplayFunc(\&displayFunc);          # 描画に使う関数(上で書いたdisplayFunc)を登録する
+glutIdleFunc(sub{glutPostRedisplay();}); # displayFuncを呼び出し続けてもらうためのおまじない
+glutMainLoop();                          # メッセージループに入る
+||<
+
+
+　はい、真ん中へんに5行くらい追加されました。 glBegin()～glEnd() の間に、描画する図形の頂点を glVertex2f() で次々と指定してやる、というのが OpenGL のプログラムの基本になります。 glVertex2f() の '2f' って何？って話ですが、「二次元の頂点をfloatで指定する」の意味です。他に glVertex3f() とかもありますが、今は気にしないでおきましょう。二次元の頂点 (x, y) を指定した場合、自動的に z = 0 であると見做されます。
+
+　座標を指定して図形を描くということは、座標系はどうなっているのか？が大切になります。この座標系を設定してやるのも OpenGL プログラマの大切な仕事なのですが、ここではデフォルト状態のまま使うことにします。デフォルトでは、x軸はウィンドウの左端から右端にかけて -1.0→1.0 、y軸はウィンドウの下端から上端にかけて -1.0→1.0 だと思ってください。z軸は画面の奥行き方向に -1.0→1.0 なんですが、 glVertex2f() を使ってる限りは全部 z = 0 になるので気にしなくていいです。
+
+　あ、ちなみに、デフォルト状態では奥行きとかは無視されて、単純に後に描画したものが重ね描きされます。
+
+**色を付けてみる
+
+　次は、三角形に色を付けてみます。もう面倒臭いっていうか displayFunc 関数以外は全部同じなので、この先は displayFunc 以外はサクッと省略します。Perlのプログラムとして実行するときは、use OpenGL...までの二行と、glutInit()...以降の部分を、前後にくっつけてください。 DIY の精神でお願いします。
+
+>|perl|
+sub displayFunc
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	# 全体に色をつける
+	glColor3f(1, 1, 0.5);      # R, G, B の順に、0.0～1.0
+	glBegin(GL_TRIANGLES);
+	glVertex2f(-0.5, 0.8);
+	glVertex2f(-0.5, 0);
+	glVertex2f(0.5, 0.4);
+	glEnd();
+
+	# 頂点ごとに色をつける
+	glBegin(GL_TRIANGLES);
+	glColor3f(1, 0, 0);        # この色が↓
+	glVertex2f(-0.5, -0.4);    #        この頂点に適用される
+	glColor3f(0, 1, 0);        # この色が↓
+	glVertex2f(0.5, -0.8);     #        この頂点に適用される
+	glColor3f(0, 0, 1);        # この色が↓
+	glVertex2f(0.5, 0);        #        この頂点に適用される
+	glEnd();
+	
+	glutSwapBuffers();
+}
+||<
+
+
+　と、このように glColor3f() を使うと、頂点の色を指定することができます。 OpenGL では、色は頂点ごとに指定します。三角形の頂点ごとに違う色を指定した場合は、その間は滑らかに補間されます。glColor3f() の三つの引数には、R,G,Bの値を 0.0～1.0 の間で指定してください。最初のうちは思い通りの色を指定するのが難しいかもしれませんが、慣れてくれば、風景を見ただけでRGB値が思い浮かぶようになります。そうすると例えば、 「ここの色どうする？」 「宗伝唐茶がいいなぁ」 「は？」 「だから、宗伝かr」 「分かんねェよ！」 と言った会話も、 「ここの色どうする？」 「0.63/0.43/0.36で」 「いいねぇ」 といった具合にスマートになる訳です。あなたのコミュニケーションに役立つ OpenGL です。まぁ、相手を考えて使わないと、「・・・」と黙られてしまう場合もあるので要注意ですが。（経験談）
+
+**動かしてみる
+
+　次は、図形を移動させるアニメーションをやってみます。移動したまま帰ってきませんけど。ここでは、描画されるたびに違う絵が描かれるよう、 $start_time を用意してやって、最初に記録した時刻との差分を使って図形を移動します。図形を移動させるのには、 glTranslatef() という、座標変換をおこなう関数を使ってみます。 glVertex2f() の引数に直接 $x を加算しても良いんですが、まとめて移動できて便利なので。とりあえず以下のコードを見てみてください。
+
+>|perl|
+use Time::Hires;
+my $start_time = Time::HiRes::gettimeofday;
+
+sub displayFunc
+{
+	my $elapsed = Time::HiRes::gettimeofday - $start_time;
+	my $x = $elapsed / 10;
+	
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	glLoadIdentity();                # 座標変換を初期化するおまじない
+	glTranslatef($x, $x, 0);         # 以降の全ての図形を(x, y, z)移動する
+	
+	glBegin(GL_TRIANGLES);
+	glVertex2f(-0.5, 0.5);
+	glVertex2f(-0.5, -0.5);
+	glVertex2f(0.9, 0);
+	glEnd();
+	
+	glutSwapBuffers();
+}
+||<
+
+
+　glTranslatef() という関数を使うと、それ以降に描画される図形は全て(x, y, z)だけ移動されます。 glVertex と違って 2f とかのバージョンはありませんので、いつでも引数が三つ必要ですが、二次元の場合は z = 0 にしておくと良いと思います。 glTranslatef() のような座標変換は、それ以降の全ての描画に影響します・・・それ以降というのはつまり、次のフレームになっても影響が残っているということです。なので、こまめに座標変換をリセットしてやる必要があります。リセットしないで座標変換を複数回実行すると、その座標変換が全て合成して適用されてしまいます。座標変換を、元の何もしない状態に戻すのが glLoadIdentity() という関数です。（覚え辛い名前ですね！）
+
+**複数の座標変換を組み合わせる
+
+　glTranslatef() による並行移動の他によく使われるのは、 glScalef() による拡大縮小、 glRotatef() による回転、などでしょうか。それらを組み合わせた座標変換をやってみましょう。
+
+>|perl|
+use Time::Hires;
+my $start_time = Time::HiRes::gettimeofday;
+
+# 三角形を一つ描く関数
+sub drawTriangle
+{
+	glBegin(GL_TRIANGLES);
+	glVertex2f(0.3, 0);
+	glVertex2f(-0.3, 0.2);
+	glVertex2f(-0.3, -0.2);
+	glEnd();
+}
+
+# GLを使って絵を作る関数
+sub displayFunc
+{
+	my $elapsed = Time::HiRes::gettimeofday - $start_time;
+	my $x = sin($elapsed);
+	
+	glClear(GL_COLOR_BUFFER_BIT);
+	
+	glLoadIdentity();                      # 座標変換を初期化
+	glTranslatef(-0.5 + $x * 0.2, 0.5, 0); # 以降の絵を移動する
+	drawTriangle();
+	
+	glLoadIdentity();                      # 座標変換を初期化
+	glTranslatef(0.5, 0.5, 0);             # 以降の絵を移動する
+	glRotatef($x * 60, 0, 0, 1);           # 以降の絵を回転させる
+	drawTriangle();
+	
+	glLoadIdentity();                      # 座標変換を初期化
+	glTranslatef(-0.5, -0.5, 0);           # 以降の絵を移動する
+	glScalef($x, $x, $x);                  # 以降の絵を拡大させる
+	drawTriangle();
+	
+	glLoadIdentity();                      # 座標変換を初期化
+	glTranslatef(0.5, -0.5, 0);            # 以降の絵を移動する
+	glRotatef($x * -360, 0, 0, 1);         # 以降の絵を回転させる
+	glScalef($x + 1, $x + 1, 1);           # 以降の絵を拡大させる
+	glTranslatef(0, $x, 0);                # 以降の絵を移動する
+	drawTriangle();
+	
+	glutSwapBuffers();
+}
+||<
+
+
+　こんな風に複数の座標変換を組み合わせることで、複雑な動きをさせることができます。ちなみに glScalef() と glRotatef() は以下のような働きをします。どれも末尾に f が付いているので、引数には浮動小数を使います。
+
+>|
+glScalef(x, y, z);
+　以降の図形を (x, y, z) 倍にする。二次元版は無いので、zは適当な値でおっけー。（0.0とか1.0とか。）
+
+glRotatef(angle, x, y, z);
+　以降の図形を、原点中心に (x, y, z)に向かう軸に沿って右回りに angle 度だけ回転させる。
+　二次元ならとりあえず、(a, 0, 0, 1)で反時計回り、(a, 0, 0, -1)で時計回りに a 度回転と思えばいいです。
+　a の単位はラジアンではなく「度」なので注意。
+|<
+
+
+
+*GLUTのお話
+
+　ここからしばらく、 OpenGL ではなく GLUT の話題です。前にも書きましたが、 OpenGL では絵を描くことしかできないので、それ以外の部分は自分で書くか、適当なライブラリに任せます。ここでは GLUT を使っているので、 GLUT の場合の各種イベントの扱い方を簡単に紹介します。
+
+**キー入力の受け取り方
+
+　GLUT でキー入力を受け取るためには、入力を受け取る関数を事前に用意して、それを glutKeyboardFunc() で登録してやります。そうするとキーボードが押された時に、登録した関数が呼び出されて、押されたキーの情報が渡されます。たとえば以下のような感じです。
+
+>|perl|
+use strict;
+use OpenGL ':all';
+my $win;
+
+sub displayFunc
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	glutSwapBuffers();
+}
+
+sub keyboardFunc
+{
+	my ($key, $x, $y) = @_;       # $x,$yは、キーが押された時のマウス位置
+	my $c = chr $key;
+	printf "keyboard: $c($key), $x, $y\n";
+	
+	if ($key == 27) { # 27 = ESCキー
+		glutDestroyWindow($win);  # ウィンドウを閉じることで終了する
+	}
+}
+
+glutInit();
+glutInitDisplayMode(GLUT_DOUBLE);
+$win = glutCreateWindow($0);      # ウィンドウ生成（引数はウィンドウタイトル）　$winは後でウィンドウ閉じる用
+glutDisplayFunc(\&displayFunc);   # 描画に使う関数を登録する
+glutKeyboardFunc(\&keyboardFunc); # 文字キーが押された時に呼ばれる関数を登録する
+glutMainLoop();                   # メッセージループに入る（決して帰ってこない）
+#ここには来ない
+||<
+
+
+　GLUT には他にも、マウスボタンが押された時に呼び出して欲しい関数を登録する glutMouseFunc() 、マウスが動いた時に呼び出して欲しい関数を登録する glutMotionFunc() 、といった具合に、コールバック関数を登録する関数がいくつか用意されています。実は最初のプログラムから登場していた glutDisplayFunc() と glutIdleFunc() もその一つで、以下のような関数になっています。
+
+-glutDisplayFunc(f) --- ウィンドウを再描画する必要があるとき、あるいは glutPostRedisplay() が呼ばれた後に、 f を呼び出す
+-glutIdleFunc(f) --- イベントの消化が終わって、他に処理するべきイベントが無くなった時に、 f を呼び出す
+
+**主要なイベントに対応
+
+　GLUT のことをいちいち調べるのが面倒な方のために、主要なコールバック関数を登録するサンプルプログラムを用意しました。コールバック関数の中では、 GLUT から渡された情報とともに関数名を表示しているので、どのようなタイミングでどの関数がコールバックされるのか分かりやすいと思います。
+
+>|perl|
+use strict;
+use OpenGL ':all';
+
+my $win;
+
+sub displayFunc
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	glutSwapBuffers();
+}
+
+sub idleFunc
+{
+	glutPostRedisplay(); # glutDisplayFunc()で登録した関数を呼ぶようGLUTに指示
+}
+
+sub reshapeFunc
+{
+	my ($w, $h) = @_;
+	printf "reshape: $w, $h\n";
+}
+
+sub keyboardFunc
+{
+	my ($key, $x, $y) = @_;
+	my $c = chr $key;
+	printf "keyboard: $c($key), $x, $y\n";
+	
+	if ($key == 27) { # 27 = ESCキー
+		glutDestroyWindow($win); # ウィンドウを閉じることで終了する
+	}
+}
+
+sub specialFunc
+{
+	my ($key, $x, $y) = @_;
+	printf "special: $key, $x, $y\n";
+}
+
+sub mouseFunc
+{
+	my ($button, $state, $x, $y) = @_;
+	my $b =
+		($button == GLUT_LEFT_BUTTON) ? 'left' :
+		($button == GLUT_MIDDLE_BUTTON) ? 'middle' :
+		($button == GLUT_RIGHT_BUTTON) ? 'right' :
+		'?';
+	my $s =
+		($state == GLUT_UP) ? 'up' :
+		($state == GLUT_DOWN) ? 'down' :
+		'?';
+	printf "mouse: $b, $s, $x, $y\n",
+}
+
+sub motionFunc
+{
+	my ($x, $y) = @_;
+	printf "motion: $x, $y\n";
+}
+
+sub passiveMotionFunc
+{
+	my ($x, $y) = @_;
+	printf "passiveMotion: $x, $y\n";
+}
+
+sub timerFunc
+{
+	my $val = @_[0];
+	printf "timer: $val\n";
+	
+	glutTimerFunc(1000, \&timerFunc, $val + 1); # 一回しか呼ばれないので、繰り返したい場合は再度登録する
+}
+
+
+glutInit();                                    # GLUTの準備
+
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH); # ダブルバッファとデプスバッファを使うよう指示する
+glutInitWindowSize(256, 256);                  # ウィンドウの初期サイズを指定する
+glutInitWindowPosition(100, 100);              # ウィンドウの初期位置を指定する
+$win = glutCreateWindow($0);                   # ウィンドウ生成（引数はウィンドウタイトル）　$winは後でウィンドウ閉じる用
+
+glutDisplayFunc(\&displayFunc);                # 描画に使う関数を登録する
+glutIdleFunc(\&idleFunc);                      # アイドル状態になった時に呼ばれる関数を登録する
+glutReshapeFunc(\&reshapeFunc);                # ウィンドウの大きさが変更された時に呼ばれる関数を登録する
+glutKeyboardFunc(\&keyboardFunc);              # 文字キーが押された時に呼ばれる関数を登録する
+glutSpecialFunc(\&specialFunc);                # 特殊キーが押された時に呼ばれる関数を登録する
+glutMouseFunc(\&mouseFunc);                    # マウスボタンが押された時に呼ばれる関数を登録する
+glutMotionFunc(\&motionFunc);                  # ボタンを押しながらマウスを動かした時に呼ばれる関数を登録する
+glutPassiveMotionFunc(\&passiveMotionFunc);    # マウスを動かした時に呼ばれる関数を登録する
+glutTimerFunc(1000, \&timerFunc, 0);           # 1000ms後に呼んで欲しい関数を登録する（最後の引数は、関数へ渡す値）
+
+glutMainLoop();                                # メッセージループに入る（決して帰ってこない）
+#ここには来ない
+||<
+
+
+　このプログラムを適当にいじってやれば、簡単なゲームや、グラフィックスデモ程度はできてしまいます。ちょっと長くなりますが（って今までも充分長いですが）、ここまで出てきた OpenGL の命令を使ってプログラムを作ってみましょう。
+
+
+*スカッシュゲームと時計
+
+　というわけで基本的にはここまでの知識でできる、サンプルプログラムを二本ばかり作ってみました。いくつか新しい GLUT の関数を使ってますが、まぁ見れば分かるでしょう。プログラムかなり長いですが、このまま実行できると思います。・・・できるといいな。
+
+**スカッシュゲーム
+
+>|perl|
+use strict;
+use OpenGL ':all';
+use Time::HiRes;
+
+
+# x,yの二次元座標を保持するクラス
+package Vec2D;
+
+sub new
+{
+	my $class = shift;
+	my $self = { x => shift, y => shift };
+	return bless $self, $class;
+}
+
+
+# main
+package main;
+
+my $win;
+
+my $prev_time = Time::HiRes::gettimeofday; # 前回idleFuncが呼ばれた時間を覚えておく
+my $view_width = 512;                      # 描画領域の幅（ピクセル）
+my $view_height = 512;                     # 描画領域の高さ（ピクセル）
+my $racket = new Vec2D 0, -0.9;            # ラケットの位置(-1~1, -1~1)
+my $racket_width = 0.2;                    # ラケットの幅
+my $racket_height = 0.02;                  # ラケットの高さ
+my @balls_pos = ((new Vec2D 0, 0.5));                          # ボールの位置の配列
+my @balls_vel = ((new Vec2D rand() * 2 - 1, 1 + rand()* 0.5)); # ボールの速度の配列
+my $max_balls = 1;                                             # ボールの最大個数
+
+
+# ボール（複数）を描画
+sub drawBalls
+{
+	glColor3f(0.5, 1, 1);
+	
+	foreach my $ball_pos (@balls_pos) {
+		glLoadIdentity();                                # 座標変換をリセット
+		glTranslatef($ball_pos->{x}, $ball_pos->{y}, 0); # 以降の描画を移動
+		glRotatef($ball_pos->{y} * 1000, 0, 0, 1);       # 以降の描画を回転
+		
+		# 適当な三角形（ボール？）
+		glBegin(GL_TRIANGLES);
+		glColor3f(0, 1, 1); glVertex2f(0, 0.03);
+		glColor3f(1, 0, 1); glVertex2f(-0.02, -0.02);
+		glColor3f(1, 1, 0); glVertex2f(0.02, -0.02);
+		glEnd();
+	}
+	
+}
+
+# ラケットを描画
+sub drawRacket
+{
+	# ボールの個数によって色を変える
+	if (@balls_pos > 0) {
+		glColor3f(1, 1, 0.5);
+	} else {
+		glColor3f(1, 0, 0);
+	}
+	
+	my $l = $racket->{x} - $racket_width / 2;  # ラケットのx座標（左端）
+	my $r = $l + $racket_width;                # 右端
+	my $b = $racket->{y} - $racket_height / 2; # ラケットのy座標（底辺）
+	my $t = $b + $racket_height;               # 上辺
+	
+	glLoadIdentity();    # 座標変換をリセット
+
+	# 四角形を描く
+	glBegin(GL_TRIANGLES);
+	glVertex2f($l, $b);
+	glVertex2f($r, $b);
+	glVertex2f($l, $t);
+	glVertex2f($r, $b);
+	glVertex2f($r, $t);
+	glVertex2f($l, $t);
+	glEnd();
+}
+
+
+
+sub displayFunc
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	drawBalls;
+	drawRacket;
+	
+	glutSwapBuffers();
+}
+
+sub idleFunc
+{
+	my $now = Time::HiRes::gettimeofday;
+	my $dt = $now - $prev_time;          # 前回ここに来てから何秒経ったか
+	$prev_time = $now;
+
+	# ラケットの上下左右端の座標を求めておく
+	my $rb = $racket->{y} - $racket_height / 2;
+	my $rt = $rb + $racket_height;
+	my $rl = $racket->{x} - $racket_width / 2;
+	my $rr = $rl + $racket_width;
+	
+	# 全てのボールについて、時間による移動と、壁反射、ラケット反射の処理をする
+	my $nballs = @balls_pos;
+	for (my $i = 0; $i < $nballs; ++$i) {
+		my $x = \$balls_pos[$i]->{x};
+		my $y = \$balls_pos[$i]->{y};
+		my $vx = \$balls_vel[$i]->{x};
+		my $vy = \$balls_vel[$i]->{y};
+		my $nx = $$x + $$vx * $dt; # 次の位置(x)
+		my $ny = $$y + $$vy * $dt; # 次の位置(y)
+		
+		# 壁反射
+		if ($nx < -1) {$nx = -1; $$vx *= -1;}
+		if ($nx > 1) {$nx = 1; $$vx *= -1;}
+		if ($ny > 1) {$ny = 1; $$vy *= -1;}
+		
+		# ラケットとの当たり判定
+		if ($$vy < 0 && $nx >= $rl && $nx <= $rr && $$y >= $rb && $ny <= $rt) {
+			# 反射
+			$$vy *= -1;
+			push(@balls_pos, (new Vec2D $$x, $$y));
+			push(@balls_vel, (new Vec2D $$vx + rand() * 2 - 1, $$vy + rand() * 0.2));
+		}
+		
+		# ボール位置を更新
+		$balls_pos[$i]->{x} = $nx;
+		$balls_pos[$i]->{y} = $ny;
+	}
+	
+	# 下端より落ちたボールを削除する
+	for (my $i = 0; $i < @balls_pos; ) {
+		if ($balls_pos[$i]->{y} < -1) {
+			splice @balls_pos, $i, 1;
+			splice @balls_vel, $i, 1;
+			if (@balls_pos == 0) {printf "Game over.\n";}
+		} else {
+			++$i;
+		}
+	}
+
+	# 個数の記録を出力
+	if (@balls_pos > $max_balls) {
+		$max_balls = @balls_pos;
+		printf "$max_balls balls\n";
+	}
+	
+	# displayFuncを呼び出すよう、GLUTに指示する	
+	glutPostRedisplay();
+}
+
+sub reshapeFunc
+{
+	my ($w, $h) = @_;
+	#printf "reshape: $w, $h\n";
+	
+	# 画面の大きさを覚えておく
+	$view_width = $w;
+	$view_height = $h;
+}
+
+sub keyboardFunc
+{
+	my ($key, $x, $y) = @_;
+	my $c = chr $key;
+	#printf "keyboard: $c($key), $x, $y\n";
+	
+	if ($key == 27) { # 27 = ESCキー
+		glutDestroyWindow($win); # ウィンドウを閉じて終了
+	}
+}
+
+sub specialFunc
+{
+	my ($key, $x, $y) = @_;
+	#printf "special: $key, $x, $y\n";
+}
+
+sub mouseFunc
+{
+	my ($button, $state, $x, $y) = @_;
+	my $b =
+		($button == GLUT_LEFT_BUTTON) ? 'left' :
+		($button == GLUT_MIDDLE_BUTTON) ? 'middle' :
+		($button == GLUT_RIGHT_BUTTON) ? 'right' :
+		'?';
+	my $s =
+		($state == GLUT_UP) ? 'up' :
+		($state == GLUT_DOWN) ? 'down' :
+		'?';
+	#printf "mouse: $b, $s, $x, $y\n",
+}
+
+sub motionFunc
+{
+	my ($x, $y) = @_;
+	#printf "motion: $x, $y\n";
+}
+
+sub passiveMotionFunc
+{
+	my ($x, $y) = @_;
+	#printf "passiveMotion: $x, $y\n";
+	
+	# ウィンドウ座標から、OpenGLの座標に変換
+	$racket->{x} = ($x / $view_width) * 2 - 1;
+	$racket->{y} = ($y / $view_height) * -2 + 1;
+	
+	$racket->{y} = 0.5 if $racket->{y} > 0.5; # ラケットの位置制限
+}
+
+sub timerFunc
+{
+	my $val = @_[0];
+	#printf "timer: $val\n";
+	
+	glutTimerFunc(1000, \&timerFunc, $val + 1); # 一回しか呼ばれないので、繰り返したい場合は再度登録する
+}
+
+
+
+glutInit();                                    # GLUTの準備
+
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH); # ダブルバッファとデプスバッファを使うよう指示する
+glutInitWindowSize(512, 512);                  # ウィンドウの初期サイズを指定する
+glutInitWindowPosition(100, 100);              # ウィンドウの初期位置を指定する
+$win = glutCreateWindow($0);                   # ウィンドウ生成（引数はウィンドウタイトル）　$winは後でウィンドウ閉じる用
+
+glutDisplayFunc(\&displayFunc);                # 描画に使う関数を登録する
+glutIdleFunc(\&idleFunc);                      # アイドル状態になった時に呼ばれる関数を登録する
+glutReshapeFunc(\&reshapeFunc);                # ウィンドウの大きさが変更された時に呼ばれる関数を登録する
+glutKeyboardFunc(\&keyboardFunc);              # 文字キーが押された時に呼ばれる関数を登録する
+glutSpecialFunc(\&specialFunc);                # 特殊キーが押された時に呼ばれる関数を登録する
+glutMouseFunc(\&mouseFunc);                    # マウスボタンが押された時に呼ばれる関数を登録する
+glutMotionFunc(\&motionFunc);                  # ボタンを押しながらマウスを動かした時に呼ばれる関数を登録する
+glutPassiveMotionFunc(\&passiveMotionFunc);    # マウスを動かした時に呼ばれる関数を登録する
+glutTimerFunc(1000, \&timerFunc, 0);           # 1000ms後に呼んで欲しい関数を登録する（最後の引数は、関数へ渡す値）
+
+glutSetCursor(GLUT_CURSOR_NONE);               # マウスカーソルを消しておく
+
+glutMainLoop();                                # メッセージループに入る（決して帰ってこない）
+#ここには来ない
+||<
+　この内容で「スカッシュ」とか言って許されるのは30代より上だけかもしれない・・・。
+
+
+
+*時計
+>|perl|
+use strict;
+use OpenGL ':all';
+use Time::HiRes;
+
+my $win;
+my $start_time = Time::HiRes::gettimeofday;
+
+sub drawArk
+{
+	my ($start, $len, $r0, $r1) = @_;
+	
+	glBegin(GL_TRIANGLES);
+	for (my $a = $start; $a < $start + $len; $a += 1) {
+		my $a0 = $a * 3.14159265 / 180;
+		my $a1 = ($a + 1) * 3.14159265 / 180;
+		my ($s0, $c0) = (sin($a0), cos($a0));
+		my ($s1, $c1) = (sin($a1), cos($a1));
+		glVertex2f($r0 * $c0, $r0 * $s0);
+		glVertex2f($r1 * $c0, $r1 * $s0);
+		glVertex2f($r0 * $c1, $r0 * $s1);
+		glVertex2f($r0 * $c1, $r0 * $s1);
+		glVertex2f($r1 * $c0, $r1 * $s0);
+		glVertex2f($r1 * $c1, $r1 * $s1);
+	}
+	glEnd();
+}
+
+sub displayFunc
+{
+	my ($sec, $min, $hr) = localtime(time);
+	my $t = Time::HiRes::gettimeofday - $start_time;
+	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	# なんか後ろで回ってるやつ
+	glLoadIdentity();
+	glColor3f(0.3, 0.3, 0.3);
+	drawArk(180 + $t * 10, 120, 0.2, 0.8);
+	glColor3f(0.3, 0.3, 0.5);
+	drawArk(100 - 8 * $t, 60, 0.55, 0.75);
+	glColor3f(0.6, 0.7, 0.2);
+	drawArk($t * -15, 120, 0.15, 0.35);
+	glColor3f(0.3, 0.2, 0.2);
+	drawArk(20 * $t, 40, 0.2, 0.3);
+	glColor3f(0.4, 0.2, 0.2);
+	drawArk(25 * $t, 50, 0.4, 0.5);
+	glColor3f(0.5, 0.2, 0.2);
+	drawArk(30 * $t, 60, 0.6, 0.7);
+	
+	# ドット
+	glColor3f(0.9, 0.3 + 0.3 * cos($t / 2), 0.5 + 0.4 * sin($t * 2));
+	for (my $i = 0; $i < 60; ++$i) {
+		glLoadIdentity();
+		glRotatef($i * 6, 0, 0, -1);
+		glTranslatef(0, 0.9, 0);
+		if ($i % 5 == 0) {glScalef(2, 3, 0);}
+		glBegin(GL_TRIANGLES);
+		glVertex2f(0, 0);
+		glVertex2f(0.01, 0.01);
+		glVertex2f(-0.01, 0.01);
+		glEnd();
+	}
+	
+	# 短針
+	glLoadIdentity();
+	glRotatef($hr * 30 + $min / 2, 0, 0, -1);
+	glColor3f(0, 1, 0.5);
+	glBegin(GL_TRIANGLES);
+	glVertex2f(0, 0.6);
+	glVertex2f(-0.04, 0);
+	glVertex2f(0.04, 0);
+	glEnd();
+	
+	# 長針
+	glLoadIdentity();
+	glRotatef($min * 6 + $sec / 10, 0, 0, -1);
+	glColor3f(0, 0.8, 0.8);
+	glBegin(GL_TRIANGLES);
+	glVertex2f(0, 0.9);
+	glVertex2f(-0.03, 0);
+	glVertex2f(0.03, 0);
+	glEnd();
+	
+	# 秒針
+	glLoadIdentity();
+	glRotatef($sec * 6, 0, 0, -1);
+	glColor3f(0, 0.8, 1);
+	glBegin(GL_TRIANGLES);
+	glVertex2f(0, 0.8);
+	glVertex2f(-0.02, 0);
+	glVertex2f(0.02, 0);
+	glEnd();
+	
+	
+	glutSwapBuffers();
+}
+
+sub idleFunc
+{
+	glutPostRedisplay(); # glutDisplayFunc()で登録した関数を呼ぶようGLUTに指示
+}
+
+sub reshapeFunc
+{
+	my ($w, $h) = @_;
+	#printf "reshape: $w, $h\n";
+}
+
+sub keyboardFunc
+{
+	my ($key, $x, $y) = @_;
+	my $c = chr $key;
+	#printf "keyboard: $c($key), $x, $y\n";
+	
+	if ($key == 27) { # 27 = ESCキー
+		glutDestroyWindow($win); # ウィンドウを閉じることで終了する
+	}
+}
+
+sub specialFunc
+{
+	my ($key, $x, $y) = @_;
+	#printf "special: $key, $x, $y\n";
+}
+
+sub mouseFunc
+{
+	my ($button, $state, $x, $y) = @_;
+	my $b =
+		($button == GLUT_LEFT_BUTTON) ? 'left' :
+		($button == GLUT_MIDDLE_BUTTON) ? 'middle' :
+		($button == GLUT_RIGHT_BUTTON) ? 'right' :
+		'?';
+	my $s =
+		($state == GLUT_UP) ? 'up' :
+		($state == GLUT_DOWN) ? 'down' :
+		'?';
+	#printf "mouse: $b, $s, $x, $y\n",
+}
+
+sub motionFunc
+{
+	my ($x, $y) = @_;
+	#printf "motion: $x, $y\n";
+}
+
+sub passiveMotionFunc
+{
+	my ($x, $y) = @_;
+	#printf "passiveMotion: $x, $y\n";
+}
+
+sub timerFunc
+{
+	my $val = @_[0];
+	#printf "timer: $val\n";
+	
+	glutTimerFunc(1000, \&timerFunc, $val + 1); # 一回しか呼ばれないので、繰り返したい場合は再度登録する
+}
+
+
+glutInit();                                    # GLUTの準備
+
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH); # ダブルバッファとデプスバッファを使うよう指示する
+glutInitWindowSize(256, 256);                  # ウィンドウの初期サイズを指定する
+glutInitWindowPosition(100, 100);              # ウィンドウの初期位置を指定する
+$win = glutCreateWindow($0);                   # ウィンドウ生成（引数はウィンドウタイトル）　$winは後でウィンドウ閉じる用
+
+glutDisplayFunc(\&displayFunc);                # 描画に使う関数を登録する
+glutIdleFunc(\&idleFunc);                      # アイドル状態になった時に呼ばれる関数を登録する
+#glutReshapeFunc(\&reshapeFunc);                # ウィンドウの大きさが変更された時に呼ばれる関数を登録する
+glutKeyboardFunc(\&keyboardFunc);              # 文字キーが押された時に呼ばれる関数を登録する
+glutSpecialFunc(\&specialFunc);                # 特殊キーが押された時に呼ばれる関数を登録する
+glutMouseFunc(\&mouseFunc);                    # マウスボタンが押された時に呼ばれる関数を登録する
+glutMotionFunc(\&motionFunc);                  # ボタンを押しながらマウスを動かした時に呼ばれる関数を登録する
+glutPassiveMotionFunc(\&passiveMotionFunc);    # マウスを動かした時に呼ばれる関数を登録する
+glutTimerFunc(1000, \&timerFunc, 0);           # 1000ms後に呼んで欲しい関数を登録する（最後の引数は、関数へ渡す値）
+
+glutMainLoop();                                # メッセージループに入る（決して帰ってこない）
+#ここには来ない
+||<
+　センス無くてごめんなさい。
+
+
+
+*資料とか
+
+　OpenGL 一般の資料に関しては、以下の URL を見てみてください。どれも C 言語が前提です。 Perl で OpenGL をやってる人はあまりいない・・・んでしょうかね、 Perl 関係の資料は豊富とは言い難いんですけど、 OpenGL の使い方は Perl でも C でも同じなので（一部、言語仕様の違いからくる些細な差はありますが） C 言語を使うサイトでも参考になると思います。
+
+　　　　基本情報は　http://www.opengl.org/
+　　　　OpenGLプログラミングガイド（英語）　http://fly.cc.fer.hr/~unreal/theredbook/
+　　　　日本語の入門サイトはこちら
+　　　　　　http://wisdom.sakura.ne.jp/system/opengl/
+　　　　　　http://www.wakayama-u.ac.jp/~tokoi/opengl/libglut.html
+
+　POGL に関しては、以下の POGL のサイトを見てください。
+
+　　　　http://graphcomp.com/pogl.cgi　の、 Documentation→APIs のあたり。
+　　　　OpenGLの関数は　OpenGL APIs 以下
+　　　　GLUTの関数は　GLUT APIs 以下
+
+
+*まとめ
+　個人的に縁が無いだけかもしれませんが、 Perl というとデータ処理だとかweb系だとかばかりで、リアルタイムで動くゲームのような話題に乏しいように思います。けど OpenGL （と GLUT ）を使うと、こういうインタラクティブなグラフィックスも簡単に作る事ができてしまいます。もしよろしければ、皆さんも是非、面白いゲームやデモを作ってみてください。
+
+　それでは～。
