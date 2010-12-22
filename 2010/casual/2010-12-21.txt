@@ -56,6 +56,7 @@ BEGIN failed--compilation aborted at -e line 1.
 typesterさんに教えてもらった方法だとwindowsでうまく動いてくれないんだそうです。
 まぁ同じことですけどwindowsの人は要注意ですね！
 
+
 gfxさん、makamakaさんの方法
 
 >||
@@ -70,6 +71,7 @@ Acme::AKB48
  -MVって指定できるのがコマンドラインオプションみたいでかっこいいV.pm
 複数モジュール指定できてインストールされてるパスも表示してくれるすぐれものですね！
 
+
 hirose31さんの方法
 
 - [https://gist.github.com/749928]
@@ -83,6 +85,7 @@ $ pmver Acme::Hidek
 V.pmと同等の機能を備えていて
  -cd オプションを指定するとモジュールのディレクトリにcdしてくれる便利機能がこころにくいですね！
 
+
 kitsさんの方法
 
 >||
@@ -91,10 +94,12 @@ $ perldoc -m Acme::Hidek
 
 perldoc -m でソースコードを直に見てしまう一石二鳥な方法ですね！
 
+
 他にもモジュールのバージョンを確認できるCPANモジュールはありますが
 xaicronさんが昔いろいろ教えてもらってブログにまとめているのでそちらも参照してみてください！
 
 - [http://blog.livedoor.jp/xaicron/archives/51037778.html:title=にひりずむ::しんぷる - モジュールの version を表示する シェル関数書いた]
+
 
 
 明日はAcme大全が大人気のまかまか先生です！楽しみですね！
