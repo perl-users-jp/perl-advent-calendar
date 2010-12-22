@@ -1,0 +1,63 @@
+Acmeを越えて - 依存されるAcme
+meta-author: makamaka
+meta-tags: perl, acme
+
+(firstly written in Japanese, later in English)
+
+こんにちは。<a href="http://twitter.com/maka2_donzoko">makamaka</a>です。今日は他のCPANモジュール（Acme以外）に依存((Makefile.PLのPREREQ_PMにあがっているということ))されている希有なAcmeの紹介をします。
+
+ご存じの方も多い<a href="http://search.cpan.org/dist/Acme-Damn/">Acme::Damn</a>です。blessでパッケージに紐づけられたリファレンスを解除します。
+
+>|perl|
+use strict;
+use Acme::Damn;
+
+my $obj = bless {}, 'Foo';
+
+print ref $obj,"\n";
+# => Foo
+
+damn( $obj );
+
+print ref $obj,"\n";
+# => HASH
+||<
+
+
+恐ろしいですね。素晴らしいですね。
+<a href="http://search.cpan.org/dist/forks/">forks</a>というCPANモジュールが重複してDESTROYの呼び出しをしないようにするために<a href="http://cpansearch.perl.org/src/RYBSKEJ/forks-0.34/Makefile.PL">依存</a>しています。今日の<a href="http://perl-users.jp/articles/advent-calendar/2010/casual/22">casualトラックの記事</a>にforksの紹介を書きました。
+
+というわけで、このお正月は依存されるAcmeモジュールを探してみると「うひょひょ」となれるのではないでしょうか。
+
+
+ * ----------------------------------------------------
+ * English version
+ * ----------------------------------------------------
+TITLE: Beyond Acme - Acme required by other CPAN module.
+
+Hello, this is <a href="http://twitter.com/maka2_donzoko">makamaka</a>. I introduce a module which is requied by other CPAN module (except of Acme) today.
+
+Perhaps you know, <a href="http://search.cpan.org/dist/Acme-Damn/">Acme::Damn</a>. It unblesses a blessed reference.
+
+>|perl|
+use strict;
+use Acme::Damn;
+
+my $obj = bless {}, 'Foo';
+
+print ref $obj,"\n";
+# => Foo
+
+damn( $obj );
+
+print ref $obj,"\n";
+# => HASH
+||<
+
+Oh terrible! Oh great!
+
+
+<a href="http://search.cpan.org/dist/forks/">forks</a> <a href="http://cpansearch.perl.org/src/RYBSKEJ/forks-0.34/Makefile.PL">requires</a> this for avoiding to duplicate DESTROY subroutine call. I wrote a <a href="http://perl-users.jp/articles/advent-calendar/2010/casual/22">casual track article</a> about forks.
+
+Well, in this winter vacation, would you like to quest Acme modules required by others.
+
