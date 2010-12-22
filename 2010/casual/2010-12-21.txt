@@ -41,9 +41,11 @@ BEGIN failed--compilation aborted.
 
 他にもおもしろい方法があったらぜひ教えてください！
 
+
 ** 追記
 
 いろんな方法を教えてもらいました！
+
 
 fbisさんの方法
 
@@ -100,6 +102,7 @@ xaicronさんが昔いろいろ教えてもらってブログにまとめてい�
 
 - [http://blog.livedoor.jp/xaicron/archives/51037778.html:title=にひりずむ::しんぷる - モジュールの version を表示する シェル関数書いた]
 
+以上、教えてもらったいろんな方法の紹介でした！
 
 
 明日はAcme大全が大人気のまかまか先生です！楽しみですね！
