@@ -1,0 +1,66 @@
+forksでithreadsに思いを馳せてみる
+meta-author: makamaka
+meta-tags: perl, casual
+
+仕事でいっぱいいっぱいのmakamakaです。
+
+Perlには<a href="http://search.cpan.org/~jesse/perl-5.12.2/pod/perlthrtut.pod">ithreads</a>というスレッド機能がありますよね。みなさん使ってますか？　私は使ってません。ithreadsといえば、遅い・メモリ喰い・不安定とディスられまくりの可哀想な子。非同期処理がしたければ<a href="http://search.cpan.org/dist/Coro/">Coro</a>などもありますし、使わない（使えない）ですよね。
+
+そ・れ・で・も
+
+「せっかくだから一度ぐらい使ってみたいなあ」と思う方もいるかもしれません。でもでも、使ってるPerlがスレッド無効でコンパイルしてあるので試せないよ、ithreadsごときに再コンパイルしたくないよ、という方もいるでしょう。そこで両者を同時に満たすために<a href="http://search.cpan.org/dist/forks/">forks</a>を紹介します。
+
+forksは<a href="http://search.cpan.org/dist/threads/">threads</a>互換のAPIを提供します。ただしスレッドはforkを使って実現されます((Windowsには対応していません))。スレッド間の通信（共有変数）はソケット通信。
+
+
+>|perl|
+
+use strict;
+use forks;
+use forks::shared;
+
+my @threads;
+my $count : shared; # 共有変数
+
+for ( 1 .. 10 ) {
+    push @threads, threads->new( sub {
+        printf( "やあ、スレッド %d だよ\n", threads->tid );
+        lock( $count ); # ロックしないと
+        $count++;
+    } );
+}
+
+$_->join for ( @threads ); # join join!
+
+print $count, "\n"; # 10
+
+||<
+
+たまたま出た結果：
+
+>|perl|
+やあ、スレッド 1 だよ
+やあ、スレッド 2 だよ
+やあ、スレッド 3 だよ
+やあ、スレッド 4 だよ
+やあ、スレッド 5 だよ
+やあ、スレッド 6 だよ
+やあ、スレッド 7 だよ
+やあ、スレッド 8 だよ
+やあ、スレッド 10 だよ
+やあ、スレッド 9 だよ
+10
+||<
+
+という具合に、ithreadsの気分が味わえます。これを書いている時点で最新のforksは<a href="http://search.cpan.org/dist/threads/">threads</a> 1.77相当です。
+
+>|perl|
+$ perl -Mforks -e 'print threads->VERSION'
+||<
+
+ってやるとthreadsの互換バージョンがわかります。
+
+あんまり役に立つネタじゃなくてごめんなさい。おまけとして<a href="http://perl-users.jp/articles/advent-calendar/2010/acme/22">acmeトラックに補足記事</a>を用意しました。ではさようなら。
+
+さあ、明日はgfxさんです！
+
