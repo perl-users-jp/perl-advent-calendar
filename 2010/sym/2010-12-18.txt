@@ -2,7 +2,7 @@ EBCDIC文字コードで記号プログラムを難読化する
 meta-author: takesako
 meta-tags: sym, EBCDIC, JavaScript
 
-3回連続で執筆を担当しているid:TAKESAKOです。
+3回連続で執筆を担当している<a href="http://developer.cybozu.co.jp/takesako/">id:TAKESAKO</a>です。
 
 ASCIIと非互換な文字コードとして古くからEBCDICが知られています。
 今日は記号プログラミングでわかりにくくしたJavaScriptプログラムをASCII非互換の文字コードEBCDICでさらに難読化してみようと思います。
@@ -10,9 +10,7 @@ ASCIIと非互換な文字コードとして古くからEBCDICが知られてい
 *EBCDICとは
 
 1964年にIBMによって作られた汎用大型コンピュータ用の文字コードがEBCDICです。
-EBCDICは「Extended Binary Coded Decimal Interchange Code」の略で「エビシディック」と発音します。
-COBOLなどの古代言語で使用された二進化十進数(BCD)を拡張する形で文字コードが定義されています。
-メインフレームやホストコンピュータなどで現在も使用されている現役バリバリの文字コードです。
+EBCDICは「Extended Binary Coded Decimal Interchange Code」の略で「エビシディック」と発音します。COBOLなどの古代言語で使用された二進化十進数(BCD)を拡張する形で文字コードが定義されています。メインフレームやホストコンピュータなどで現在も使用されている現役バリバリの文字コードです。
 
 *cp500（International EBCDIC）
 
@@ -63,7 +61,7 @@ $='';$--;$-=--$*--$-$;
 >||
 <!DOCTYPE html>
 <meta charset="cp819"/>
-<script charset="cp500" src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/9ce29d2faf619b5927575acfa4ec1aa997fff5da/2010/sym/ebcdic.js"></script>
+<script charset="cp500" src="ebcdic.js"></script>
 <script>
 ''[_=((_=''+-~-~'')+{})[-~_*_]+(_+{})[_]+(_+{}._)[_]+(_+![])[_*_]+(_+!'')
 [_/_]+(_+!'')[_]+(''+!'')[_]+(_+{})[-~_*_]+(_+!'')[_/_]+(_+{})[_]+(_+!'')
@@ -82,12 +80,10 @@ _*_+_,~_*_^~_*_+_,_*_+_-~_,-_*~_+_,_|_<<_,_+_*_,_/_+_-~_,(~-_+_|_)+'=',''+_
 
 *動作ブラウザ
 
-Windows上のIEやSafariのブラウザではそのままOSの提供するEBCDICの文字コード変換エンジンが利用できます。
-驚くべき事に最新のWindowsでもEBCDICのサポートは続けられているのです。
+Windows上のIEやSafariのブラウザではそのままOSの提供するEBCDICの文字コード変換エンジンが利用できます。驚くべき事に最新のWindowsでもEBCDICのサポートは続けられているのです。
 
 *さらに詳しく
 
-IBMのコードページ500（EBCDIC）を利用したハックはgihyo.jpのエイプリルフール記事として
-掲載させていただきましたので、もしも興味のある方はご覧になってください。
+IBMのコードページ500（EBCDIC）を利用したハックはgihyo.jpのエイプリルフール記事として掲載させていただきましたので、もしも興味のある方はご覧になってください。
 
 -<a href="http://gihyo.jp/dev/column/01/prog/2010/aprilfool2010-02">http://gihyo.jp/dev/column/01/prog/2010/aprilfool2010-02</a>
