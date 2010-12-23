@@ -13,7 +13,7 @@ Switchはスイッチ文を導入するためのソースフィルタモジュ�
 -[http://www.shadowcat.co.uk/blog/matt-s-trout/show-us-the-whole-code/:title=Show Us The Whole Code]
 このモジュールを避けると5.10未満ではスイッチ文がつかえない事になりますが、余計な事で時間を取られたくないなら使用しない方がいいでしょう。
 
-次に、使うべきでないモジュールです。いくつかのモジュールは実際に警告を発生させることがあります。
+次に、使うべきでないモジュールです。これらを使っていたからといって必ずしも問題がおきるとは限りませんが、新しいコードでは避けた方がいいでしょう。いくつかのモジュールは実際に警告を発生させることがあります。
 - [http://search.cpan.org/perldoc?UNIVERSAL:title=UNIVERSAL]
 - [http://search.cpan.org/perldoc?Shell:title=Shell]
 - [http://search.cpan.org/perldoc?FileHandle:title=FileHandle]
@@ -21,8 +21,7 @@ Switchはスイッチ文を導入するためのソースフィルタモジュ�
 - [http://search.cpan.org/perldoc?base:title=base]
 - [http://search.cpan.org/perldoc?bytes:title=bytes]
 
-UNIVERSALは、UNIVERSAL::isa()とUNIVERSAL::can()をエクスポートするモジュールです。しかし、この二つのメソッドを関数として呼び出すのは誤りです。<code>blessed($x) && $x->isa(...)</code>などを使ってください。
-Perl 5.12ではこの二つのメソッドをインポートしようとすると警告が出ます。このモジュールはドキュメントとして存在し続けるでしょうが、useする必要はありません。
+UNIVERSALは、UNIVERSAL::isa()とUNIVERSAL::can()をエクスポートするモジュールです。しかし、この二つのメソッドを関数として呼び出すのは誤りです。<code>blessed($x) && $x->isa(...)</code>などを使ってください。Perl 5.12ではこの二つのメソッドをインポートしようとすると警告が出ます。このモジュールはドキュメントとして存在し続けるでしょうが、useする必要はありません。
 Shellは外部コマンドを関数のように呼び出せるようにするモジュールです。5.12からはuseすると警告されるようになりました。このモジュールはもともとAUTOLOADのデモとして作成されたものなので、特に使う必要はないでしょう。
 FileHandleはファイルハンドルを値として使用するためのモジュールでしたが、いまや単なる[http://search.cpan.org/perldoc?IO%3a%3aFile:title=IO::File]のラッパーなので、ロードしてもメモリを余計に消費するだけです。単なるラッパーになってすでに10年以上経過しているので、新しいコードで使用する必要はまったくありません。また、5.6から無名ファイルハンドルを生成することができるようになったため、IO::Fileを使う必要性も減少しています。
 DynaLoaderはXSモジュール用の.so/.dllをロードするためのモジュールです。いまは[http://search.cpan.org/perldoc?XSLoader:title=XSLoader]があるのでこちらを使いましょう。DynaLoaderはベースクラスに指定することによって機能を提供するので、余計なメソッドをいくつか継承してしまいます。また、モジュール自体もXSLoaderのほうが軽量です。
