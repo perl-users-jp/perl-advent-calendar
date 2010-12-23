@@ -9,10 +9,10 @@ meta-tags: mobile, perl,
 メールのパーズは、以下のように、メールの文字列をくわせてやればいいです。
 
 >||
-use Email::MIME::JPMobile::Parser;
+use Email::MIME::MobileJP::Parser;
 
 my $src_text = do { local $/; <> };
-my $mail = Email::MIME::JPMobile::Parser->new($src_text);
+my $mail = Email::MIME::MobileJP::Parser->new($src_text);
 ||<
 
 メールオブジェクトから Subject をえるには以下のようにしましょう。
@@ -115,13 +115,13 @@ my $sender = Email::Send->new({mailer => 'Sendmail'});
 $sender->send($mail);
 ||<
 
-** Email::MIME::JPMobile::Template のやつをつかうパターン
+** Email::MIME::MobileJP::Template のやつをつかうパターン
 
 Web Service などでは、メールの本文をテンプレートに分離したくなることがあるでしょう。そんなときはこうしましょう。
 内部的に Tiffany を使用しているので、あらゆるテンプレートエンジンを使用可能です。
 
 >||
-my $mail_maker = Email::MIME::JPMobile::Template->new('Text::Xslate' => {path => ['email_tmpl/'], syntax => 'TTerse'});
+my $mail_maker = Email::MIME::MobileJP::Template->new('Text::Xslate' => {path => ['email_tmpl/'], syntax => 'TTerse'});
 my $mail = $mail_maker->render('signup.eml', {token => $token, syntax => 'TTerse'});
 my $sender = Email::Send->new({mailer => 'Sendmail'});
 $sender->send($mail);
