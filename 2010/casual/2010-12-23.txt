@@ -1,0 +1,34 @@
+使っちゃいけない標準モジュール
+
+[http://github.org/gfx/:title=gfx]と申します。
+Perlは後方互換性を重視しているので、標準モジュールはめったに取り除かれる事がありません。しかしそれでも、いくつかのモジュールが将来的に取り除かれる見込みです。そのようなモジュールは使用しないほうがいいでしょう。また、取り除かれはしないものの、仕様すべきでないモジュールもいくつかあります。今日は、そういった使うべきでないモジュールを紹介します。なお、このエントリの対象バージョンは5.8から5.14を想定しています。
+
+まず、取り除かれるモジュールです。現在のところ、以下の三つのモジュールが5.14でコアから削除される予定です。
+- [http://search.cpan.org/perldoc?Class%3a%3aISA:title=Class::ISA]
+- [http://search.cpan.org/perldoc?Pod%3a%3aPlainer:title=Pod::Plainer]
+- [http://search.cpan.org/perldoc?Switch:title=Switch]
+Class::ISAはクラス階層を直列化するモジュールですが、5.10以降は[http://search.cpan.org/perldoc?mro:title=mro]に取って代わられました。5.10未満のバージョン用には[http://search.cpan.org/perldoc?MRO%3a%3aCompat:title=MRO::Compat]が用意されているため、こちらを使ってください。
+Pod::Plainerは現行スタイルのPODを旧スタイルのPODに変換するモジュールです((C&lt;&lt; .. &gt;&gt;といった書き方は、初期のPODには存在しなかったようです。))。旧スタイルのPODしか理解できないPOD処理ルーチンのためのものなのでしょうが、いまや必要ありません。このモジュールの事は忘れてください。
+Switchはスイッチ文を導入するためのソースフィルタモジュールです。5.10以降はスイッチ文が組み込みになったため、このモジュールは不要になりました。それだけでなく、このモジュールはソースコードを書き換えるため、しばしば不可解な現象を引き起こします。たとえばmstは以下のエントリでそのような現象を報告しています。
+-[http://www.shadowcat.co.uk/blog/matt-s-trout/show-us-the-whole-code/:title=Show Us The Whole Code]
+この5.10未満のバージョン用の救済策はありませんが、余計な事で時間を取られたくないなら使用しない方がいいでしょう。
+
+次に、使うべきでないモジュールです。いくつかのモジュールは警告を発生させることがあります。
+
+- [http://search.cpan.org/perldoc?UNIVERSAL:title=UNIVERSAL]
+- [http://search.cpan.org/perldoc?Shell:title=Shell]
+- [http://search.cpan.org/perldoc?FileHandle:title=FileHandle]
+- [http://search.cpan.org/perldoc?DynaLoader:title=DynaLoader]
+- [http://search.cpan.org/perldoc?base:title=base]
+- [http://search.cpan.org/perldoc?bytes:title=bytes]
+
+UNIVERSALは、UNIVERSAL::isa()とUNIVERSAL::can()をエクスポートするモジュールです。しかし、この二つのメソッドを関数として呼び出すのは誤りです。<code>blessed($x) && $x->isa(...)</code>などを使ってください。
+Perl 5.12ではこの二つのメソッドをインポートしようとすると警告が出ます。このモジュールはドキュメントとして存在し続けるでしょうが、useする必要はありません。
+Shellは外部コマンドを関数のように呼び出せるようにするモジュールです。このモジュールはもともとAUTOLOADのデモとして作成されたものなので、特に使う必要はないでしょう。
+FileHandleはファイルハンドルを値として使用するためのモジュールでしたが、いまや単なる[http://search.cpan.org/perldoc?IO%3a%3aFile:title=IO::File]のラッパーなので、ロードしてもメモリを余計に消費するだけです。単なるラッパーになってすでに10年以上経過しているので、新しいコードで使用する必要はまったくありません。
+DynaLoaderはXSモジュール用の.so/.dllをロードするためのモジュールです。いまは[http://search.cpan.org/perldoc?XSLoader:title=XSLoader]があるのでこちらを使いましょう。DynaLoaderはベースクラスに指定することによって機能を提供するので、余計なメソッドがいくつか継承してしまいます。また、モジュール自体もXSLoaderのほうが軽量です。
+baseは@ISAを設定するプラグマモジュールです。代わりに5.10から標準になった[http://search.cpan.org/perldoc?parent:title=parent]を使いましょう。baseを使っていると思わぬ罠にハマることがありますが((ベースモジュールのロードに失敗したことを検出できない、誤ってロード済みと判断してロードしないなど。))、parentではそのようなことはありません。
+bytesはsubstr()などの挙動を強制的にバイト単位にするプラグマモジュールです。このプラグマの元で文字列操作を行うと、テキスト文字列((「テキスト文字列」は昔はutf8-flagged文字列やユニコード文字列と呼ばれることがありましたが、それは誤りです。utf8 flagの立っていない、Latin-1(ISO-8859-1)でエンコードされた文字列もまた正しいテキスト文字列だからです。))を渡してもバイト列を渡しても同じ挙動になりますが、そのような挙動はおそらく間違っています。テキスト文字列を渡すべきかバイト列を渡すべきかというのはそのルーチンの仕様の問題であり、そのルーチンがバイト列を処理するルーチンであるならば、使用者がきちんとバイト列を渡すべきです。[http://search.cpan.org/perldoc?perlunifaq:title=perlunifaq] ([http://perldoc.jp/docs/perl/5.10.0/perlunifaq.pod:title=日本語訳]）も参考になります。
+
+いじょ。JPerl Advent Calendar随一の後ろ向きなエントリを目指しました！
+いよいよ明日はクリスマスイブですね！Perl会のトリックスターが満を持して登場します！お楽しみに！
