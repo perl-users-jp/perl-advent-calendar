@@ -1,0 +1,114 @@
+Smart::Args でバリデーションする。またはバリデーターとして必要な事
+meta-author: yappo
+meta-tags: perl, validator
+
+めりめり！<a href="http://twitter.com.hisaichi5518">@yappo</a>です。うっかり Acme Trac を書いてたら、こっちの当番だったんです！
+
+**Smart::Args とは
+実行時型チェック / パラメーターチェックが出来る便利なモジュールです。
+現在、 Params::Validate がデファクトスタンダードっぽいんですが、速度が遅かったりするので正直微妙です。
+まぁ、速度っていうか色々面倒い感じだなーって思ってきた人も多いと思います。
+
+**Smart::Args のインストール
+>||
+    cpanm Smart::Args
+||<
+CPANにも上がってるので簡単ですね！
+
+**Smart::Args の使い方
+>|perl|
+use Smart::Args;
+sub foo {    
+    args my $p => 'Int',
+         my $q => { isa => 'Int', optional => 1 };
+    say $q ? "$p, $q" : $p;
+}
+
+foo(p => 1); # 1
+foo(p => 1, q => 2); # 1, 2
+||<
+これまた簡単！
+
+例えば、以下のようにすると
+
+>|perl|
+foo(p => 'str');
+||<
+
+以下のように怒られます。
+
+>>
+Validation failed for 'Int' with value str at /Users/dankogai/perl5/perlbrew/perls/perl-5.13.7/lib/site_perl/5.13.7/Smart/Args.pm line 111
+	   Smart::Args::_validate_by_rule('HASH(0x100826530)', 'p', 'Int', 'SCALAR(0x100859f08)') called at /Users/dankogai/perl5/perlbrew/perls/perl-5.13.7/lib/site_perl/5.13.7/Smart/Args.pm line 57
+	   Smart::Args::args(undef, 'Int', undef, 'HASH(0x1008264e8)') called at ./xx.pl line 4
+	   main::foo('p', 'str') called at ./xx.pl line 11
+<<
+
+
+isaは、Mouseのtype constraint名か任意のtype constraintオブジェクトを渡す事が出来ます。
+<a href="http://search.cpan.org/dist/Mouse/lib/Mouse/Util/TypeConstraints.pm#Default_Type_Constraints">Mouse::Util::TypeConstraintsのDefault Type Constraints</a>とかですね。
+URIかどうか確かめたい！という時はこうします。
+>|perl|
+use Smart::Args;
+use MouseX::Types::URI;
+use URI;
+
+sub foo {
+    args my $uri => 'URI';
+}
+
+foo(uri => 'http://example.com/');
+||<
+あらまあ、簡単。
+>||
+use Smart::Args;
+use Mouse::Util::TypeConstraints;
+
+my $MyHash = subtype 'MyHash', as 'HashRef';
+coerce $MyHash,
+    from 'ArrayRef', via { +{ @{$_} } };
+
+sub foo{
+    args my $p => $MyHash;
+}
+
+foo(p => { a => 42 } );
+foo(p => [ a => 42 ] );
+||<
+なんて事も出来ます。これは、<a href="http://perl-users.jp/articles/advent-calendar/2010/casual/10">もとネタから改変した</a>んですけども。
+
+Smart::Args をもっと詳しく知りたい場合は<a href="http://search.cpan.org/dist/Smart-Args/lib/Smart/Args.pm">POD</a>とかを見ればいいと思います。
+
+**バリデーターとして必要な事
+
+既存の良く有るバリデータは
+
+>|perl|
+my %args = foo(@_, argname1 => { ... config ... }, argname2 => { ...  config... });
+||<
+
+のように使う事が良く有るんですが、例えば上の例で argname1 を取ろうとしていて $args{agrnaem1} とか typo してしまうと、 undef の値を使おうとして諸々不都合があります。
+それに対する対策としては <a href="http://blog.nekokak.org/show?guid=xsl-73YN4BGMelT8MCAp_g">Sub::Argsで存在しないキーにアクセスしたらエラーに</a> のように %args に read only のフラグを付けて、存在しない key へのアクセスを抑制するという解決方法も取られていますが、そもそも
+
+>|perl|
+my $argname1 = $args{argname1};
+||<
+
+の用にして使うケースが多数なので、最初っから変数を作った方がよりスマートに書ける。
+その辺はモジュール名で主張してますね。
+
+**黒魔術云々
+
+Smart::Args は黒魔術を多く使っているとか言う話もありますが、 PadWalker は一見黒魔術だけども、様々なモジュールで使われているし、実装自体も無茶してないのでそんなに恐れる物ではないでしょうし、 DB とか使って「うわぁ」とか思う人も居るけども、 Perl のデバッガ用の仕組みとしてきちんと整備されてるので、恐れる事は無いでしょう。
+
+ちなみに PadWalker で args my $foo => 'Int'; したときの、変数名をパラメータの key として検出する為につかっていて、 DB は args 関数に @_ を引数として渡さなくても、呼び出し元の @_ を args の中から引っぱりだすために使っています。
+
+**まとめ
+Smart::Args かんたん、はやい、べんり！まだ使った事無いけど。
+これだけべた褒めしておいてなんですが、このモジュールはリリースされて半年くらいです。
+みんなでたくさん使って、さらにいいものにしていきましょう！
+
+「OSSは使って育てるもの。」by <a href="http://twitter.com/#!/__gfx__/status/9988955441209346">@__gfx__</a>
+
+次は、<a href="http://www.twitter.jp/Songmu">Songmu</a>さんです！
+ではでは、みなさんリアルな充を！
