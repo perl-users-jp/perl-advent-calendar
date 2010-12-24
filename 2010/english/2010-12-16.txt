@@ -1,0 +1,23 @@
+Net::DNS::Lite - a module for handling timeout of hostname lookups safely, and more
+
+Hostname lookup functions (like inet_aton) are one of the functions that aren't cancellable, and that makes hard to set timeouts within perl scripts that connect to other servers.
+
+<a href="http://search.cpan.org/dist/Net-DNS-Lite/">Net::DNS::Lite</a> is a port of <a href="search.cpan.org/perldoc?AnyEvent::DNS">AnyEvent::DNS</a> without dependency on AnyEvent, intended to be used in ordinally perl scripts not event-driven.
+
+The easiest way to use the function is to override the core inet_aton with the one provided by Net::DNS::Lite.  The following example does the replacement, and then uses the local variable to set the timeout.
+
+>|perl|
+use Net::DNS::Lite;
+
+*CORE::GLOBAL::inet_aton = Net::DNS::Lite::inet_aton;
+...
+
+sub dowhatever {
+    ...
+    local $Net::DNS::Lite::TIMEOUT = $timeout_secs;
+    communicate_with_server();
+    ...
+}
+||<
+
+It is not only a replacement-with-timeout function for inet_aton but also has support for caching the responses from DNS servers as well so you can expect performance improvements by using the module as well.  Please see the POD for more detail.
