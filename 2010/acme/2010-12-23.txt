@@ -1,0 +1,176 @@
+PerlIO::via
+meta-author: tomi-ru
+meta-tags: perl, acme
+
+こんにちは、こんなにトミールを名乗っているのにいつまでたっても<a href="http://www.google.co.jp/search?q=%E3%83%88%E3%83%9F%E3%83%BC%E3%83%AB">トミールの検索結果</a>が抗ウイルス製剤の<a href="http://e8y.net/">トミール</a>です。今年も1位奪還は失敗しました。
+
+さて、今日は Acme じゃないんだけど限りなく Acme ぽい <a href="http://search.cpan.org/perldoc?PerlIO::via">PerlIO::via</a> をご紹介しましょう。
+
+
+<h3>役に立つ PerlIO 基礎知識（Acme に入る前に）</h3>
+
+perl の IO レイヤーは、実はいろいろできて便利です。一番便利なのは、:encoding() でしょう。
+
+こういう、
+
+>|perl|
+use autodie;
+use Encode;
+open(my $fh, '<', 'file.txt');
+while (my $line = Encode::decode('cp932', <$fh>)) {
+    print Encode::encode('utf-8', $line);
+}
+||<
+
+入力を cp932 エンコーディングで decode()、出力は utf-8 で encode() して出す、みたいな decode/encode をレイヤーにさせることができます。
+
+>|perl|
+use autodie;
+
+# STDOUTから出す時に、自動でencode('utf-8')
+binmode STDOUT => ':encoding(utf-8)';
+
+# $fhから読むときは自動でdecode('cp932')
+open(my $fh, '<:encoding(cp932)', 'file.txt');
+
+while (my $line = <$fh>) {
+    print $line;
+}
+||<
+
+なお、:encoding(utf-8) と :utf8 という指定方法はやりたいことは同じですが、前者はちゃんと utf-8 として正しいかのチェックが入り、後者は入りません。
+
+そのため、出力にかませるなら :utf8 でもよいですが、入力にかませるなら（データがちゃんと utf-8 として valid か不明なので） :encoding(utf-8) の方が安全です。よくわかんないよという場合は、単に :encoding(エンコーディング名) とう書き方だけ覚えておけばよいです。
+
+http://search.cpan.org/perldoc?PerlIO::encoding
+
+
+<h3>use open;（これも Acme ではない）</h3>
+
+:encoding() IOレイヤーの指定は binmode や open の第二引数にくっつける形じゃなく open モジュールで指定することもできます。（open モジュールは :encoding() 指定用モジュールと思っておけば良いと思います）
+
+>|perl|
+use utf8;
+use open qw/:utf8 :std/;
+
+print "メリークリスマス！ みなさま、どうぞ良い年をお迎えください。";
+||<
+
+上の use open の仕方は、「そのスコープでのデフォルトIOレイヤーが :utf8 に指定される」ことに加え、以下のコードを書いたのと同じです。
+
+>|perl|
+binmode STDIN  => ':utf8';
+binmode STDOUT => ':utf8';
+binmode STDERR => ':utf8';
+||<
+
+なので、（use utf8;したスコープにある）“文字列”をprintしてもWide character in print at的警告はでません。
+
+
+<h3>PerlIO::via（さあ、こっから Acme な話だ！）</h3>
+
+そんな PerlIO レイヤー、勝手レイヤーを定義できるようになっています。
+
+http://search.cpan.org/perldoc?PerlIO::via
+
+作り方はカンタン。PerlIO::via::FooBarというPerlIO::via以下の名前空間でモジュールを作ると、:via(FooBar) というIOレイヤーが使えます。（ちなみに、openモジュールは :via の指定には対応していない）
+
+モジュールは、tie みたいに、特定のメソッドを定義しておくと、IOレイヤーとして働かせることができます。
+
+しかし、IOレイヤーで動いてくれてうれしいことってあんまりありません。<a href="http://search.cpan.org/search?query=perlio+via&mode=dist">PerlIO via で CPAN を検索すると</a>、ネタとしか思えないもの（失礼）がざくざく出てきます。
+
+全部インストールしてためしてないんだけど、
+
+<a href="http://search.cpan.org/perldoc?PerlIO::via::Base64">PerlIO::via::Base64</a>は、どうやらIOレイヤーでBase64がかかるものらしい。う、うれしい・・こともあるカモ？
+
+<a href="http://search.cpan.org/perldoc?PerlIO::via::Babelfish">PerlIO::via::Babelfish</a> これはどうやら IOレイヤーで翻訳をするらしい。日本語を print したつもりが英語になって出てしまう！ 今日からバイリンガルうわーい！とかできる。みたいです。
+
+>|perl|
+use PerlIO::via::Babelfish(
+    source => 'Japanese',
+    target => 'English',
+);
+
+binmode STDOUT => ":via(Babelfish)";
+print "メリークリスマス！ みなさま、どうぞ良い年をお迎えください。";
+||<
+
+
+<h3>つくってみよう</h3>
+
+※【テロップ】当記事は PerlIO::via モジュールの制作を勧めるものではありません。
+
+<a href="http://search.cpan.org/perldoc?PerlIO::via">どうやら</a>、PUSHED() が最初に呼ばれ、出力時には WRITE() が呼ばれるらしい。
+
+ふむ。さっそく、何をprintしてもイカ娘になるのをやってみましょう。
+
+<script src="https://gist.github.com/753973.js"></script>
+
+これ、我ながらひどいのは、自動で STDOUT に自分を設定しているところです。さすがは侵略者！
+
+>|perl|
+use utf8;
+use open qw/:utf8 :std/;
+
+use PerlIO::via::Ikamusume;
+
+print "メリークリスマス！ みなさま、どうぞ良い年をお迎えください。";
+||<
+
+useするだけで何と！
+
+<strong>メリークリスマスでゲソ！ みなさま、どうぞ良い年をお迎えくださいでゲソ。</strong>
+
+と出力されます。もはや普通にprintできません。
+
+ついでに、サムライ語をつくったことも思い出したのでそれも作ってみましょう。
+
+https://gist.github.com/753976
+
+>|perl|
+use utf8;
+use open qw/:utf8 :std/;
+
+use PerlIO::via::Samurai;
+
+print "メリークリスマス！ みなさま、どうぞ良い年をお迎えください。";
+||<
+
+これは、
+
+<strong>メリークリスマスでござる！ みなさま、なにとぞ良い年をお迎えくだされ。</strong>
+
+と出ます。渋いですね。
+
+PerlIOレイヤーはレイヤーというだけに多段にかけることもできます。
+
+・・・ということは
+
+・・・！
+
+>|perl|
+use utf8;
+use open qw/:utf8 :std/;
+
+use PerlIO::via::Lou;
+use PerlIO::via::Samurai;
+use PerlIO::via::Ikamusume;
+
+print <<'m(__)m';
+メリークリスマス！
+
+みなさま、どうぞ良い年をお迎えください。
+読んでいただきありがとうございました。
+
+来年もよろしくお願いします！
+m(__)m
+||<
+
+これはこんな感じになります。
+
+<strong>メリークリスマスにてゲソ！
+
+みなさま、なにとぞグッドなイヤーをお迎えくだされにてゲソ。
+読んでいただきかたじけないにてゲソ。
+
+ネクストイヤーもよろしくプリーズするでゲソ！</strong>
