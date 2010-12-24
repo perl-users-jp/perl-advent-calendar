@@ -2,7 +2,7 @@ dan.pm に迫る
 meta-author: yappo
 meta-tags: perl, acme, dankogai
 
-<a href="http://atnd.org/events/10336"><img src="http://gyazo.com/9fd86dce549f1851c38bbe4ad77988f5.png" width="60%" /></a>
+<a href="http://atnd.org/events/10336"><img src="http://gyazo.com/9fd86dce549f1851c38bbe4ad77988f5.png" width="400" /></a>
 
 こんにちわ。前日に PerlIO ネタが出てきたので、ここぞとばかりに dan.pm を登場させましょう。
 
