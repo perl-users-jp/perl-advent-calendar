@@ -1,0 +1,40 @@
+Smart::Args - smart argument validation
+meta-format: markdown
+
+Smart::Args is yet another argument validation library.
+
+This module makes your module more readable, and writable =)
+
+  use Smart::Args;
+
+  sub func2 {
+    args my $p => 'Int',
+         my $q => { isa => 'Int', optional => 1 };
+  }
+  func2(p => 3, q => 4); # p => 3, q => 4
+  func2(p => 3);         # p => 3, q => undef
+
+  sub func3 {
+    args my $p => {isa => 'Int', default => 3},
+  }
+  func3(p => 4); # p => 4
+  func3();       # p => 3
+
+  package F;
+  use Moose;
+  use Smart::Args;
+
+  sub method {
+    args my $self,
+         my $p => 'Int';
+  }
+  sub class_method {
+    args my $class => 'ClassName',
+         my $p => 'Int';
+  }
+
+  my $f = F->new();
+  $f->method(p => 3);
+
+  F->class_method(p => 3);
+

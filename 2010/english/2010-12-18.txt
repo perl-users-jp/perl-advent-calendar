@@ -1,0 +1,12 @@
+Cache::KyotoTycoon - Client library for KyotoTycoon
+meta-format: markdown
+
+Cache::KyotoTycoon is a client library for [KyotoTycoon](http://fallabs.com/kyototycoon/).
+KyotoTycoon is pretty fast, stable, and extensible. It's very good cache server for web applications.
+
+    use Cache::KyotoTycoon;
+
+    my $kt = Cache::KyotoTycoon->new(host => '127.0.0.1', port => 1978);
+    $kt->set('foo' => bar');
+    $kt->get('foo'); # => 'bar'
+
