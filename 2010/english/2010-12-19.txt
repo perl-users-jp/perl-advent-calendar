@@ -1,0 +1,15 @@
+cpan-outdated - detect outdated CPAN modules in your environment
+
+Are you using fresh modules? Okay, the old modules have a bug and less feature.
+Use the latest modules!
+
+B<cpan-outdated> script prints the list of outdated CPAN modules in your machine.
+It's same feature of 'CPAN::Shell->r', but cpan-outdated is much faster and uses less memory.
+
+This script can be integrated with cpanm command.
+
+Just run:
+
+    % cpan-outdated | cpanm
+
+Enjoy!
