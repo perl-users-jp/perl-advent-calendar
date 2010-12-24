@@ -88,7 +88,11 @@ if ($GetFileType->Call($handle) eq FILE_TYPE_CHAR) {
 }
 ||<
 
-こうなります。ただ自前でポーリングをしなければなりませんので厄介ですね。こんな時は「使うと Marc Lehmann 先生に DIS られる」という噂の threads を使いましょう。
+こうなります。ただ自前でポーリングをしなければなりませんので厄介ですね。こんな時は
+
+<em>「使うと Marc Lehmann 先生に DIS られる」</em>
+
+という噂の threads を使いましょう。
 
 >|perl|
 async {
