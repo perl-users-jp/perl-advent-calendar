@@ -1,0 +1,187 @@
+dan.pm に迫る
+meta-author: yappo
+meta-tags: perl, acme, dankogai
+
+<a href="http://atnd.org/events/10336"><img src="http://gyazo.com/9fd86dce549f1851c38bbe4ad77988f5.png" /></a>
+
+こんにちわ。前日に PerlIO ネタが出てきたので、ここぞとばかりに dan.pm を登場させましょう。
+
+dan.pm とは何をするためのモジュールかというと、特定のレキシカルスコープの文字リテラルを無効化したりフィルタを噛ます事が出来るプラグマモジュールです。簡単にいうと空気を読まなかったり空気を読み替えます。
+Acme::dan とかになってないですが、プラグマなので dan としました。れっきとした Acme の一員です。
+
+** dan を入れよう
+
+dan は既に CPAN レディなので普通に cpanm で入れられます。
+
+>||
+$ cpanm dan
+--> Working on dan
+Fetching http://search.cpan.org/CPAN/authors/id/Y/YA/YAPPO/dan-0.551.2.tar.gz ... OK
+Configuring dan-0.551.2 ... OK
+Building and testing dan-0.551.2 ... OK
+Successfully installed dan-0.551.2
+||<
+
+簡単に入りました！
+
+ちなみにバージョン番号の 551 はコガイという意味です。
+
+** dan を使おう
+
+使い方はとっても簡単で
+
+>|perl|
+use strict;
+use warnings;
+use feature 'say';
+
+say '俺が';
+{
+    use dan;
+    say 'dan';
+}
+say 'だ！';
+||<
+
+のようにかくと
+
+>>
+俺が
+
+だ！
+<<
+
+と表示されます。
+
+** dan に迫る
+
+さて、このなんの変哲も無いネタモジュールですが内部的には普通やらない事をやってたりしてます。
+
+- hinthash を使いプラグマを実装する
+- デフォルトのエンコーディング処理を乗っ取る
+
+では、順繰りにどうなってるか説明しましょう。じゃーん★
+
+** hinthash の件
+
+perl 5.10 から、ユーザが誰でもプラグマを実装出来るように、その実装をするために必要な %^H が整備されてます。 5.8 の時代からあったんですが、気軽に使えるような状況ではなかったんですね。
+
+もう必要な所だけ説明すると BEGIN フェーズ(例えば import/unimport)の時に %^H を操作しておいて、あとから caller() を読んだ時に、 caller() を読んだスコープの中での hintash の内容が取得できるという、説明すると面倒なのでコードを貼ると
+
+>|perl|
+package yappo {
+    use strict;
+    use warnings;
+
+    my $HINT_LOCALIZE_HH = 0x20000;
+    sub import {
+        $^H{yappo} = 1;
+    }
+    sub unimport {
+        delete $^H{yappo};
+    }
+
+    sub is_hentai {
+        my $hinthash = (caller(0))[10];
+       return !!$hinthash->{yappo};
+    }
+}
+1;
+||<
+
+こういった yappo.pm というモジュールを用意しておいて
+
+>|perl|
+use common::sense;
+require yappo;
+
+say yappo::is_hentai() ? 'hentai' : 'normal';
+
+{
+    use yappo;
+    say yappo::is_hentai() ? 'hentai' : 'normal';
+    no yappo;
+    say yappo::is_hentai() ? 'hentai' : 'normal';
+    use yappo;
+    say yappo::is_hentai() ? 'hentai' : 'normal';
+}
+
+say yappo::is_hentai() ? 'hentai' : 'normal';
+||<
+
+こんなコードを書いて実行すると。
+
+>>
+normal
+hentai
+normal
+hentai
+normal
+<<
+
+と表示されます。
+
+この import/unimport で操作してる %^H というのは BEGIN フェーズを抜けると適当な値になってしまうので、そのままでは使えないのですが、 (caller(0))[10] と perl 5.10 から新しく用意された caller の戻り値を使う事で、 caller が呼ばれたコードのスコープでの BEGIN フェーズ時のヒントハッシュの中身が取れるようになります。
+
+BEGIN フェーズでコードを実行するお手軽でかつスマートな方法は import/unimport を実装しつつ use/no を使う事なので、これらのメソッドでヒントハッシュを操作しておいて、通常の実行フェーズでヒントハッシュを取り出せばプラグマが実行出来るという寸法です。
+
+しかも、この方法でヒントハッシュを取り扱うと意識しなくてもヒントハッシュの中身がレキシカルスコープを意識した物になってるので、俺様プラグマが簡単に作れるって事ですね。
+
+
+dan.pm はちゃんとしたプラグマモジュールとして実装されてる秘密は、このヒントハッシュをきちんと使ってるからってことですねぇ。
+
+** エンコーディング処理を乗っ取る
+
+まったくもって今や使うべきでは無いものなんですが
+
+>|perl|
+use encoding "euc-jp"
+my $text = 'にほんご';
+||<
+
+とかすると、文字リテラルを euc-jp として decode してから $text に自動的に定義するようになります。
+
+dan.pm では、これを行うための仕組みに悪ふざけをして文字リテラルの読み込み処理に細工を施しています。
+
+*** 文字リテラル読み込みを行うクラスを奪う
+
+${^ENCODING} という特殊変数に、文字リテラルを読み込むためのインスタンスを入れると、それ以後の文字列読み取り処理がそのインスタンスを介して行われるようになります。
+
+たとえば dan.pm ではだいたい以下のような事をしてます。
+
+>|perl|
+${^ENCODING} = bless {}, 'dan';
+||<
+
+*** 必要なメソッドを用意する
+
+文字リテラルを読み込むために必要な事として name/decode/cat_decode というメソッドを用意します。
+
+**** name
+
+そのエンコーディングを処理するクラスで扱うエンコーディングの名前を返します。
+
+dan.pm は面倒いので iso-8859-1 として処理します。
+
+**** decode
+
+割愛
+
+**** cat_decode
+
+実際に文字列を変換する処理を入れます。
+文字列の開始位置や、終端クオートやらもろもろのパラメータが渡されますので、良い感じに decode 処理してやってください。
+
+*** エンコーディング処理そのほか
+
+いたるところで $self->is_dan としてますが、これを調べる事により「今処理しようとしている文字リテラルのスコープで dan が有効かどうか」をヒントハッシュを使って調べてます。 dan の範囲外だったら、もともとあったエンコーディング処理に丸投げします。
+
+そのほか詳しい事は perldoc Encode::Encoding だけど、そもそもこの仕組みは今はもう真面目に使わない方がいいよ。
+
+** おわりに
+
+ということで何とか acme トラック書くことできました。みなさんすいません＞＜
+
+see also: <a href="http://coderepos.org/share/browser/docs/yappo/20080515-yapcasia2008/yapcasia2008-hintshash.pl">Let's enjoy Perl on the %^H</a>
+
+あ、 yappo 提供の記事でした＾＾
