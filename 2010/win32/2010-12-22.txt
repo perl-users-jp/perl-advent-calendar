@@ -13,12 +13,12 @@ my $c = AE::cv;
 my $out = AnyEvent::Handle->new(fh => \*STDOUT);
 
 my $in; $in = AnyEvent::Handle->new(
-	fh => \*STDIN,
-	on_read => sub{
-		my $hdl = shift;
-		$out->push_write($hdl->rbuf . "\n");
-		$hdl->rbuf = "";
-	}
+    fh => \*STDIN,
+    on_read => sub{
+        my $hdl = shift;
+        $out->push_write($hdl->rbuf . "\n");
+        $hdl->rbuf = "";
+    }
 );
 $out->push_write("Start\n");
 
@@ -58,33 +58,33 @@ my $ReadConsole = Win32::API->new('kernel32.dll',
     'N',
 ) or die ": $^E";
 my $GetConsoleMode = Win32::API->new('kernel32.dll',
-	'GetConsoleMode',
-	'NP',
-	'I',
+    'GetConsoleMode',
+    'NP',
+    'I',
 ) or die ": $^E";
 my $SetConsoleMode = Win32::API->new('kernel32.dll',
-	'SetConsoleMode',
-	'NN',
-	'I',
+    'SetConsoleMode',
+    'NN',
+    'I',
 ) or die ": $^E";
 
 my $handle = $GetStdHandle->Call(STD_INPUT_HANDLE);
 if ($GetFileType->Call($handle) eq FILE_TYPE_CHAR) {
-	my $mode = 0;
-	$GetConsoleMode->Call($handle, \$mode);
+    my $mode = 0;
+    $GetConsoleMode->Call($handle, \$mode);
     $SetConsoleMode->Call( $handle,
         $mode &
-		~ENABLE_LINE_INPUT &
-		~ENABLE_ECHO_INPUT |
+        ~ENABLE_LINE_INPUT &
+        ~ENABLE_ECHO_INPUT |
          ENABLE_PROCESS_INPUT );
-	while (1) {
-		if ($_kbhit->Call()) {
-			my ($buf, $num) = (' ', 0);
-			if ($ReadConsole->Call($handle, $buf, 1, \$num, 0)) {
-				# 読み取れた
-			}
-		}
-	}
+    while (1) {
+        if ($_kbhit->Call()) {
+            my ($buf, $num) = (' ', 0);
+            if ($ReadConsole->Call($handle, $buf, 1, \$num, 0)) {
+                # 読み取れた
+            }
+        }
+    }
 }
 ||<
 
@@ -92,14 +92,14 @@ if ($GetFileType->Call($handle) eq FILE_TYPE_CHAR) {
 
 >|perl|
 async {
-	while (1) {
-		if ($_kbhit->Call()) {
-			my ($buf, $num) = (' ', 0);
-			if ($ReadConsole->Call($handle, $buf, 1, \$num, 0)) {
-				# 読み取れた
-			}
-		}
-	}
+    while (1) {
+        if ($_kbhit->Call()) {
+            my ($buf, $num) = (' ', 0);
+            if ($ReadConsole->Call($handle, $buf, 1, \$num, 0)) {
+                # 読み取れた
+            }
+        }
+    }
 }->detach;
 ||<
 
@@ -145,14 +145,14 @@ my $ReadConsole = Win32::API->new('kernel32.dll',
     'N',
 ) or die ": $^E";
 my $GetConsoleMode = Win32::API->new('kernel32.dll',
-	'GetConsoleMode',
-	'NP',
-	'I',
+    'GetConsoleMode',
+    'NP',
+    'I',
 ) or die ": $^E";
 my $SetConsoleMode = Win32::API->new('kernel32.dll',
-	'SetConsoleMode',
-	'NN',
-	'I',
+    'SetConsoleMode',
+    'NN',
+    'I',
 ) or die ": $^E";
 
 my $inputs = &share([]);
@@ -160,23 +160,23 @@ tie *STDIN, 'Win32::Async::Tied::Stdin', $inputs;
 
 my $handle = $GetStdHandle->Call(STD_INPUT_HANDLE);
 if ($GetFileType->Call($handle) eq FILE_TYPE_CHAR) {
-	my $mode = 0;
-	$GetConsoleMode->Call($handle, \$mode);
+    my $mode = 0;
+    $GetConsoleMode->Call($handle, \$mode);
     $SetConsoleMode->Call( $handle,
         $mode &
-		~ENABLE_LINE_INPUT &
-		~ENABLE_ECHO_INPUT |
+        ~ENABLE_LINE_INPUT &
+        ~ENABLE_ECHO_INPUT |
          ENABLE_PROCESS_INPUT );
-	async {
-		while (1) {
-			if ($_kbhit->Call()) {
-				my ($buf, $num) = (' ', 0);
-				if ($ReadConsole->Call($handle, $buf, 1, \$num, 0)) {
-					push @$inputs, $buf;
-				}
-			}
-		}
-	}->detach;
+    async {
+        while (1) {
+            if ($_kbhit->Call()) {
+                my ($buf, $num) = (' ', 0);
+                if ($ReadConsole->Call($handle, $buf, 1, \$num, 0)) {
+                    push @$inputs, $buf;
+                }
+            }
+        }
+    }->detach;
 }
 
 package Win32::Async::Tied::Stdin;
@@ -189,7 +189,7 @@ sub TIEHANDLE {
 
 sub GETC {
     my $self = shift;
-	shift @{$self->{ref}};
+    shift @{$self->{ref}};
 }
 
 1;
@@ -201,9 +201,9 @@ sub GETC {
 use Win32::Async::Stdin;
 
 while () {
-	my $a = getc(STDIN);
-	warn $a if $a;
-	# 高速ループするので sleep いれてね！
+    my $a = getc(STDIN);
+    warn $a if $a;
+    # 高速ループするので sleep いれてね！
 }
 ||<
 
