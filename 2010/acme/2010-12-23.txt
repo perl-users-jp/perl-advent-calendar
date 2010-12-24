@@ -1,4 +1,4 @@
-PerlIO::via
+PerlIO::via で遊ぶ
 meta-author: tomi-ru
 meta-tags: perl, acme
 
@@ -47,7 +47,7 @@ http://search.cpan.org/perldoc?PerlIO::encoding
 
 <h3>use open;（これも Acme ではない）</h3>
 
-:encoding() IOレイヤーの指定は binmode や open の第二引数にくっつける形じゃなく open モジュールで指定することもできます。（open モジュールは :encoding() 指定用モジュールと思っておけば良いと思います）
+":encoding()" IOレイヤーの指定は binmode や open の第二引数にくっつける形じゃなく open モジュールで指定することもできます。（open モジュールは:encoding() 指定用モジュールと思っておけば良いと思います）
 
 >|perl|
 use utf8;
@@ -100,9 +100,12 @@ print "メリークリスマス！ みなさま、どうぞ良い年をお迎え
 
 ※【テロップ】当記事は PerlIO::via モジュールの制作を勧めるものではありません。
 
+
 <a href="http://search.cpan.org/perldoc?PerlIO::via">どうやら</a>、PUSHED() が最初に呼ばれ、出力時には WRITE() が呼ばれるらしい。
 
-ふむ。さっそく、何をprintしてもイカ娘になるのをやってみましょう。
+ふむ。
+
+さっそく、何をprintしてもイカ娘になるのをやってみましょう。
 
 <script src="https://gist.github.com/753973.js"></script>
 
@@ -121,7 +124,10 @@ useするだけで何と！
 
 <strong>メリークリスマスでゲソ！ みなさま、どうぞ良い年をお迎えくださいでゲソ。</strong>
 
-と出力されます。もはや普通にprintできません。
+と出力されます。
+
+もはや普通にprintできません。
+
 
 ついでに、サムライ語をつくったことも思い出したのでそれも作ってみましょう。
 
@@ -166,7 +172,8 @@ print <<'m(__)m';
 m(__)m
 ||<
 
-これはこんな感じになります。
+こんな感じになります。
+
 
 <strong>メリークリスマスにてゲソ！
 
