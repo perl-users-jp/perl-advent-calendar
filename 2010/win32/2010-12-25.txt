@@ -1,0 +1,89 @@
+Win32 で ps っぽいことをしたい！
+meta-tags: perl, win32
+meta-author xaicron
+
+正直、Win32 Track が順調に進むとはこれっぽちっも思っていませんでした。やっぱりみんな Windows が大好きなんですね！！しってたけど！
+というわけで、最後は Win32 でプロセスリストをゲッツする超簡単な方法をご紹介いたします。
+
+* プロセスリストを取得
+
+まさにこれをやってくれる、[http://search.cpan.org/dist/Win32-Process-List/:title=Win32::Process::List] というモジュールがあって、こいつを使うと簡単に取得できます。
+
+>|perl|
+use strict;
+use warnings;
+use List::Util qw/max/;
+use Win32::Process::List;
+
+my $pl = Win32::Process::List->new;
+my %processes = $pl->GetProcesses;
+
+my $max_pid  = max map { length $_ } keys %processes;
+my $max_name = max map { length $_ } values %processes;
+
+for my $pid (keys %processes) {
+    printf "%-*s | pid: %*d\n", $max_name, $processes{$pid}, $max_pid, $pid;
+}
+||<
+
+こんな感じにやると、以下のように出ます。
+
+>|perl|
+chrome.exe                   | pid: 2028
+perl.exe                     | pid: 1376
+cmdagent.exe                 | pid:  288
+chrome.exe                   | pid: 2748
+MDIE.exe                     | pid: 3396
+svchost.exe                  | pid: 1488
+nvsvc32.exe                  | pid: 1332
+svchost.exe                  | pid:  532
+explorer.exe                 | pid: 4072
+spoolsv.exe                  | pid: 1912
+...
+||<
+
+素晴らしいですね！
+
+ちなみに Tips なんですが、printf では "%*s" とかやると、任意の長さに切り詰めることができます。可変長の出力をきれいに出したい場合に重宝するので覚えておくと便利ですね！(("%100s" とかするとずれないけど空白がすごいしね！))
+
+* 名前から pid を知りたい！
+
+できますできます。
+
+>|perl|
+use strict;
+use warnings;
+use Win32::Process::List;
+
+my $pl = Win32::Process::List->new;
+my ($name, $pid) = $pl->GetProcessPid("explorer");
+print "$name: $pid";
+||<
+
+今試したら Pid とか言ってるのに、なぜ名前もとれる！そして同じ名前で別プロセスな感じの奴は特にとれない！
+一意な名前の奴に使えば良いでしょう。
+
+* プロセスの個数を知りたい！
+
+なんであるのかよくわからないですが、使いましょう！
+
+>|perl|
+use strict;
+use warnings;
+use Win32::Process::List;
+
+my $pl = Win32::Process::List->new;
+print $pl->GetNProcesses;
+||<
+
+数だけ知りたい場合は便利！
+
+* まとめ
+
+さて、まさか本当に終わるとは思っていなかった Win32 Track はこれでおしまいです。
+初日から全部みたあなたは、もう立派な Win32 Perl Monger です。
+教えることはもう何もありません。
+この記事だけ読んだあなたは、ぜひ[http://perl-users.jp/articles/advent-calendar/2010/win32/:title=最初から読みましょう。]きっと面白いよ！
+
+これで、日本の Win32 Perl Monger も 100人ぐらいにはなったはずなので、Perl-Win32 Con 的なのが開催できる日も近いですね！
+それではみなさんまた逢う日まで！アディオス！！
