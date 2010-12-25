@@ -1,4 +1,4 @@
-記号Polyglotプログラミングでメリークリスマス！
+全部入り記号Polyglotでメリークリスマス！
 meta-author: takesako
 meta-tags: sym, x86, Perl, Ruby, JavaScript
 
