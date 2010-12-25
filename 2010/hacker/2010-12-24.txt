@@ -1,0 +1,18 @@
+Devel::KYTProfで空気読んだプロファイリングする
+
+イヴです。こんにちはid:nekokakです。
+<a href="https://github.com/onishi/perl5-devel-kytprof">Devel::KYTProf</a>というイカしたモジュールの紹介です。
+
+
+このモジュールはまだcpanにupされていないのと、私がco-maintainerではないのですが、コラボにいれてもらってるのでご紹介。
+
+
+Devel::KYTProfはuseするだけで空気読んでくれます。
+
+<img src="http://gyazo.com/8c7df87b9af226dc9ad0052e9845c697.png">
+
+useするだけでこんなプロファイリングデータが出力されます。
+
+とりあえずgit cloneしてuseしてみてください。
+
+ドキュメントとかあんまないですけど、細かいことは空気読んで使ってください。
