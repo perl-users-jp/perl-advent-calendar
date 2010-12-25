@@ -1,0 +1,106 @@
+PMのためのAcme - Acme::PM::*
+meta-author: makamaka
+meta-tags: perl, acme
+
+(firstly written in Japanese, later in English)
+
+こんにちは、<a href="http://twitter.com/maka2_donzoko">makamaka</a>です。今年は<a href="http://yapcasia.org/2010/">YAPC Asia 2010 Tokyo</a>で地方PMやPerler集まりの活動報告・ディスカッションがあったのが印象的でした。また実際、各地で新しいPMが勃興しました((PMについては石垣さんの<a href="http://gihyo.jp/dev/serial/01/modern-perl/0034">モダンPerlの世界へようこそ - Perl Mongers：顔の見える仲間を増やそう</a>で素晴らしい説明がされています))。
+
+そういうわけでPMに関するAcmeを紹介して締めくくります。今CPANにあるのは以下になります（ACME::PM::VoronezhはAcmeが大文字です）。
+
+<a href="http://search.cpan.org/dist/Acme-PM-Barcelona">Acme::PM::Barcelona</a>
+<a href="http://search.cpan.org/dist/Acme-PM-Berlin-Meetings">Acme::PM::Berlin::Meetings</a>
+<a href="http://search.cpan.org/dist/Acme-PM-Chicago">Acme::PM::Chicago</a>
+<a href="http://search.cpan.org/dist/Acme-PM-Frankfurt-Meetings">Acme::PM::Frankfurt::Meetings</a>
+<a href="http://search.cpan.org/dist/Acme-PM-Paris-Meetings">Acme::PM::Paris::Meetings</a>
+<a href="http://search.cpan.org/dist/ACME-PM-Voronezh">ACME::PM::Voronezh</a>
+
+基本的にはpodに活動報告やリンク先が書いてあったり、次回の会合の日程を知るためのモジュールです。
+
+Acme::PM::Barcelonaではかなり詳細にライトニングトークの内容が掲載されたPODが付属しています。
+
+Acme::PM::Berlin::Meetingsは詳細なミーティングの歴史が付いています。
+
+Acme::PM::ChicagoはChicago.pmで誰かに何かをやらせるのに毎月もめるので、リストからランダムに名前を選ぶ関数がついていたりします。2004年以降更新されていませんが……
+
+先達を見習って私も<a href="https://github.com/makamaka/Acme-PM-Hachioji">Acme::PM::Hachioji</a>というのをつくってみました。大変てきとーかつ、機能がありませんので我こそはと思う方はどんどん弄ってください。
+
+>|perl|
+use strict;
+use  Acme::PM::Hachioji;
+
+my $meetings = Acme::PM::Hachioji->meetings;
+
+while ( my $meeting = $meetings->next ) {
+    print $meeting->ymd, "\n";
+}
+||<
+
+<a href="http://atnd.org/events/9807">Hachioji.pm</a>の次回新年会の日程が取り出せますよ！　まあ、まだ決まってないのでundefが返りますが。
+
+
+もちろん
+
+
+>|perl|
+while ( my $meeting = $meetings->previous ) {
+    print $meeting->ymd, "\n";
+}
+||<
+
+前回の会合の日程もとれます。
+
+
+てな感じで、このお正月はあなたもお近くのAcme::PMをこさえてみては如何でしょうか。
+それでは良いお年を！
+
+
+
+ * ----------------------------------------------------
+ * English version
+ * ----------------------------------------------------
+TITLE: Acme for PM - Acme::PM::*.
+
+Hello, I am <a href="http://twitter.com/maka2_donzoko">makamaka</a>. In <a href="http://yapcasia.org/2010/">YAPC Asia 2010 Tokyo</a>, local PMs and Perler's circles report theire activities and had a discussion. Additionaly some local PMs was born ((About PM, please see to Ishigaki's great article <a href="http://gihyo.jp/dev/serial/01/modern-perl/0034">"モダンPerlの世界へようこそ - Perl Mongers：顔の見える仲間を増やそう"</a>)).
+
+So I introduce Acme modules for PM. Currently on CPAN（ACME::PM::Voronezh's Acme is ACME）.
+
+<a href="http://search.cpan.org/dist/Acme-PM-Barcelona">Acme::PM::Barcelona</a>
+<a href="http://search.cpan.org/dist/Acme-PM-Berlin-Meetings">Acme::PM::Berlin::Meetings</a>
+<a href="http://search.cpan.org/dist/Acme-PM-Chicago">Acme::PM::Chicago</a>
+<a href="http://search.cpan.org/dist/Acme-PM-Frankfurt-Meetings">Acme::PM::Frankfurt::Meetings</a>
+<a href="http://search.cpan.org/dist/Acme-PM-Paris-Meetings">Acme::PM::Paris::Meetings</a>
+<a href="http://search.cpan.org/dist/ACME-PM-Voronezh">ACME::PM::Voronezh</a>
+
+Basically they say activities or links, and inform next meetings.
+
+I also wrote <a href="https://github.com/makamaka/Acme-PM-Hachioji">Acme::PM::Hachioji</a>.
+
+>|perl|
+use strict;
+use  Acme::PM::Hachioji;
+
+my $meetings = Acme::PM::Hachioji->meetings;
+
+while ( my $meeting = $meetings->next ) {
+    print $meeting->ymd, "\n";
+}
+||<
+
+You can get next Hachioji.pm meeting date!  But it is not yet decided, so retrn undef.
+
+
+Of course
+
+>|perl|
+while ( my $meeting = $meetings->previous ) {
+    print $meeting->ymd, "\n";
+}
+||<
+
+You can get privious date.
+
+
+Well, in this winter vacation, would you like to write Acme::PM module of you.
+Wish a happy new year!
+
