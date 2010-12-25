@@ -1,0 +1,18 @@
+ひらがなをカタカナに変換したいだって?それなら Lingua::JA::Regular::Unicode
+meta-author: tokuhirom
+meta-format: pod
+
+ここにきて本気をだしている tokuhirom です。こんにちは。
+
+Perl でコードをかいていると、全角カタカナを半角ｶﾀｶﾅに変換したいとか、そういう要望ってよくあるとおもうんですよね。そんなときは L<Lingua::JA::Regular::Unicode> をつかうといいですね。
+
+    use Lingua::JA::Regular::Unicode qw/alnum_z2h hiragana2katakana space_z2h/;
+    alnum_z2h("Ａ１");                                        # => "A1"
+    hiragana2katakana("ほげ");                                # => "ホゲ"
+    space_z2h("\x{0300}");                                    # => 半角スペース
+
+ちょうべんり。
+
+たぶん、だいたいのケースでいま実装されてる関数でたりてるとおもうんですが、なんかこういうのほしい!ってのあれば要望をおまちしております。
+
+Enjoy!
