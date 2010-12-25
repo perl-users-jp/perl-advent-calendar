@@ -1,0 +1,91 @@
+DBIx::Kohada - yet another O/R Mapper
+meta-format: markdown
+
+L<DBIx::Kohada> is lightweight OO-ish O/R Mapper. It mostly likes L<Class::DBI>.
+
+The feature of L<DBIx::Kohada> is:
+
+=over 4
+
+=item OO
+
+The object have a C< $dbh >, unlike L<Class::DBI>.
+
+L<Class::DBI> holds C<$dbh> in the class variable. It is bad idea. It makes hard to manage connections by users.
+
+=item Simple code
+
+L<DBIx::Kohada> is readable. It does not inherit L<Ima::DBI> :P
+
+=item No unintended automatic DB call
+
+L<DBIx::Kohada> does not call RDBMS without user's request.
+
+=item Efficient pagination
+
+L<DBIx::Kohada> has 2 pagination plugins.
+
+L<DBIx::Kohada::Plugin::Pager> fetches "entries_per_page + 1" rows. And detect "this page has a next page or not".
+
+L<DBIx::Kohada::Plugin::Pager::MySQLFoundRows> uses MySQL's SQL_CALC_FOUND_ROWS. It is faster than calling COUNT(*).
+
+L<DBIx::Class>'s pagination makes very slow query at some time. I dislike it.
+
+=item No transparent cache
+
+I don't like transparent cache on O/R mapper.
+
+=item No caching in iterator
+
+L<DBIx::Skinny>'s iterator caches all data in iterator object. It makes the situation: user uses too much memory.
+Why user want to use iterator?? User want to save a memory!
+
+Then, L<DBIx::Kohada>'s iterator doesn't use a cache.
+
+=item Programmable meta data API
+
+L<DBIx::Skinny> provides only DSL style API for creating schema. It makes hard to meta programming for schema.
+
+L<DBIx::Kohada> provides complete API for the operating schema.
+
+=item use L<SQL::Maker>
+
+L<DBIx::Kohada> uses L<SQL::Maker> for creating SQL. L<SQL::Maker> is simple and flexible SQL generator.
+
+=back
+
+
+    package MyApp::DB::Row::User;
+    use parent qw/DBIx::Kohada::Row/;
+    __PACKAGE__->set_table('user');
+    __PACKAGE__->set_primary_key('user_id');
+    __PACKAGE__->add_column($_) for qw/user_id name email/;
+
+    package main;
+    use DBIx::Kohada::Schema;
+    use DBIx::Kohada;
+    use DBI;
+
+    my $schema = DBIx::Kohada::Schema->new();
+    $schema->register_row_class('MyApp::DB::Row::User');
+
+    my $dbh = DBI->connect('dbi:SQLite:');
+    my $db = DBIx::Kohada->new(
+        dbh    => $dbh,
+        schema => $schema,
+    );
+    $db->dbh; # => #dbh
+    my $user = $db->insert('user' => {name => 'john', email => 'john@exapmle.com'});
+    say $user->name; # => john
+    $user->name('mark');
+    $user->update;
+    $user->delete();
+
+    my @users = $db->search_by_sql('user' => q{SELECT * FROM user WHERE name LIKE 'dai%'});
+
+    {
+        my $user = $db->single('user' => {user_id => 3});
+        my $iter = $db->search('user' => {user_id => 3});
+        my @users = $db->search('user' => {user_id => 3});
+    }
+
