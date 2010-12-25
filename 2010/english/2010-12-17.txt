@@ -38,3 +38,6 @@ This module makes your module more readable, and writable =)
 
   F->class_method(p => 3);
 
+Okay, it uses L<PadWalker> to retrieve variable name. It is obvious. But so, L<PadWalker> is stable enough. I think it is production ready.
+
+Enjoy!
