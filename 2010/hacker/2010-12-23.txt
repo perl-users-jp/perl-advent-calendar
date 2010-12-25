@@ -7,7 +7,7 @@ meta-format: pod
 そんな時は、[http://search.cpan.org/dist/WWW-YouTube-Download/:title=WWW::YouTube::Download]を使いましょう。
 死ぬほど内部実装が変わってそのたびに泣ける YouTube ですが、いまだにくじけずにちゃんとメンテしていて、現役でダウンロードできます。
 
-=head1 基本編
+=head3 基本編
 
     use WWW::YouTube::Download;
     
@@ -16,7 +16,7 @@ meta-format: pod
 
 とすれば、「Ry6Rupm3kqM.mp4」という名前でダウンロードされます。
 
-=head1 ファイル名を変えたい
+=head3 ファイル名を変えたい
 
 ファイル名はタイトルにしたいところかと思いますので、
 
@@ -27,7 +27,7 @@ meta-format: pod
 
 という風にやれば、いいです。
 
-=head1 プログレスバーだしたい
+=head3 プログレスバーだしたい
 
 コマンドで使う場合は進捗がみれるとうれしいですね。
 
@@ -37,7 +37,7 @@ meta-format: pod
 
 なんでこの機能がコアにあるんでしょうか？
 
-=head1 自分で callback 定義したい！
+=head3 自分で callback 定義したい！
 
 デフォルトの動きなんかしゃらくさいので、自分で callback 関数を定義してそいつで downalod したい
 
@@ -56,7 +56,7 @@ meta-format: pod
 
 これで 1 chunk ごとに sl コマンドが走るのでだいぶ便利です。
 
-=head1 パラレルでダウンロードしたい
+=head3 パラレルでダウンロードしたい
 
     use strict;
     use warnings;
@@ -83,7 +83,7 @@ meta-format: pod
 
 たぶんこんな感じでいいでしょう。
 
-=head1 まとめ
+=head3 まとめ
 
 インターフェースは [http://search.cpan.org/dist/WWW-NicoVideo-Download/:title=WWW::NicoVide::Download] をだいぶパクリましたが、もしかして Download 系のモジュールの需要がいっぱいあるようだったら、共通のインターフェースを考えた方がなにかと再利用性が高まるなーといまふと思いました。
 でも特に近々で書く予定はないので誰か考えてくれるとうれしいですね！
