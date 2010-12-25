@@ -1,4 +1,4 @@
-* Jonkで作るおれおれJobQueueフレームワーク
+Jonkで作るおれおれJobQueueフレームワーク
 
 こんにちわこんにちわ！YAPC::Asia 2010でベストスピーカー賞（次点）を頂いた [http://nekokak.org/:title=nekokak] です。
 今回は拙作 [http://search.cpan.org/dist/Jonk/:title=Jonk] でオレオレJobQueueフレームワークを作るお話をします。

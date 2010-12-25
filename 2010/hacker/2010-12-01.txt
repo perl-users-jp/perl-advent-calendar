@@ -1,4 +1,4 @@
-* Test::Fixture::DBI で覚えるデータベーステスト
+Test::Fixture::DBI で覚えるデータベーステスト
 
 さて、今年も JPerl Advent Calendar の季節がやってきましたね。こんにちわこんにちわ [http://d.hatena.ne.jp/ZIGOROu/:title=zigorou] です。
 今回は拙作 [http://search.cpan.org/dist/Test-Fixture-DBI/lib/Test/Fixture/DBI.pm:title=Test::Fixture::DBI] でデータベースのテストをするお話をしますよ！
