@@ -1,0 +1,18 @@
+Data::Recursive::Encode で再帰的に encode/decode する
+meta-author: tokuhirom
+meta-format: pod
+
+最近、009 をまたみなおしている tokuhirom です。こんにちは。
+
+さて、複雑なデータ構造にはいった文字列を decode/encode したい場合、いちいちやるのは存外めんどくさいものです。
+
+そんなときには L<Data::Recursive::Encode> をつかうといいでしょう。一発で、complex data structure にはいった data の encode/decode をやることができます。
+
+    use Data::Recursive::Encode;
+
+    Data::Recursive::Encode->decode( 'euc-jp', $data );
+    Data::Recursive::Encode->encode( 'euc-jp', $data );
+    Data::Recursive::Encode->decode_utf8($data);
+    Data::Recursive::Encode->encode_utf8($data);
+
+Enjoy!
