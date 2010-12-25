@@ -4,7 +4,7 @@ meta-format: pod
 
 最近寒過ぎて家からでられない xaicron です。
 みなさん YouTube の動画をダウンロードしたいですよね？
-そんな時は、[http://search.cpan.org/dist/WWW-YouTube-Download/:title=WWW::YouTube::Download]を使いましょう。
+そんな時は、L<WWW::YouTube::Download|http://search.cpan.org/dist/WWW-YouTube-Download> を使いましょう。
 死ぬほど内部実装が変わってそのたびに泣ける YouTube ですが、いまだにくじけずにちゃんとメンテしていて、現役でダウンロードできます。
 
 =head3 基本編
@@ -85,5 +85,5 @@ meta-format: pod
 
 =head3 まとめ
 
-インターフェースは [http://search.cpan.org/dist/WWW-NicoVideo-Download/:title=WWW::NicoVide::Download] をだいぶパクリましたが、もしかして Download 系のモジュールの需要がいっぱいあるようだったら、共通のインターフェースを考えた方がなにかと再利用性が高まるなーといまふと思いました。
+インターフェースは L<WWW::NicoVide::Download|http://search.cpan.org/dist/WWW-NicoVideo-Download/> をだいぶパクリましたが、もしかして Download 系のモジュールの需要がいっぱいあるようだったら、共通のインターフェースを考えた方がなにかと再利用性が高まるなーといまふと思いました。
 でも特に近々で書く予定はないので誰か考えてくれるとうれしいですね！
