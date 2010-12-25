@@ -1,0 +1,14 @@
+Image::LibRaw で raw 画像を操作する
+meta-author: tokuhirom
+meta-format: pod
+
+おなかがすきすぎたので、そろそろ昼飯をたべにいきたい tokuhirom です。
+L<Image::LibRaw> をつかうと、raw 画像を簡単に操作できます。これは、libraw という C++ (だったはず)でかかれたライブラリのラッパーです。
+
+    use Image::LibRaw;
+    my $libraw = Image::LibRaw->new();
+    $raw->open_file($fname);
+    $raw->unpack_thumb;
+    $raw->dcraw_thumb_writer('libraw-thumb.jpg');
+
+raw 画像をあつかいたい場合にはぜひごりようください。
