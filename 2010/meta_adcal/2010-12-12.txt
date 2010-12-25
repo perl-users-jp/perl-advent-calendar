@@ -1,0 +1,29 @@
+pod に対応する
+meta-format: pod
+meta-author: tokuhirom
+
+クリスマスの六本木は人大杉だとおもったtokuhiromですこんにちは。
+
+正直、最近はてな記法つかってなくて、まじ忘れてるし、はてな記法だけしかサポートしてないのってイケてなくね?っておもったので、pod で書けるようにした。
+L<mattn|http://www.google.co.jp/images?um=1&hl=ja&biw=997&bih=652&tbs=isch%3A1&sa=1&q=mattn+%E3%82%A8%E3%83%AD&aq=f&aqi=&aql=&oq=&gs_rfai=> さんによって、meta data のうめこみができるようになっているから、
+
+    タイトル
+    meta-format: pod
+    meta-author: tokuhirom
+
+    pod pod
+
+みたいなかんじでかけばいいようにした。
+
+pod を html に変換するには L<Pod::Simple::XHTML> をつかえばいい。
+
+    use Pod::Simple::XHTML;
+
+    my $p = Pod::Simple::XHTML->new();
+    $p->output_string(\my $out);
+    $p->html_header('');
+    $p->html_footer('');
+    $p->parse_string_document("=pod\n\n$text");
+    return $p;
+
+ってやるだけ!かんたんでしょ。

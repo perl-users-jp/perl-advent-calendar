@@ -1,0 +1,24 @@
+markdown に対応する
+meta-format: pod
+meta-author: tokuhirom
+
+クリスマスの六本木は人大杉だとおもったtokuhiromですこんにちは。
+
+正直、最近はてな記法つかってなくて、まじ忘れてるし、はてな記法だけしかサポートしてないのってイケてなくね?っておもったので、markdown で書けるようにした。
+また、L<mattn|http://www.google.co.jp/images?um=1&hl=ja&biw=997&bih=652&tbs=isch%3A1&sa=1&q=mattn+%E3%82%A8%E3%83%AD&aq=f&aqi=&aql=&oq=&gs_rfai=> さんによって、meta data のうめこみができるようになっているから、
+
+    タイトル
+    meta-format: markdown
+    meta-author: tokuhirom
+
+    markdown markdown
+
+みたいなかんじでかけばいいようにした。
+
+markdown を html に変換するには L<Text::Markdown> をつかえばいい。
+
+    use Text::Markdown qw/markdown/;
+
+    $html = markdown($text);
+
+ってやるだけ!かんたんでしょ。
