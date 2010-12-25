@@ -1,0 +1,50 @@
+DBIx::TransactionManagerでネストしたトランザクションを管理
+
+もうすぐクリスマスですね。
+id:nekokakです。
+
+DBIx::ClassやDBIx::SkinnyなんかのORMを使っていれば、
+ソフトウエア的にネストしたトランザクションを管理する機能が提供されていたりするんですが、
+
+生DBI派の人でも使えるといいよねということで
+DBIx::SkinnyでつかっていたTransaction管理の仕組みを外だしして作ったのが
+<a href="http://search.cpan.org/dist/DBIx-TransactionManager/">DBIx::TransactionManager</a>です
+
+
+DBIx::TransactionManagerを使えば
+
+>||
+use DBI;
+use DBIx::TransactionManager;
+my $dbh = DBI->connect('dbi:SQLite:');
+my $tm = DBIx::TransactionManager->new($dbh);
+
+{
+    my $txn = $tm->txn_scope;
+    $dbh->do("insert into foo (id, var) values (1,'baz')");
+    {
+        my $txn2 = $tm->txn_scope;
+        $dbh->do("insert into foo (id, var) values (2,'bab')");
+        $txn2->commit;
+    }
+    {
+        my $txn3 = $tm->txn_scope;
+        $dbh->do("insert into foo (id, var) values (3,'bee')");
+        $txn3->commit;
+    }
+    $txn->commit;
+}
+||<
+
+こんな感じでトランザクションを入れ子にする事が可能です。
+
+入れ子にできると何が良いかというと、
+ビジネスロジックを細かい単位で作成し、
+その単位毎にトランザクションをかけておき、
+細かい単位で利用可能であるのは勿論のこと、
+ある纏まった単位で一気に細かいビジネスロジックを呼び出す際、
+呼び出し側で大きくトランザクションをかける事で、
+いい感じでトランザクションを制御できることでしょう。
+
+
+と、ぐだぐだと長くなりましたがとりあえずみんな使ってみるといいと思います！
