@@ -1,0 +1,25 @@
+Python::Serialize::Pickle::InlinePython
+meta-format: pod
+
+L<Python::Serialize::Pickle::InlinePython> is a serializer/deserializer for Python's serializer format named L<Pickle|http://docs.python.org/library/pickle.html>.
+
+L<Python::Serialize::Pickle> is already exists in the CPAN, but it is no longer maintain. It does not supports recent Python's pickle format.
+
+L<Python::Serialize::Pickle::InlinePython> uses L<Inline::Python> to manipulate pickle. It is very simple and easy!
+
+    use Data::Dumper;
+    use Python::Serialize::Pickle::InlinePython;
+
+    # load it
+    my $pic = Python::Serialize::Pickle::InlinePython->new('data.pickle');
+    while (my $dat = $pic->load()) {
+        warn Dumper($dat);
+    }
+
+    # dump it
+    my $pic = Python::Serialize::Pickle::InlinePython->new('>data.pickle');
+    $pic->dump('foo');
+    $pic->dump('bar');
+    $pic->close();
+
+Enjoy!
