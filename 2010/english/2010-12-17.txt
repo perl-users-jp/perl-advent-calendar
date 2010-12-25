@@ -1,5 +1,5 @@
 Smart::Args - smart argument validation
-meta-format: markdown
+meta-format: pod
 
 Smart::Args is yet another argument validation library.
 
