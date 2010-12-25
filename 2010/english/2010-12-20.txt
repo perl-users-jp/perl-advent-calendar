@@ -1,5 +1,5 @@
 DBIx::Kohada - yet another O/R Mapper
-meta-format: markdown
+meta-format: pod
 
 L<DBIx::Kohada> is lightweight OO-ish O/R Mapper. It mostly likes L<Class::DBI>.
 
