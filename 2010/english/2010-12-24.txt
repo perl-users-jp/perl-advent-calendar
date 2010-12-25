@@ -44,7 +44,9 @@ for example:
 --"\x{3060}" - single Unicode, <a href="http://www.fileformat.info/info/unicode/char/3060/index.htm">HIRAGANA LETTER DA</a>.
 --"\x{305F}\x{3099}" - one character by two Unicode, <a href="http://www.fileformat.info/info/unicode/char/305F/index.htm">HIRAGANA LETTER TA</a> and <a href="http://www.fileformat.info/info/unicode/char/3099/index.htm">COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK</a>
 
-<span style="font-weight:bold;">Simply put</span>, NFD(Normalization Form Canonical Decomposition) is normalization name "single Unicode" style to "one character by two Unicode" style. and NFC(Normalization Form Canonical Composition) makes reverse.
+<span style="font-weight:bold;">Simply put</span>, NFD(Normalization Form Canonical Decomposition) is normalization name "single Unicode" style to "one character by two Unicode" style.
+
+and NFC(Normalization Form Canonical Composition) makes reverse.
 
 
 <h3>Mac OSX filesystem use utf-8 based on NFD-ed unicode</h3>
@@ -113,8 +115,9 @@ for example
 -<span style="font-size:large;">福</span>
 --"\x{FA1B}" - <a href="http://www.fileformat.info/info/unicode/char/fa1b/index.htm">CJK COMPATIBILITY IDEOGRAPH-FA1B</a>.
 --NFD() normalize to <span style="font-size:large;">福</span>( "\x{798F}" ) / same meaning, but simple Kanji.
+--Mac <span style="font-weight:bold;">does not normalizei</span>. = we can use "福" as filename on MacOS.
 
-Most of the character is a special rare Kanji. So, unless you use Asian characters, the problem will not happen. But even if you are in Asia, may be included in the itunes music directory.
+Most of these special character are special rare Kanji. So, unless you use Asian characters, the problem will not happen. But even if you are in Asia, may be included in the itunes music directory.
 
 If you simply use Unicode::Normalize::NFD(), you may get the file name you do not expect.
 
