@@ -1,7 +1,7 @@
 Mouseに関する4つの誤解
 
 メリクリ！Hacker Trackもいよいよ最終日となりました！
-今回は以下のような[http://search.cpan.org/dist/Mouse]に関するよくある誤解を晴らそうと思います((version 0.88現在))。
+今回は以下のような[http://search.cpan.org/dist/Mouse:title=Mouse]に関するよくある誤解を晴らそうと思います((version 0.88現在))。
 
 + MouseはMooseとの互換性に難がある
 + Mouseは依存モジュールが多い
