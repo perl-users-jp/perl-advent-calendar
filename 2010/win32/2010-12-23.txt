@@ -1,0 +1,28 @@
+Encode::EUCJPMSで楽々日本語処理(ただしWindowsに限る)
+
+こんにちは<a href="http://www.twitter.jp/songmu">Songmu</a>です。Win32 Trackが止まりかけているので、どさくさにまぎれて書きます。
+
+さて、WindowsではShift_JISからJISX0208外の文字を含んだ独自拡張(かつ一部Unicodeとマッピングが異なる)であるcp932(Windows31J)が使われていることはご存知かと思います。cp932はEncodeにも標準搭載されていますね。
+
+EUC-JPにも同じような独自拡張が存在します。以下の二つです。
+
+:eucJP-ms:Unix/Linux界隈で制定されたcp932互換の文字集合を持つEUC-JPの拡張。PostgreSQLなんかのEUC-JPはこれになり、MySQLも5.0.4以降eucjpmsが選択できるようになっています。
+
+:cp51932:Windowsで使われているEUC-JP。cp932/eucJP-msに比べると文字集合が小さく、IBM拡張漢字部分がNEC選定文字しか含まれていません。IEや秀丸なんかで表示されるEUC-JPはこれになります。
+
+二つもあって厄介ですね。特にeucJP-msはmsと書かれているのに、Windows上では使われないので注意が必要です。
+
+さて、過去のコードがEUC-JPで書かれていたり、DBの文字コードがEUC-JP(eucJP-ms)だったりといったことは多々あるかと思います。
+
+入出力がJISX0208内に収まるのであれば特に意識する必要はありませんが、記号や「髙」(はしごだか)等を扱いたいという無茶振りに答える必要がある際にはこの辺意識が必要です。例えばeucJP-msとcp51932では「髙」のコードポイントの値が異なります。
+
+その辺りの処理に必要なのが、Encode::EUCJPMSです。このモジュールを追加すると、"eucJP-ms"と"cp51932"というエンコードが扱えるようになります。
+
+- Windows上で入力されたEUC-JP(=CP51932)をDBのEUC-JP(eucJP-ms)に格納
+- テンプレートはEUC-JP(CP51932/eucJP-ms)だけど出力はShift_JIS(cp932)
+
+みたいなことが実現できます。とっても便利ですね。いいえ、全部UTF-8にしてしまえば良いと思います。
+
+ちなみに、Encode::EUCJPMSにはcp50220とcp50221というWindow上のISO-2022-JPの独自拡張のエンコードも含まれています。
+
+Encode::EUCJPMSはEncodeに標準搭載して欲しい気もするのですが難しいのでしょうか。
