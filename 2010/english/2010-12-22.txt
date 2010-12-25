@@ -1,0 +1,9 @@
+Image::Epeg - extreamly fast JPEG resizing
+meta-format: pod
+
+Perl wrapper to the ultra-fast jpeg manipulation library "Epeg". This library can be used to thumbnail (resize down) jpegs, set comments and quality.
+
+    use Image::Epeg qw(:constants);
+    my $epg = new Image::Epeg( "test.jpg" );
+    $epg->resize( 150, 150, MAINTAIN_ASPECT_RATIO );
+
