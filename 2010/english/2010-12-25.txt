@@ -1,0 +1,5 @@
+FrePAN - Fresh CPAN Site
+
+<a href="http://frepan.64p.org/">FrePAN</a> is one of the recent alternatives to <a href="http://search.cpan.org/>The CPAN Search Site</a>. FrePAN is written and maintained by tokuhirom, and its source is available at <a href="https://github.com/tokuhirom/frepan">github</a>. It's fairly easy to install (FrePAN is based on the Plack/PSGI through his web application framework, <a href="http://search.cpan.org/dist/Amon2/">Amon2</a>), and it uses really fresh information about who uploaded what, so you usually can view a source and meta information within a few minutes. If you are keen to know the latest information, do visit there, and also try <a href="http://search.cpan.org/dist/App-CPAN-Fresh/">cpanf</a>, which is written by miyagawa. With that, you can query and install the fresh uploads from the shell. If you can wait a bit longer, <a href="http://search.cpan.org/dist/App-cpanminus/">cpanm</a> would be a fine alternative, which relies on an hourly mirror.
+
+Wish you happy holidays!
