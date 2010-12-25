@@ -1,3 +1,7 @@
+記号Polyglotプログラミングでメリークリスマス！
+meta-author: takesako
+meta-tags: sym, x86, Perl, Ruby, JavaScript
+
 今日でいよいよ最終日になりました。<a href="http://developer.cybozu.co.jp/takesako/">id:TAKESAKO</a>です。
 
 ネタで始まった記号トラックですが、執筆いただいたみなさんのおかげで全日程達成することができました。ありがとうございます。
@@ -182,7 +186,7 @@ Merry Christmas! 80286 (^-^)/~
 
 実行できました！
 
-こんな感じですが、ぜひみなさんも記号プログラミングをマスターしてHappy Hackingしましょう！
+ぜひみなさんも記号プログラミングをマスターしてHappy Hackingしましょう！
 
 メリークリスマス！
 
