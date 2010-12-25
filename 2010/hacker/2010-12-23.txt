@@ -1,0 +1,89 @@
+YouTube の動画を保存する
+meta-author: xaicron
+meta-format: pod
+
+最近寒過ぎて家からでられない xaicron です。
+みなさん YouTube の動画をダウンロードしたいですよね？
+そんな時は、[http://search.cpan.org/dist/WWW-YouTube-Download/:title=WWW::YouTube::Download]を使いましょう。
+死ぬほど内部実装が変わってそのたびに泣ける YouTube ですが、いまだにくじけずにちゃんとメンテしていて、現役でダウンロードできます。
+
+=head1 基本編
+
+    use WWW::YouTube::Download;
+    
+    my $client = WWW::YouTube::Download->new;
+    $client->download('http://www.youtube.com/watch?v=Ry6Rupm3kqM');
+
+とすれば、「Ry6Rupm3kqM.mp4」という名前でダウンロードされます。
+
+=head1 ファイル名を変えたい
+
+ファイル名はタイトルにしたいところかと思いますので、
+
+    my $params = $client->prepare_download($vide_id_or_url);
+    $client->download($vide_id_or_url, +{
+        file_name => $params->{title}.$params->{suffix},
+    });
+
+という風にやれば、いいです。
+
+=head1 プログレスバーだしたい
+
+コマンドで使う場合は進捗がみれるとうれしいですね。
+
+    $client->download($vide_id_or_url, +{
+        verbose => 1,
+    });
+
+なんでこの機能がコアにあるんでしょうか？
+
+=head1 自分で callback 定義したい！
+
+デフォルトの動きなんかしゃらくさいので、自分で callback 関数を定義してそいつで downalod したい
+
+    my $params = $client->prepare_download($vide_id_or_url);
+    my $fh;
+    $client->download($vide_id_or_url, +{
+        cb => sub {
+            my ($data, $res, $proto) = @_;
+            unless ($fh) {
+                open $fh, '>', $params->{title}.$params{suffix} or die $!;
+            }
+            print $fh $data;
+            system 'sl';
+        },
+    });
+
+これで 1 chunk ごとに sl コマンドが走るのでだいぶ便利です。
+
+=head1 パラレルでダウンロードしたい
+
+    use strict;
+    use warnings;
+    use WWW::YouTube::Download;
+    use Parallel::ForkManager;
+
+    my $urls = [qw{
+        http://www.youtube.com/watch?v=JS0CxKuocsE
+        http://www.youtube.com/watch?v=LYhuBOOBunU
+        http://www.youtube.com/watch?v=tDWgt8Asj68
+    }];
+
+    my $pm = Parallel::ForkManager->new(scalar @$urls);
+    for my $url (@$urls) {
+        my $pid = $pm->start and next;
+
+        my $client = WWW::YouTube::Download->new;
+        $client->download($url);
+
+        $pm->finish;
+    }
+
+    $pm->wait_all_children;
+
+たぶんこんな感じでいいでしょう。
+
+=head1 まとめ
+
+インターフェースは [http://search.cpan.org/dist/WWW-NicoVideo-Download/:title=WWW::NicoVide::Download] をだいぶパクリましたが、もしかして Download 系のモジュールの需要がいっぱいあるようだったら、共通のインターフェースを考えた方がなにかと再利用性が高まるなーといまふと思いました。
+でも特に近々で書く予定はないので誰か考えてくれるとうれしいですね！
