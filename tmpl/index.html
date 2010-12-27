@@ -38,7 +38,7 @@ function foo(){
                     <ul>
                         [% FOR entry IN entries %]
                             [% IF entry.exists %]
-                                <li class="text-indent">[% format_date(entry.date) %] <a href="[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]">[% entry.title %]</a> <img src="http://b.hatena.ne.jp/entry/image/[% uri_for(year _ '/' _ name _ '/' _ col.date.mday) %]" alt="B!" /></li>
+                                <li class="text-indent">[% format_date(entry.date) %] <a href="[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]">[% entry.title %]</a> <img src="http://b.hatena.ne.jp/entry/image/[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]" alt="B!" /></li>
                             [% ELSE %]
                                 <li class="text-indent">[% format_date(entry.date) %]</li>
                             [% END %]
