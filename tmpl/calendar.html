@@ -50,7 +50,8 @@ function foo(){
                         [% FOR col IN row.cols %]
                             <td class="cell">
                                 [% IF col.exists %]
-                                    [% col.date.mday %]<br /><a class="article-title" href="[% uri_for(year _ '/' _ name _ '/' _ col.date.mday) %]" title="[% col.title %]">[% col.title %]</a>
+                                    [% col.date.mday %]<br /><a class="article-title" href="[% uri_for(year _ '/' _ name _ '/' _ col.date.mday) %]" title="[% col.title %]">[% col.title %]</a><br />
+                                    <img src="http://b.hatena.ne.jp/entry/image/[% uri_for(year _ '/' _ name _ '/' _ col.date.mday) %]" alt="B!" />
                                 [% ELSE %]
                                     [% col.date.mday %]
                                 [% END %]
