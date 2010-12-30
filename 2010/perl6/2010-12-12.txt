@@ -6,7 +6,7 @@ meta-tag: perl6 rakudo
 
 * とりあえず#perl6で聞いてみた
 
->>
+>||
 13:10:05 >#perl6@freenode:lopnor< is there any way to fork a process?
 13:11:41 <#perl6@freenode:TiMBuS> yes, if you use zavolaj you can call fork
 13:11:56 <#perl6@freenode:TiMBuS> https://github.com/jnthn/zavolaj
@@ -37,7 +37,7 @@ meta-tag: perl6 rakudo
 13:34:56 >#perl6@freenode:lopnor< it ran
 13:40:18 <#perl6@freenode:sorear> is native<libc>
 13:41:23 >#perl6@freenode:lopnor< it also ran:)
-<<
+||<
 
 ということで一発で教えてもらえました。
 
