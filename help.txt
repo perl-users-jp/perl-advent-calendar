@@ -1,26 +1,22 @@
-Perl Advent Calendar 書き方 (2010年版)
+Perl Advent Calendar 書き方
 meta-author: hasegawayosuke
 meta-tags: help, jperl
 
 このドキュメントは、perl-users.jp で公開されている Advent Calendar のwriter向けにカレンダー記事の公開方法について説明したものです。
 
-2010年版 Advent Calendar は、一般利用者に対しては以下のURLで公開されます。<br/> http://perl-users.jp/articles/advent-calendar/2010/
+この Advent Calendar は、一般利用者に対しては以下のURLで公開されます。<br/> http://perl-users.jp/articles/advent-calendar/2011/
 
 トラックは以下のものがあります。
 
 - Hacker Track
 - Casual Track
 - English Track
-- Acme Track
-- Win32 Track
-- Meta Advent Calendar Track
-- Symbolic Programing Track
 
 各トラックの内容については、上記 URL および参加者募集要項等を見てください。
 
-各トラックの記事は、GitHub 上にテキスト形式で配置します。<br /> https://github.com/perl-users-jp/jperl-advent-calendar-2010/tree/master/
+各トラックの記事は、GitHub 上にテキスト形式で配置します。<br /> https://github.com/perl-users-jp/perl-advent-calendar-japan/tree/master/
 
-例えば、記号トラックの2010年12月5日用の記事であれば、<br/> https://github.com/perl-users-jp/jperl-advent-calendar-2010/tree/master/2010/sym/2010-12-05.txt <br/>として git push することになります。
+例えば、記号トラックの2010年12月5日用の記事であれば、<br/> https://github.com/perl-users-jp/perl-advent-calendar-japan/tree/master/2011/sym/2011-12-05.txt <br/>として git push することになります。
 
 現在、上記リポジトリへの push 権は各トラックで主要な数名が保持していますので、
 +githubにアカウントを持っているのであれば tokuhirom, yappo, kan_fushihara, takesako, xaicron, hasegawayosuke, makamaka, yusukebe, kazuho, lestrrat, dankogai, mattn あたりにお願いして権限を与えてもらう。連絡方法はIRC(#perl-casual@freenodeあたり)やTwitterでどうぞ。forkしてpull reqするのは面倒なので禁止です。
@@ -59,6 +55,8 @@ meta-tags: perl, win32
 
 という形式で記述します。meta-tags はカンマによる複数指定が可能です。なおどちらのメタ情報も省略は可能ですが、なるべく入れる様にして下さい。
 
-その他、分からないことがあれば IRC で #perl-casual@freenode.net or <a href="http://search.twitter.com/search?q=%23jpac2010">#jpac2010@Twitter</a> あたりで気軽に尋ねてください。
+その他、分からないことがあれば IRC で #perl-casual@freenode.net or <a href="http://search.twitter.com/search?q=%23perladvent">#perladvent@Twitter</a> あたりで気軽に尋ねてください。
 
-書いた人：hasegawayosuke 
+書いた人：hsegawayosuke 
+
+※ツールが複数年対応となったので、リポジトリ url などが変わりました
