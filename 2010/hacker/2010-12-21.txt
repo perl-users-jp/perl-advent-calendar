@@ -1,0 +1,27 @@
+Text::Xslateで安全なテンプレート生活を送ろう！
+
+いよいよクリスマスまで残り4日となりましたが皆様はいかがお過ごしでしょうか。クリスマスが終わると年越しですね。年末年始は枕を高くして眠りたいですね。XSSの恐怖に怯えたくないですね。テンプレートファイルのgrepログを眺めるだけの単純なお仕事で時間を使いたくありませんね。それなら[http://xslate.org/:title=Text::Xslate]を使ってエスケープのことは忘れましょう！
+Text::Xslateはウェブアプリケーションのために最適化したテンプレートエンジンです。Xslateの一部は今年のJPerl Advent Calendar Casual Trackでも紹介されていますね((KolonというのはXslateのデフォルトのテンプレート構文です。))。
+- [http://perl-users.jp/articles/advent-calendar/2010/casual/8:title=Kolonでかこう]
+さて、ウェブアプリケーションではユーザーからの入力をHTMLページに埋め込むことがよくありますが、そこで気をつけなければならないのがXSSですね。このあたりのことは私よりも詳しい方がおおぜいいらっしゃるのでそちらを参考にしてください。
+- [http://labs.cybozu.co.jp/blog/kazuho/archives/2008/12/textmicrotemplate.php:title=Text::MicroTemplate - テンプレートエンジンのセキュリティと利便性]
+- [http://developer.cybozu.co.jp/kazuho/2010/10/xss-f211.html:title=XSSに強いウェブサイトを作る – テンプレートエンジンの選定基準とスニペットの生成手法]
+- [http://subtech.g.hatena.ne.jp/mala/20100222/1266843093:title=HTMLのscriptタグ内に出力されるJavaScriptのエスケープ処理に起因するXSSがとても多い件について]
+- [http://blog.nomadscafe.jp/2010/11/xssjavascriptjson.html:title=XSSを回避しつつ、テンプレートからJavaScriptにJSONで値を渡す方法]
+Xslateは、特に上記リストの最初のエントリで紹介されているText::MicroTemplateのアイデアを採用し、テンプレートに埋め込む値をデフォルトでHTMLエスケープするようにしています。Template::ToolkitやHTML::Templateと異なり、原則としてテンプレート側にエスケープ処理のためのコードを書く必要がありません。というより、書いてはいけません。このAdvent Calendar用のテンプレートを見ていただくとそれがわかると思います。
+- https://github.com/perl-users-jp/jperl-advent-calendar-2010/blob/master/tmpl/index.html
+- https://github.com/perl-users-jp/jperl-advent-calendar-2010/blob/master/tmpl/entry.html
+entry.htmlではText::Xatenaで整形したHTMLを埋め込みますが、その部分のテンプレートは以下のようになっています。
+>|html|
+    <div class="entry-content">
+      [% text %]
+    </div>
+||<
+このtextはエスケープされませんが、それは[https://github.com/p5-app-adventcalendar/p5-app-adventcalendar/blob/master/lib/App/AdventCalendar.pm#L295:title=アプリケーション]側でそのまま(raw)埋め込むよう指定しているからです。
+>|perl|
+#line 295
+    text      => mark_raw($text),
+||<
+テンプレート側でもmark_rawを行うことはできますが、これを使うのは開発中だけにしておき、リリースの際は全てアプリケーション側で処理するようにしたほうがいいでしょう。重要な処理をアプリケーションコードに分離することでメンテナンスしやすくなりますし、またアプリケーションとテンプレートをうっかり同期し忘れてXSSが発生するというアクシデントが原理的に起こらなくなります。
+安全なテンプレートエンジンを使って年末年始はのんびりしましょう！
+以上、[http://github.org/gfx/:title=gfx]でした！

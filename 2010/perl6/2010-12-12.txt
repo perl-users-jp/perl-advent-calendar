@@ -1,0 +1,105 @@
+サブプロセスをforkしたい
+meta-author: Nobuo Danjou <nobuo.danjou@gmail.com>
+meta-tag: perl6 rakudo
+
+こんにちは、[http://twitter.com/lopnor:title=@lopnor]です。 こないだサーバーのテストを書こうとしてforkする方法がわかったので、それをメモしておきます。
+
+* とりあえず#perl6で聞いてみた
+
+>||
+13:10:05 >#perl6@freenode:lopnor< is there any way to fork a process?
+13:11:41 <#perl6@freenode:TiMBuS> yes, if you use zavolaj you can call fork
+13:11:56 <#perl6@freenode:TiMBuS> https://github.com/jnthn/zavolaj
+13:12:02 >#perl6@freenode:lopnor< is it core in rakudo star?
+13:12:29 <#perl6@freenode:TiMBuS> not sure, but it's a simple single .pm file you can include
+13:12:52 <#perl6@freenode:TiMBuS> https://github.com/jnthn/zavolaj/blob/master/examples/unix-fork.p6 there's the example
+13:13:20 >#perl6@freenode:lopnor< oh, it's very easy!
+13:13:34 >#perl6@freenode:lopnor< thank you, i will try that
+13:13:36 <#perl6@freenode:TiMBuS> yeah i was surprised at how easy it was, as well
+13:14:00 <#perl6@freenode:TiMBuS> im not sure if it's very efficient. keep an eye on your memory usage
+13:14:55 >#perl6@freenode:lopnor< i wanted to fork for testing some server,
+13:15:03 >#perl6@freenode:lopnor< so it should be okay for me
+13:27:40 >#perl6@freenode:lopnor< TiMBuS: hm, the sample doesn't work in my mac,
+13:27:55 >#perl6@freenode:lopnor< saying "Could not locate symbol 'fork' in native library '(resident)'"
+13:28:33 >#perl6@freenode:lopnor< i'm using rakudo star 2010-11
+13:29:15 <#perl6@freenode:TiMBuS> you might need to specify the library name
+13:30:24 >#perl6@freenode:lopnor< what library name?
+13:32:31 <#perl6@freenode:TiMBuS> erm, whats fork in osx?
+13:32:43 <#perl6@freenode:TiMBuS> 'libc' ?
+13:32:56 >#perl6@freenode:lopnor< ah,
+13:33:23 >#perl6@freenode:lopnor< sub fork() returns Int is native() { ... } 
+13:33:28 >#perl6@freenode:lopnor< this line should be
+13:33:54 >#perl6@freenode:lopnor< "sub fork() returns Int is native(libc) { ... }" or something,
+13:33:59 >#perl6@freenode:lopnor< right?
+13:34:07 <#perl6@freenode:TiMBuS> yeah
+13:34:31 <#perl6@freenode:TiMBuS> its a string, so  is native('libc')
+13:34:51 >#perl6@freenode:lopnor< thank you!
+13:34:56 >#perl6@freenode:lopnor< it ran
+13:40:18 <#perl6@freenode:sorear> is native<libc>
+13:41:23 >#perl6@freenode:lopnor< it also ran:)
+||<
+
+ということで一発で教えてもらえました。
+
+* 使ってみよう 
+
+いま個人的に進めている[http://github.com/lopnor/p6-plackdo:title=plackdo]というプロジェクトの中で書いたテストです。ソースは[https://github.com/lopnor/p6-plackdo/blob/master/t/Handler-Standalone/fork.t:title=こちら]です。
+
+>||
+use Test;
+use NativeCall;
+use LWP::Simple;
+use Plackdo::Handler::Standalone;
+
+ok 1;
+
+sub fork returns Int is native<libc> { ... }
+
+my $pid = fork();
+if ($pid) {
+    is LWP::Simple.get('http://localhost:5000/'), 'Hello, World';
+} else {
+    my $handler = Plackdo::Handler::Standalone.new;
+    $handler.run(sub (%env){
+        return [
+            200,
+            [
+                Content-Type => 'text/plain',
+                Content-Length => '12',
+            ],
+            ['Hello, World']
+        ];
+    });
+}
+run("kill $pid");
+
+done_testing;
+
+# vim: ft=perl6 :
+||<
+
+zavolajはrakudo-star-2010-11に同梱されていたので、追加のインストールは不要でした。
+
+>||
+use NativeCall;
+sub fork returns Int is native<libc> { ... }
+||<
+
+これでfork()するとlibcのforkが呼ばれるようになります。実運用的にはこのsub forkを記述したモジュールを書いて使い回すのが現実的だと思います。そして、呼び出す側は
+>||
+
+my $pid = fork();
+if ($pid) {
+# parent process
+    # do something
+    run("kill $pid"); # kill the child
+} else {
+# child process
+}
+||<
+
+こんな感じで、perl5とおんなじ感じです。
+
+*「perl6にはforkがない.......」そんなふうに考えていた時期が俺にもありました。
+
+enjoy!

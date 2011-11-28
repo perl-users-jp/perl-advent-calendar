@@ -36,7 +36,7 @@ while ( my $meeting = $meetings->next ) {
 }
 ||<
 
-<a href="http://atnd.org/events/9807">Hachioji.pm</a>の次回新年会の日程が取り出せますよ！　まあ、まだ決まってないのでundefが返りますが。
+<a href="http://atnd.org/events/11405">Hachioji.pmの次回新年会</a>の日程が取り出せますよ！
 
 
 もちろん

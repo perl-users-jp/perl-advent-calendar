@@ -1,0 +1,30 @@
+Mouseに関する4つの誤解
+
+メリクリ！Hacker Trackもいよいよ最終日となりました！
+今回は以下のような[http://search.cpan.org/dist/Mouse:title=Mouse]に関するよくある誤解を晴らそうと思います((version 0.88現在))。
+
++ MouseはMooseとの互換性に難がある
++ Mouseは依存モジュールが多い
++ Mouseはロードが遅い
++ Mouseは実行が遅い
+
+** MouseはMooseとの互換性に難がある
+
+これは誤解です。確かにMouseは[http://search.cpan.org/dist/Moose:title=Moose]と互換性のない部分もありますが、それはほとんどがメタオブジェクトプロトコルレベルの話です。メタオブジェクトプロトコルは普通に使っている限り意識する必要のないものなので、ほとんどのケースでは問題になりません。普通に使う限りは非互換な点は特にないでしょう。
+
+** Mouseは依存モジュールが多い
+
+これは誤解です。Mooseは大量の依存モジュールがありますが、Mouseが依存しているのは標準モジュールのみです。また、CコンパイラがあればXSコードをビルドして使用しますが、これは必須ではありません。すなわち、Mouseの関連もジュールを単純にコピーするだけで動きます。
+
+** Mouseはロードが遅い
+
+これは誤解です。ディストリビューションをみると大量のクラスがあり一見遅そうですが、単なるクラスビルダーとして使用する限りロードは迅速に行われます。たとえば私の環境((VMWare Player/Ubuntsu/Perl 5.12.3))で `<code>time perl -e 'use Foo'</code>` で簡単に計測したところ、Mouseが79ms、Class::Accessor::Fastが54ms、Class::Accessor::Liteが31ms、Class::Accessor::Groupedが68ms、そしてMooseが501msとなりました。確かに他のクラスビルダーと比較すると相対的には高速とはいえません。しかし、もっとも単純なClass::Accessor::Liteと比較しても約40msしか違いがありません。
+
+** Mouseは実行が遅い
+
+これは誤解です。XSが有効になっていれば、Class::XSAccessorに次いで高速なアクセサを提供します。これは、pure Perlなアクセサと比較すると約1.8倍の速度になります。しかもClass::XSAccessorとの差も微々たるものでしかありません。
+
+いかがでしょうか。Mouse(or Moose or Any::Moose)をどんなときでも使うべきだとは思いませんが、だからといってまったく使わないのも惜しいと思いこのエントリを書きました。
+
+いじょ。[http://github.org/gfx/:title=gfx]でした！
+

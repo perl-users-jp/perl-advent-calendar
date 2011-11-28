@@ -1,0 +1,43 @@
+MiniDBIでmysqlを使ってみよう
+meta-author: Nobuo Danjou <nobuo.danjou@gmail.com>
+meta-tag: perl6 rakudo
+
+perl6でデータベース操作を行う方法は、現在のところMiniDBIというモジュールを使うのが良さそうなので、その使い方を紹介します。MiniDBIはrakudo-star-2010-11に同梱されていましたので、追加のインストールは不要です。
+
+使い方はこんな感じです。
+
+>||
+#!/usr/bin/env perl6
+use v6;
+use MiniDBI;
+
+my $dbh = MiniDBI.connect(
+    'MiniDBI:mysql:database=hoge;host=127.0.0.1',
+    'root',
+    '',
+    :RaseError
+);
+$dbh.do('set names utf8');
+
+{
+    my $sth = $dbh.prepare('select * from hoge where id = ?');
+    $sth.execute(42);
+    while $sth->fetchrow_hashref() -> $row {
+        my $body = Buf.new($row<body>.comb>>.ord).decode;
+        $body.say;
+    }
+}
+{
+    my $sth = $dbh.prepare('insert into hoge values (?,?)');
+    $sth.execute(50, 'ほげほげ');
+}
+||<
+
+まずまず普通に動いているようです。注意しないといけないのは、
+
+- MiniDBD::mysql.pm6がNativeCallでlibmysqlclientを呼び出しているので、環境によってはexport LD_LIBRARY_PATH=/usr/local/mysql/lib等としておく必要がある点
+- 'set names utf8'を自分でしないと「????」な感じになる点。まあよくある話ですね。
+- fetchrow_hashrefでとれた文字列はそのままだと壊れてるので、Bufに突っ込んでdecodeする必要がある点
+- MiniDBD::mysql.pm6を読むとわかりますがかなり素朴な実装なので、SQLインジェクションを食らう点
+
+くらいでしょうか。実際にはこれをベースに自分で安全な実装を書く方が良いと思います。NativeCallを使ってlibmysqlclientをたたいているので、そこらへんの使い方は参考になるでしょう。
