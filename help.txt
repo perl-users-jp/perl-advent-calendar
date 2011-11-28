@@ -14,9 +14,9 @@ meta-tags: help, jperl
 
 各トラックの内容については、上記 URL および参加者募集要項等を見てください。
 
-各トラックの記事は、GitHub 上にテキスト形式で配置します。<br /> https://github.com/perl-users-jp/perl-advent-calendar-japan/tree/master/
+各トラックの記事は、GitHub 上にテキスト形式で配置します。<br /> https://github.com/perl-users-jp/perl-advent-calendar/tree/master/
 
-例えば、記号トラックの2010年12月5日用の記事であれば、<br/> https://github.com/perl-users-jp/perl-advent-calendar-japan/tree/master/2011/sym/2011-12-05.txt <br/>として git push することになります。
+例えば、記号トラックの2010年12月5日用の記事であれば、<br/> https://github.com/perl-users-jp/perl-advent-calendar/tree/master/2011/sym/2011-12-05.txt <br/>として git push することになります。
 
 現在、上記リポジトリへの push 権は各トラックで主要な数名が保持していますので、
 +githubにアカウントを持っているのであれば tokuhirom, yappo, kan_fushihara, takesako, xaicron, hasegawayosuke, makamaka, yusukebe, kazuho, lestrrat, dankogai, mattn あたりにお願いして権限を与えてもらう。連絡方法はIRC(#perl-casual@freenodeあたり)やTwitterでどうぞ。forkしてpull reqするのは面倒なので禁止です。
