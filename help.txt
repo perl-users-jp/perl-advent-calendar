@@ -11,6 +11,8 @@ meta-tags: help, jperl
 - Hacker Track
 - Casual Track
 - English Track
+- DBIx Track
+- Teng Track
 
 各トラックの内容については、上記 URL および参加者募集要項等を見てください。
 
