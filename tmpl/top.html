@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head profile="http://purl.org/net/ns/metaprof">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" />
+    <title>[% conf.title %]</title>
+<!--
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://perl-users.jp/articles/advent-calendar/2009/index.xml" />
+-->
+</head>
+<body class="layout-two-column-right">
+<div id="container">
+    <div id="container-inner" class="pkg">
+
+        <div id="banner">
+            <div id="banner-inner" class="pkg">
+                <h1 id="banner-header">[% conf.title %]</a></h1>
+                <p id="banner-description">Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="pagebody">
+        <div id="pagebody-inner">
+            <div id="alpha">
+                <div id="alpha-inner">
+<div class="entry">
+    <h1 class="entry-header">[% title %]&nbsp;<a href="http://b.hatena.ne.jp/entry/[% uri_for(req.path_info) %]"><img src="http://b.hatena.ne.jp/entry/image/[% uri_for(req.path_info) %]" alt="B!" /></a></h1><br />
+    <div class="entry-content">
+      [% text %]
+    </div>
+                </div>
+            </div>
+        </div>
+        [% INCLUDE 'include/sidemenu.html' %]
+    </div>
+</div>
+</body>
+</html>
