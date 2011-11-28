@@ -193,7 +193,7 @@ unlet s:save_cpo
 
 とすると
 
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/casual/2010-12-05/unite-rhythmbox.png" width="400" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/casual/2010-12-05/unite-rhythmbox.png" width="400" />
 
 どーん。さらに Unite の強力なインクリメンタルサーチで曲を絞り込んで選択すると見事に音楽が再生されました。なんか嬉しい！ Vim から音楽が再生出来てステキ！
 

@@ -16,13 +16,13 @@ EBCDICは「Extended Binary Coded Decimal Interchange Code」の略で「エビ�
 
 EBCDICには、いくつかのコードページがあるのですが、記号プログラムの難読化に一番使えそうなcp500を考えてみます。
 
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/9ce29d2faf619b5927575acfa4ec1aa997fff5da/2010/sym/cp500.png" width="500" height="513">
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/9ce29d2faf619b5927575acfa4ec1aa997fff5da/2010/sym/cp500.png" width="500" height="513">
 
 *cp819（ISO-8859-1）
 
 これをISO-8859-1のコードページcp819と比較すると以下になります。
 
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/9ce29d2faf619b5927575acfa4ec1aa997fff5da/2010/sym/cp819.png" width="500" height="513">
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/9ce29d2faf619b5927575acfa4ec1aa997fff5da/2010/sym/cp819.png" width="500" height="513">
 
 *ASCIIと非互換なEBCDIC
 

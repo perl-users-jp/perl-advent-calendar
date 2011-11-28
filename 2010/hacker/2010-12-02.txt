@@ -140,7 +140,7 @@ sub work {
 
 今回は超簡単なサンプルスクリプトでご説明しました。
 サンプルコードも
-https://github.com/perl-users-jp/jperl-advent-calendar-2010/tree/master/2010/hacker/jonk_sample/
+https://github.com/perl-users-jp/perl-advent-calendar/tree/master/2010/hacker/jonk_sample/
 に置いておきましたのでどうぞ。
 
 このようにJonkのをつかえばオレオレJobQueueフレームワークを作成することは簡単です。

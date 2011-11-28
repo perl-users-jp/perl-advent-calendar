@@ -10,9 +10,9 @@ meta-tags: sym, x86, Perl, Ruby, JavaScript
 
 *polyglot.com
 
-<iframe width="495" height="200" src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/14858d0ab5c678abc9e242ff4185e4e5a3caae9e/2010/sym/polyglot.com"></iframe>
+<iframe width="495" height="200" src="https://github.com/perl-users-jp/perl-advent-calendar/raw/14858d0ab5c678abc9e242ff4185e4e5a3caae9e/2010/sym/polyglot.com"></iframe>
 
-このファイルを<a href="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/14858d0ab5c678abc9e242ff4185e4e5a3caae9e/2010/sym/polyglot.com">polyglot.com</a>という名前で保存しておきます。
+このファイルを<a href="https://github.com/perl-users-jp/perl-advent-calendar/raw/14858d0ab5c678abc9e242ff4185e4e5a3caae9e/2010/sym/polyglot.com">polyglot.com</a>という名前で保存しておきます。
 
 >||
 C:\> more polyglot.com
@@ -101,9 +101,9 @@ Merry Christmas! 80286 (^-^)/~
 
 *final.txt
 
-<iframe width="495" height="200" src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/14858d0ab5c678abc9e242ff4185e4e5a3caae9e/2010/sym/final.txt"></iframe>
+<iframe width="495" height="200" src="https://github.com/perl-users-jp/perl-advent-calendar/raw/14858d0ab5c678abc9e242ff4185e4e5a3caae9e/2010/sym/final.txt"></iframe>
 
-ファイル名を<a href="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/14858d0ab5c678abc9e242ff4185e4e5a3caae9e/2010/sym/final.txt">final.txt</a>として保存して、いろいろ中身を確認してみてください。
+ファイル名を<a href="https://github.com/perl-users-jp/perl-advent-calendar/raw/14858d0ab5c678abc9e242ff4185e4e5a3caae9e/2010/sym/final.txt">final.txt</a>として保存して、いろいろ中身を確認してみてください。
 
 ^L
 

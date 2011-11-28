@@ -133,7 +133,7 @@ tmpl/top.txはこんな感じで、
 アクセスするとこんなふうに表示されます:
 
 <div style="text-align:center;">
-  <img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/hacker/pictogram-mobilejp/display-au.png" alt="hidek48" />
+  <img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/hacker/pictogram-mobilejp/display-au.png" alt="hidek48" />
 </div>
 
 *** テンプレートの処理

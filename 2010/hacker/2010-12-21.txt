@@ -9,8 +9,8 @@ Text::Xslateはウェブアプリケーションのために最適化したテ�
 - [http://subtech.g.hatena.ne.jp/mala/20100222/1266843093:title=HTMLのscriptタグ内に出力されるJavaScriptのエスケープ処理に起因するXSSがとても多い件について]
 - [http://blog.nomadscafe.jp/2010/11/xssjavascriptjson.html:title=XSSを回避しつつ、テンプレートからJavaScriptにJSONで値を渡す方法]
 Xslateは、特に上記リストの最初のエントリで紹介されているText::MicroTemplateのアイデアを採用し、テンプレートに埋め込む値をデフォルトでHTMLエスケープするようにしています。Template::ToolkitやHTML::Templateと異なり、原則としてテンプレート側にエスケープ処理のためのコードを書く必要がありません。というより、書いてはいけません。このAdvent Calendar用のテンプレートを見ていただくとそれがわかると思います。
-- https://github.com/perl-users-jp/jperl-advent-calendar-2010/blob/master/tmpl/index.html
-- https://github.com/perl-users-jp/jperl-advent-calendar-2010/blob/master/tmpl/entry.html
+- https://github.com/perl-users-jp/perl-advent-calendar/blob/master/tmpl/index.html
+- https://github.com/perl-users-jp/perl-advent-calendar/blob/master/tmpl/entry.html
 entry.htmlではText::Xatenaで整形したHTMLを埋め込みますが、その部分のテンプレートは以下のようになっています。
 >|html|
     <div class="entry-content">

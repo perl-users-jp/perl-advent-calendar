@@ -155,7 +155,7 @@ clean:
 
 ||<
 こうですよね。皆さんついて来てますよね！これを起動するとエディットボックスが付いた、ちょうとテキストエディタの様な物が起動します。
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-02/edit1.png" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/win32/2010-12-02/edit1.png" />
 
 ** ここに Perl を起動するアクションを作りましょう。
 まずメニューにアイテムを追加してそのアクション関数を以下の様に書きました。
@@ -267,9 +267,9 @@ for (@{$res->{foods}}) {
 ||<
 マクドナルドのハンバーガーメニューをスクレイピングして add_text を呼び出しています。
 出来上がったアプリケーションのメニューから...
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-02/edit2.png" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/win32/2010-12-02/edit2.png" />
 えい！
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-02/edit3.png" width="400" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/win32/2010-12-02/edit3.png" width="400" />
 キターーーーーー！
 
 コーディングしててお腹空いたときに超便利なプラグインが出来ました。

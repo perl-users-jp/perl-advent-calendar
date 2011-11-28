@@ -36,9 +36,9 @@ char main[]="`%[_-]%-```%`-_-`[_][_]_[-~-%#-[,~]-#[],-][_--_[_%`________-_"
 
 *デモ
 
-<!--embed type="application/x-shockwave-flash" src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/sym/bcc32.swf" width="669" height="468"/-->
-<!--embed type="application/x-shockwave-flash" src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/sym/bcc32.swf" width="446" height="312"/-->
-<embed type="application/x-shockwave-flash" src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/sym/bcc32.swf" width="480" height="480"/>
+<!--embed type="application/x-shockwave-flash" src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/sym/bcc32.swf" width="669" height="468"/-->
+<!--embed type="application/x-shockwave-flash" src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/sym/bcc32.swf" width="446" height="312"/-->
+<embed type="application/x-shockwave-flash" src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/sym/bcc32.swf" width="480" height="480"/>
 
 WindowsXP日本語版SP2のBorland C++ 5.5 Compilerでしか動作しませんが、動きましたね。
 

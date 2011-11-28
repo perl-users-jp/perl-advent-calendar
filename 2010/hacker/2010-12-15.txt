@@ -51,7 +51,7 @@ growl_notify(
 アプリケーションを register で登録して、notify を呼び出すだけ。
 これだけで
 
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-12/growl1.png" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/win32/2010-12-12/growl1.png" />
 
 こんな通知アプリケーションが書けます。
 
@@ -149,7 +149,7 @@ $cv->recv;
 いろんなブログで A::T::Stream なコードは既出なので誰でも書けるかと思います。
 ちなみに、twitter という検索語でフィルタを実行したら、画面がとんでもない事になりました。
 
-<img src="https://github.com/perl-users-jp/jperl-advent-calendar-2010/raw/master/2010/win32/2010-12-12/growl2.png" width="400" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2010/win32/2010-12-12/growl2.png" width="400" />
 
 ぜひ皆さんもやってみて下さい！
 
