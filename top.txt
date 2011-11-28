@@ -1,5 +1,6 @@
 Perl Advent Calendar Japan
 
+<div style="float: right"><img src="htdocs/advent-calendar.jpg" alt="advent calendar" /></div>
 本来、アドベントカレンダーというのは、イエスの降誕祭を待ち望み、１２月１日からクリスマスまでの間に１日一個ずつクリスマスツリーを模したカードの窓を一個ずつあけていくようなもののことです。
 一方、エンジニアの世界では、技術系アドベントカレンダーというものがあります。これは、一日一個ずつ tips 的な記事を掲載していくというものです。Perl の世界では、2000年からはじまっています（発祥不明）。
 http://www.perladvent.org/archives-Yd.html
