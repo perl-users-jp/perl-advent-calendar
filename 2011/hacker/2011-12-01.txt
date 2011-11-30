@@ -1,0 +1,157 @@
+Config::ENV - 環境変数で config を切替えるためのモジュール
+meta-author: cho45
+meta-tags: perl, config
+
+** 前置き
+
+こんにちは。cho45 です。みなさん、意識は高まっていますか？ 僕は上々です。今回は拙作の Config::ENV というモジュールを紹介させて頂きます。
+
+アプリケーション開発をするとき、開発用・テスト用・本番用で、設定を変えたいわけですよね。だいたいのウェブアプリケーションフレームワークでは、環境変数にある値を設定することで、複数の設定を一括で切替えられるような機能を提供していると思います。Config::ENV は、その機能を1つのモジュールとしたものです。
+
+** 使いかた
+
+*** Config モジュールを書く
+
+とりあえず簡単な使い方を紹介します。まずは以下のように設定を保持するモジュール (MyApp::Config) を作ります。
+
+>|perl|
+package MyApp::Config;
+
+use Config::ENV 'PLACK_ENV'; # (1)
+
+common +{ # (2)
+    api_key => 'XXXX',
+};
+
+config default => +{ # (3)
+    dsn_user => 'dbi:mysql:dbname=user;host=localhost',
+};
+
+config test => +{
+    dsn_user => 'dbi:mysql:dbname=user_test;host=localhost',
+};
+
+config production => +{
+    dsn_user => 'dbi:mysql:dbname=user;host=127.0.0.254',
+};
+
+1;
+||<
+
+MyApp::Config の (1) では Config::ENV を引数付きで use しています。引数は環境変数の名前で、この場合は $ENV{PLACK_ENV} の値に従って設定が切り替えるように、という意味です。Config::ENV を use すると、MyApp::Config は Config::ENV のサブクラスになります。
+
+(2) の common 関数は、環境変数の値に関わらず使う設定を定義します。
+
+(3) の config は環境変数の値と、設定のハッシュリファレンスを関連付けます。
+
+*** Config モジュールを使う
+
+作った MyApp::Config は以下のように使うことができます。
+
+>|perl|
+use MyApp::Config;
+
+warn MyApp::Config->param('dsn_user');
+||<
+
+param を呼ぶだけです。簡単ですね。環境変数 (この場合 PLACK_ENV) を変えれば値も当然変わってくれます。
+
+MyApp::Config を毎回書くのが面倒なときは、適当な名前で export させるようにすることができます。以下のように Config モジュールで Config::ENV を use するときに export オプションを渡してあげます。
+
+>|perl|
+package MyApp::Config;
+
+use Config::ENV 'PLACK_ENV', export => 'config';
+||<
+
+そうすると、MyApp::Config を use したときに、export オプションに指定した名前で、Config モジュール名を export します。
+
+>|perl|
+use MyApp::Config;
+
+config->param('dns_user');
+||<
+
+少し簡単に使えるようになって嬉しいですね。
+
+** 発展した使いかた
+
+だいたい上記で終わりなのですが、加えて、便利な機能がいくつかついています。
+
+*** 別の設定を継承する
+
+ほぼ同じだけど、ちょっとだけ違う設定を定義したいときというのもよくあることだと思いますが、Config::ENV では parent() を使うことで簡単に別の設定を継承することができます。
+
+>|perl|
+package MyApp::Config;
+
+use Config::ENV 'PLACK_ENV', export => 'config';
+
+config production => +{
+    dsn_user => 'dbi:mysql:dbname=user;host=127.0.0.254',
+};
+
+config production_batch => +{
+    parent('production'),
+    batch => 1,
+};
+||<
+
+便利ですね。
+
+*** github フレンドリに
+
+レポジトリにコミットできない設定は、load() を使うことで別のファイルに分けることが簡単にできます。
+
+>|perl|
+package MyApp::Config;
+
+use Config::ENV 'PLACK_ENV', export => 'config';
+
+common +{
+    api_key => 'XXXX'
+    load('myconf.pl'),
+};
+||<
+
+>|perl|
+# myconf.pl
++{
+    api_key => 'bcde38cfe99fe5dbb6318371120752697110aaa2'
+}
+||<
+
+load() の引数にはファイル名を渡します。load() は実際のところ do しているだけ (エラー処理や返り値が親切) で、最終的に HashRef を返せばなんでも書けます。
+
+load() 自体はコンテキストに応じてリストかハッシュリファレンスいずれかを返すので、以下のようにも書けます。
+
+>|perl|
+package MyApp::Config;
+
+use Config::ENV 'PLACK_ENV', export => 'config';
+
+common load('myconf.pl');
+||<
+
+便利ですね。
+
+*** 一時的に設定を変更する
+
+特にテストを書いているときなどでは、一時的に設定を変更したケースがでてきます。Config::ENV は特定のスコープ内でだけ設定を変更して実行する機能があります。
+
+>|perl|
+{
+    my $guard = config->local(limit => 3);
+    is ...;
+}
+||<
+
+Config モジュールの local メソッドを呼ぶと guard オブジェクトが返ってきます。このオブジェクトが生きている間に限り、設定を変更してコードを実行することができます。
+
+*** 他の Config ローダーと併用する
+
+Config::ENV は単にハッシュリファレンスを切替えているだけなので、YAML が使いたければ YAML::Load で読みこめば良いですし、INI フォーマットを使いたければ適当に slurp / map / split するだけです。特に面倒なことはありません。
+
+** まとめ
+
+Config::ENV という環境変数によって設定を変えるシンプルなモジュールを紹介しました。「設定」はウェブアプリケーションフレームなどからは独立して定義されていたほうが役割的に何かと便利です。設定切替えたい衝動が沸いてきたら是非お試しください。
