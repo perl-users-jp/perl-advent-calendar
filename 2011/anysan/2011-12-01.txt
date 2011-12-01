@@ -2,6 +2,8 @@ hellow AnySan World!
 
 こんばんわ！今日から AnySan のトラックが始まりましたね！
 
+参加したい人は http://atnd.org/events/22890 からどしどし頼むぜ！
+
 AnySan とは何かをおさらいすると AnyEvent をベースとしたリアルタイミングメッセージング用の bot を簡単に作る為のツールキットなんだ。
 AnyEvent::IRC::Client との違いが解らない！と良く言われるけど AnySan は bot で使う為に必要な機能だけを実装した薄いラッパーになってるんだ。
 
