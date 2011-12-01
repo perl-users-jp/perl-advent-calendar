@@ -1,6 +1,6 @@
 DBIx::Handlerで安心DB生活
 
-こんにちは！
+こんにちは！nekokakです！
 今年はボクが作ってるDBIx::Handlerというものを紹介してみる。
 
 DBIx::HandlerはDBIのラッパーでありDBのコネクション周りの管理に重点を置いたモジュールである。
