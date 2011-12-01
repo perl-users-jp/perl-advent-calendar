@@ -1,0 +1,209 @@
+DISられても負けないWindows Perl Hacker養成講座
+meta-author: mattn
+meta-tags: perl, windows
+
+こんにちわ。Linuxも使ってるのに何故かWindowsハッカー扱いされていて、主にPerl Geekからは毎度WIN32パッチを送ってくる面倒な奴として知れ渡ってしまったmattnです。
+
+そんな僕がPerl Hackerに<del>粘着する</del>パッチを提供する為に使っているツールを紹介します。
+エディタはVimです。僕の人生の何分の一かはVimのパッチ書きに費やされているかもしれませんね。
+
+もちろん、<a href="https://github.com/c9s/perlomni.vim">perlomni.vim</a> や <a href="https://github.com/hotchpotch/perldoc-vim">perldoc.vim</a> は必須です。入れておきましょう。
+
+僕がWindowsユーザがPerlを書いてて良くやらかすのが
+
+- ファイルのエンコーディングをcp932のままリリースしちゃった
+- ファイルのフォーマットをdosのままリリースしちゃった
+- パッケージ名を変えたのにpmファイルを動かしてなかった。もしくはファイル名が小文字だった。
+
+って所ですがこれを極力抑制するべく、<a href="https://github.com/mattn/perlvalidate-vim">perlvalidate-vim</a> というのを書きました。これを使うと、ファイルが保存されたタイミングで上記の項目をチェックし、エラー表示してくれます。
+
+あと僕はPerlを書いていて、useしてるパッケージのソースを検索しながら別の事を考えたいことが多く、出来れば非同期でgrepして欲しいなぁと思っていたので <a href="https://github.com/mattn/asyncgrep-vim">asyncgrep-vim</a> というのも書きました。これを使うと、これを使うと非同期にgrepが始まり、quickfixウィンドウにどんどん追加されていきます。中ではPerlを使っています。残念ながらUNIXの場合はXが起動していないと使えません。
+
+そしてよくWindowsユーザが困るのがワンライナー。ブログ等ではUNIXを前提に書かれたワンライナーが殆どで、そのままコマンドプロンプトに貼り付けるともちろん死ねる訳ですが、これをWindowsで実行しようと思うとcygwinやmsysの様なシェル環境が必要になります。でも実行する度にそれを起動するのは若干おっくうですよね。
+
+そこで良く僕が使っているのが
+
+>|perl|
+use strict;
+use warnings;
+use Getopt::Long;
+use Text::ParseWords 'shellwords';
+
+my $print_line;
+GetOptions( 'p' => \$print_line );
+
+$| = 1;
+
+my $line = '';
+while (<STDIN>) {
+    $line .= $_;
+	# 行末がバックスラッシュなら複数行
+    if ( $line =~ /\\$/ ) {
+        $line =~ s!\\$!! && next;
+    }
+}
+
+my @args;
+for my $arg ( shellwords($line) ) {
+    if ( $arg =~ / / ) { # 空白を含んでいるならクォート
+		# ただし間のダブルクォートは3重にする
+        $arg =~ s!"!"""!g;
+        $arg = "\"$arg\"";
+    } elsif ( $arg =~ /\\/ ) { # バックスラッシュを含んでいるならクォート
+		# この場合shellwordsがクォートを消しているはずなので戻す
+        $arg =~ s!"!""""!g;
+        $arg = "\"$arg\"";
+    } elsif ( $arg =~ /."./ ) { # 間にクォートを含んでいるなら
+		# ただし間のダブルクォートは3重にする
+        $arg =~ s!"!"""!g;
+        $arg = "\"$arg\"";
+    }
+    push @args, $arg;
+}
+my $cmds = join( ' ', @args );
+if ($print_line) {
+	# -p オプションは表示のみ
+    print "$cmds\n";
+} else {
+	# デフォルトは実行
+    system($cmds );
+}
+||<
+
+こんなスクリプト。p1.pl というファイルです。だいたいのWindows向けPerlディストリビューションでは pl2bat というコマンドが配布されているので
+
+>|sh|
+pl2bat p1.pl
+||<
+
+とやってバッチファイル化(p1.batになります)してしまうのが便利です。
+
+この p1 を起動して、ブログ等に書かれたワンライナーコマンドをコピペします。コマンドプロンプトだと CTRL-Z して終了します。するとWindowsで扱える様に引数を解釈して実行してくれます。-p オプションを付けて起動するとそのコマンドを表示だけして終了します。表示された内容をバッチファイルに貼り付けても良いですね。
+
+試しに<del>全裸M</del>ワンライナーでおなじみのsugyanさんのページから幾つか試します。
+
+**閏年判定ワンライナー**
+
+http://d.hatena.ne.jp/sugyan/20090411/1239379343
+
+>|sh|
+C:\>p1
+perl -lne 'print $_ % 4 || !($_ % 100) && $_ % 400 ? 0 : 1'
+^Z
+2008
+1
+||<
+
+いいですね。-p オプションだとこうなります。
+
+>|sh|
+perl -lne "print $_ % 4 || !($_ % 100) && $_ % 400 ? 0 : 1"
+||<
+
+**16進数のテーブルを表示するワンライナー**
+
+http://d.hatena.ne.jp/sugyan/20090326/1238007478
+
+>|sh|
+perl -le'$i=$_,print map"$i$_ ",@!for@!=(0..9,A..F)'
+^Z
+00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
+20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
+30 31 32 33 34 35 36 37 38 39 3A 3B 3C 3D 3E 3F
+40 41 42 43 44 45 46 47 48 49 4A 4B 4C 4D 4E 4F
+50 51 52 53 54 55 56 57 58 59 5A 5B 5C 5D 5E 5F
+60 61 62 63 64 65 66 67 68 69 6A 6B 6C 6D 6E 6F
+70 71 72 73 74 75 76 77 78 79 7A 7B 7C 7D 7E 7F
+80 81 82 83 84 85 86 87 88 89 8A 8B 8C 8D 8E 8F
+90 91 92 93 94 95 96 97 98 99 9A 9B 9C 9D 9E 9F
+A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 AA AB AC AD AE AF
+B0 B1 B2 B3 B4 B5 B6 B7 B8 B9 BA BB BC BD BE BF
+C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF
+D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 DA DB DC DD DE DF
+E0 E1 E2 E3 E4 E5 E6 E7 E8 E9 EA EB EC ED EE EF
+F0 F1 F2 F3 F4 F5 F6 F7 F8 F9 FA FB FC FD FE FF
+||<
+
+-p だと
+
+>|sh|
+perl "-le$i=$_,print map"""$i$_ """,@!for@!=(0..9,A..F)"
+||<
+
+**年齢確認ワンライナー**
+
+http://d.hatena.ne.jp/sugyan/20090422/1240367849
+
+>|sh|
+perl -MDateTime -le 'print+(DateTime->now - DateTime->new(day,pop,month,pop,year,pop))->years' 1982 12 10
+^Z
+28
+||<
+
+sugyanさん28歳なんですね。-p オプションだと
+
+>|sh|
+perl -MDateTime -le "print+(DateTime->now - DateTime->new(day,pop,month,pop,year,pop))->years" 1982 12 10
+||<
+
+http://d.hatena.ne.jp/sugyan/20090702/1246522768
+**svn diff をカラフルに表示させるワンライナー**
+
+これはパイプに渡されるコマンドなので -p で実行して部分的にコピペします。
+
+>|sh|
+perl -pe 's/^([-+]).*$/"\e[".($1eq"+"?32:31)."m$&\e["/e'
+^Z
+perl -pe "s/^([-+]).*$/""""\e["""".($1eq""""+""""?32:31).""""m$&\e[""""/e"
+||<
+
+出力されたコマンドをバッチファイル colordiff.bat して以下の様に実行します。
+
+>|sh|
+svn diff . | colordiff | lv
+||<
+
+Windows版のlessは色がおかしくなるので、<a href="https://github.com/mattn/lv421-windows">lvのWindows版</a>を使いましょう。
+
+<img src="http://go-gyazo.appspot.com/a9d91329c846a567.png" alt="oneliner" />
+
+まぁ綺麗。
+
+**記号ワンライナー**
+
+http://d.hatena.ne.jp/sugyan/20100321/1269174230
+
+>|sh|
+perl -e '""!~("(?{".("{^(?)!(?^{^^!){.^^~~?}{!~}^}^.(!~}!..^^!~}!~~.~^}"^"^}((~))~~^{.{^~?}^!^}(~{^)?()^)^!).^}!()){.^)(}.("^"!~!{}(!(!~((}}!})!^^{^){(.?}{}!~{^~!)^?..(~)!~.?."^"{{?}^(~)~^!..~)??){^.~){.~(!{.)}}^.}^~}?}.^}(^?{~"^".)^!?^(.)!~!)~{^{(}){?!^.~)({?)(^.^!.^{((^!!^(^(!"^"!})^?}^(?^(~{.)(}})!.?^~!!{~))}({^^!..)^^~?{.?)..")."})")'
+^Z
+1
+2
+Fizz
+4
+Buzz
+Fizz
+7
+8
+Fizz
+Buzz
+11
+Fizz
+13
+14
+FizzBuzz
+16
+17
+Fizz
+19
+Buzz
+||<
+
+-p だとこうなりました。
+
+>|sh|
+perl -e """""""!~("""(?{""".("""{^(?)!(?^{^^!){.^^~~?}{!~}^}^.(!~}!..^^!~}!~~.~^}"""^"""^}((~))~~^{.{^~?}^!^}(~{^)?()^)^!).^}!()){.^)(}.("""^"""!~!{}(!(!~((}}!})!^^{^){(.?}{}!~{^~!)^?..(~)!~.?."""^"""{{?}^(~)~^!..~)??){^.~){.~(!{.)}}^.}^~}?}.^}(^?{~"""^""".)^!?^(.)!~!)~{^{(}){?!^.~)({?)(^.^!.^{((^!!^(^(!"""^"""!})^?}^(?^(~{.)(}})!.?^~!!{~))}({^^!..)^^~?{.?)..""")."""})""")"
+||<
+
+Text::ParseWords:shellwords の挙動を元に作ったスクリプトなので、厳密ではありませんが、適当なスクリプトなら動かせますよ。
+
