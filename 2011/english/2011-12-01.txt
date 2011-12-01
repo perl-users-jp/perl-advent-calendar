@@ -1,0 +1,25 @@
+About Perl Advent Calendar Japan 2011
+meta-author: Kensuke Nagae <kyanny@gmail.com>
+meta-tags: perladvent
+
+Hello, this is [http://twitter.com/kyanny:title=@kyanny]. We are excited to announce the [http://perl-users.jp/articles/advent-calendar/2011/:title=Perl Advent Calendar Japan 2011]. This year we have at least 6 tracks.
+
+**[http://perl-users.jp/articles/advent-calendar/2011/casual/:title=Casual Track]
+Casual Track is for introduction of useful Perl modules. As name of this track, we expects most of articles are not so much hard to understand. Last year Casual Track was a little hacker-ish, so we strongly recommend to write Hacker Track for Japanese Perl Hackers.
+
+**[http://perl-users.jp/articles/advent-calendar/2011/dbix/:title=DBIx Track]
+At CPAN, DBIx:: namespace is used for many useful extension modules of DBI. Sometimes skilled Perl programmer prefer to use raw DBI instead of O/R mapper. However they use some DBIx:: modules because of lack of DBI function. If you are looking for modules that provides useful features, this track will help you.
+
+**[http://perl-users.jp/articles/advent-calendar/2011/english/:title=English Track]
+English Track is for non Japanese readers. We will write articles about Perl written in English. Well, here is the English Track, so you already see it ;)
+
+**[http://perl-users.jp/articles/advent-calendar/2011/hacker/:title=Hacker Track]
+Hacker Track is for skilled Perl programmers. Most of the authors of this track are creator of CPAN modules. They will write an article about introduction of their modules. Some of them also will write about higher grade topics things about Perl. If you want to learn Perl more deeply, this track would be interesting.
+
+**[http://perl-users.jp/articles/advent-calendar/2011/test/:title=Test Track]
+Test is important. Again, test is important. This fact is widely known among Japanese Perl community. In this track you will find techniques of testing in Perl. If you are Perl newbie, this track helps you to learn writing tests for your code. After read whole of articles, your code quality will improve.
+
+**[http://perl-users.jp/articles/advent-calendar/2011/acme/:title=Acme Drug]
+Acme Track is for fun. In Japanese Perl community, Acme modules are so popular that a certain Perl hacker wrote [http://www.donzoko.net/gakuya/#Acmencyclopedia2011:title=Acmencyclopedia]. In this track you will see some funny modules. Most of them are useless, but entertainment is necessary for human's life.
+
+We are sorry many of articles are written in Japanese. If you interested in an article but you could not read it, please try to translate it via [http://translate.google.com/:title=http://translate.google.com/]. Otherwise tweet to request translation with permalink of the article and [http://twitter.com/#!/search/%23perladvent:title=#perladvent] hash tag, maybe someone translate it for you ;)
