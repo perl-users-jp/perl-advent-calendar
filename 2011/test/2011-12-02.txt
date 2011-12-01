@@ -1,0 +1,224 @@
+use Test::Attribute::AutoLevel
+
+こんにちは、ｶﾜ(・∀・)ｲｲ!!アイコンで有名なnekokakだよ。
+
+今日はｶﾜ(・∀・)ｲｲ!!僕がつくったTest::Attribute::AutoLevelという
+イカしたモジュールを紹介してみたいと思うんだ。
+
+僕はテストを書く時にテスト用の便利関数を定義することがよくあるんだ。
+そのテスト関数の中でTest::Moreのテスト関数を実行するんだけど、
+そこでテストがコケたときに表示されるエラーメッセージがおかしなことになるんだ。
+
+例えば
+
+>||
+use strict;
+use warnings;
+use Test::More;
+
+sub test_cute_icon {
+    my $icon = shift;
+    is $icon->{state}, 'cute';
+}
+
+{
+    package My::Icon;
+    sub new {
+        my ($class, $opts) = @_;
+        bless $opts, $class;
+    }
+}
+
+my $icon = My::Icon->new(+{name => 'nekokak', state => 'not cute'});
+
+test_cute_icon($icon);
+
+done_testing;
+||<
+
+こんなテストがあったとするよね。
+これを./t/01_cute.tというファイル名として実行すると、
+
+>||
+not ok 1
+#   Failed test at ./t/01_cute.t line 7.
+#          got: 'not cute'
+#     expected: 'cute'
+1..1
+# Looks like you failed 1 test of 1.
+||<
+
+こんな感じのエラーがでるんだ。
+Test::Moreのテスト関数はテストが失敗した行数を表示してくれるからそこを見に行くんだけど、
+テスト失敗箇所として表示されている７行目を見に行っても
+test_cute_icon関数内の
+
+>||
+is $icon->{state}, 'cute';
+||<
+
+の行数が表示されちゃうよね。
+
+でも、実際に表示して欲しい行数って２２行目の
+
+>||
+test_cute_icon($icon);
+||<
+
+ココだと思うんだよ。
+今回はtest_cute_icon関数を一回しか呼び出してないから、すぐに何が原因かは分かると思うんだけど、
+便利関数を定義するくらいだから、何度も呼び出すよね？
+そうすると、どこで便利テスト関数をよびだしてテストが失敗しても同じ行数をレポートしてしまう。
+
+／(^o^)＼ﾅﾝﾃｺｯﾀｲ
+
+
+Test::Moreには呼び出し改装を制御するしくみがあるんだ。
+その仕組みを利用するとこんな感じになる。
+
+>||
+use strict;
+use warnings;
+use Test::More;
+
+sub test_cute_icon {
+    my $icon = shift;
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+    is $icon->{state}, 'cute';
+}
+
+{
+    package My::Icon;
+    sub new {
+        my ($class, $opts) = @_;
+        bless $opts, $class;
+    }
+}
+
+my $icon = My::Icon->new(+{name => 'nekokak', state => 'not cute'});
+
+test_cute_icon($icon);
+
+done_testing;
+||<
+
+$Test::Builder::Levelをlocal定義して値を設定して上げる感じだね。
+そうすると実行結果は
+
+>||
+not ok 1
+#   Failed test at ./t/01_cute.t line 21.
+#          got: 'not cute'
+#     expected: 'cute'
+1..1
+# Looks like you failed 1 test of 1.
+||<
+
+って想定した行数がでるよね。
+でもさ、
+
+>||
+local $Test::Builder::Level = $Test::Builder::Level + 1;
+||<
+
+って書くのダサいよね？長いし。
+
+ってことで作ったのがTest::Attribute::AutoLevelなんだ。
+使い方は超簡単だよ。
+
+>||
+use strict;
+use warnings;
+use Test::More;
+use Test::Attribute::AutoLevel;
+
+sub test_cute_icon : AutoLevel {
+    my $icon = shift;
+    is $icon->{state}, 'cute';
+}
+
+{
+    package My::Icon;
+    sub new {
+        my ($class, $opts) = @_;
+        bless $opts, $class;
+    }
+}
+
+my $icon = My::Icon->new(+{name => 'nekokak', state => 'not cute'});
+
+test_cute_icon($icon);
+
+done_testing;
+||<
+
+こんなふうにするだけなんだ。
+Test::Attribute::AutoLevelをuseして、
+便利テスト関数名のところに: AutoLevelっていうattributeをつけるだけだね。
+
+そうすると、テスト実行結果はこんなかんじになる。
+
+>||
+not ok 1
+#   Failed test at ./t/01_cute.t line 21.
+#          got: 'not cute'
+#     expected: 'cute'
+1..1
+# Looks like you failed 1 test of 1.
+||<
+
+実際に便利テスト関数を呼び出した行数がテスト失敗行数としてレポートされるね。
+
+＼(^o^)／YATTA!
+
+
+localとかよくわかんないことやらなくても簡単にleveを制御できたね♪
+
+
+最後にテストがコケたままだと隣の人に嫌味言われるかもしれないので、テストが通るようにしとくね。
+
+>||
+use strict;
+use warnings;
+use Test::More;
+use Test::Attribute::AutoLevel;
+
+sub test_cute_icon : AutoLevel {
+    my $icon = shift;
+    is $icon->{state}, 'cute';
+}
+
+{
+    package My::Icon;
+    sub new {
+        my ($class, $opts) = @_;
+        bless $opts, $class;
+    }
+}
+
+my $icon = My::Icon->new(+{name => 'nekokak', state => 'cute'});
+
+test_cute_icon($icon);
+
+done_testing;
+||<
+
+実行結果はこうだよ
+
+>||
+$ prove -lvc ./t/01_cute.t
+./t/01_cute.t .. 
+ok 1
+1..1
+ok
+All tests successful.
+Files=1, Tests=1,  0 wallclock secs ( 0.04 usr  0.01 sys +  0.03 cusr  0.00 csys =  0.08 CPU)
+Result: PASS
+||<
+
+All tests successful.だね！
+
+こんな感じでみんな気持ちよくテスト書けるように工夫するといいよ。
+じゃあね。
+
+明日はikasam_aさんだよ
