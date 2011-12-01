@@ -167,7 +167,7 @@ svn diff . | colordiff | lv
 
 Windows版のlessは色がおかしくなるので、<a href="https://github.com/mattn/lv421-windows">lvのWindows版</a>を使いましょう。
 
-<img src="http://go-gyazo.appspot.com/a9d91329c846a567.png" alt="oneliner" />
+<img src="2011-12-01/image01.png" alt="oneliner" />
 
 まぁ綺麗。
 
