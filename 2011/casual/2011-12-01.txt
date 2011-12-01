@@ -82,7 +82,7 @@ pl2bat p1.pl
 
 試しに<del>全裸</del>ワンライナーでおなじみのsugyanさんのページから幾つか試します。
 
-**閏年判定ワンライナー**
+**閏年判定ワンライナー
 
 http://d.hatena.ne.jp/sugyan/20090411/1239379343
 
@@ -100,7 +100,7 @@ perl -lne 'print $_ % 4 || !($_ % 100) && $_ % 400 ? 0 : 1'
 perl -lne "print $_ % 4 || !($_ % 100) && $_ % 400 ? 0 : 1"
 ||<
 
-**16進数のテーブルを表示するワンライナー**
+**16進数のテーブルを表示するワンライナー
 
 http://d.hatena.ne.jp/sugyan/20090326/1238007478
 
@@ -131,7 +131,7 @@ F0 F1 F2 F3 F4 F5 F6 F7 F8 F9 FA FB FC FD FE FF
 perl "-le$i=$_,print map"""$i$_ """,@!for@!=(0..9,A..F)"
 ||<
 
-**年齢確認ワンライナー**
+**年齢確認ワンライナー
 
 http://d.hatena.ne.jp/sugyan/20090422/1240367849
 
@@ -148,7 +148,7 @@ perl -MDateTime -le "print+(DateTime->now - DateTime->new(day,pop,month,pop,year
 ||<
 
 http://d.hatena.ne.jp/sugyan/20090702/1246522768
-**svn diff をカラフルに表示させるワンライナー**
+**svn diff をカラフルに表示させるワンライナー
 
 これはパイプに渡されるコマンドなので -p で実行して部分的にコピペします。
 
@@ -170,7 +170,7 @@ Windows版のlessは色がおかしくなるので、<a href="https://github.com
 
 まぁ綺麗。
 
-**記号ワンライナー**
+**記号ワンライナー
 
 http://d.hatena.ne.jp/sugyan/20100321/1269174230
 
