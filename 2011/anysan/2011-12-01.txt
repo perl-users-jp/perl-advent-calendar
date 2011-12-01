@@ -1,0 +1,49 @@
+hellow AnySan World!
+
+こんばんわ！今日から AnySan のトラックが始まりましたね！
+
+AnySan とは何かをおさらいすると AnyEvent をベースとしたリアルタイミングメッセージング用の bot を簡単に作る為のツールキットなんだ。
+AnyEvent::IRC::Client との違いが解らない！と良く言われるけど AnySan は bot で使う為に必要な機能だけを実装した薄いラッパーになってるんだ。
+
+もちろん IRC だけじゃなくて Twitter や FriendFeed にも対応しているんだ。将来的には Skype や Facebook や Google+ などリアルタイムコミュニケーションを薄くラップするよていだYo♪
+どのサービスでも同じインターフェィスで使う事を目的としてるので perldoc で使い方調べたりしなきゃ行けなくなる量も減ると思うんだ。
+
+なにが言いたいかと言うと、手軽に bot を作りたい時に便利なツールキットなのさ。
+
+簡単な例として !dan という発言を見たら dan さんの名言を返す bot の実装を見てその軽さを実感してもらうと良いかな。
+
+>||
+use AnySan;
+use AnySan::Provider::IRC;
+
+my $irc = irc 'chat.freenode.net',
+    key      => 'danbot',
+    nickname => 'dankogaibot',
+    channels => {
+        '#dankogai' => {},
+    };
+
+AnySan->register_listener( dan => {
+    cb => sub {
+        my $receive = shift;
+        return unless $receive->message =~ /^!dan/;
+        $receive->send_replay('Dan the Perl Hacker');
+    }
+});
+AnySan->run;
+||<
+
+どうだい？簡単だろう？
+興味を持ってくれると嬉しい。
+
+今日はここでおしまいだ。
+
+え？インストールの仕方すら無いって？
+
+>||
+$ cpanm AnySan 
+||<
+
+で入っちゃうんだから固い事言わないでくれよ。
+
+少人数でトラックを廻すには5分程度でかける tips を積み重ねるのが重要だぜ？
