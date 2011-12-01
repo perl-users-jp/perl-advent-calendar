@@ -1,0 +1,200 @@
+オレオレDBIxへの第一歩 - DBIのサブクラスを作る
+meta-author: myfinder
+meta-tags: perl, dbi, dbix
+
+** 注意書き
+
+ここで紹介しているオレオレDBIxモジュールの作成方法は、ある種呪いにも似た副作用を発生させる可能性があるので十分に検討した上で利用してください。
+あわせて DBIx 名前空間にあるモジュールは用法、用量を守って正しくお使いください。
+
+** はじめに
+
+こんばんは、DBIx トラック2日目をやる myfinder です。
+今回は DBIx::ナントカ の紹介ではなく、オレオレDBIxへの第一歩として DBI のサブクラスを作る方法について書きます。
+
+** 作り方
+
+[http://search.cpan.org/~timb/DBI-1.609/DBI.pm#Subclassing_the_DBI:title=Subclassing_the_DBI] という枠組みがあるのでこれに従えば、オレオレDBIxを作成できます。
+大変 Casual な枠組みですね。
+
+** はじめの一歩
+
+「千里の道も一歩から」という言葉がありますが、オレオレDBIxもまずは一歩を踏み出さないと始まらないと思います。
+ということで、下記が最小のオレオレDBIxです。
+
+>|perl|
+use strict;
+use version;
+our $VERSION = '0.03';
+
+package DBIx::OreOre;
+use parent qw(DBI);
+
+package DBIx::OreOre::db;
+use parent qw(DBI::db);
+
+package DBIx::OreOre::st;
+use parent qw(DBI::st);
+
+1;
+||<
+
+たったこれだけです。
+use して使いたい場合
+
+>|perl|
+use DBIx::OreOre;
+
+$oreore_dbh = DBIx::OreOre->connect($data_source, $username, $auth, \%attrs) or die;
+||<
+
+でもよいのですが、
+
+>|perl|
+use DBIx::OreOre;
+
+my @dsn = (
+  'dbi:mysql:host=localhost;database=mysql;mysql_socket=/tmp/mysql.sock;',
+  'root',
+  '',
+  {
+      RootClass => 'DBIx::OreOre',
+  },
+);
+
+my $dbh = DBI->connect(@dsn) or die;
+||<
+
+として、DSN に RootClass 指定することでも利用可能です。
+DSN は config ファイルなどに別途定義することも多いと思いますので、後からオレオレDBIxを使いたいという場合こちらの使い方をするのも良いでしょう。
+
+但し、見ての通りこのままでは何もしません。
+なにもしないのは寂しいので、何かやらせてみましょう。
+
+** なにかやらせる
+
+DBI が提供する枠組みでは DBI, DBI::db, DBI::st それぞれのサブクラスを定義するわけなので、当然各フェーズで実行される関数に処理をかぶせる事が可能です。
+例えば connect した時に何がしかの前処理をしたい場合
+
+>|perl|
+〜
+package DBIx::OreOre;
+use parent qw(DBI);
+
+sub connect {
+  my $self = shift;
+  my ($dsn, $user, $pass, $attrs) = @_;
+
+  # MySQL だったら
+  if ($dsn =~ /^(?i:dbi):mysql:/) {
+    〜
+  }
+  # PostgreSQL だったら
+  if ($dsn =~ /^(?i:dbi):Pg:/) {
+    〜
+  }
+  # SQLite だったら
+  if ($dsn =~ /^(?i:dbi):SQLite:/) {
+    〜
+  }
+
+  $self->SUPER::connect($dsn, $user, $pass, $attrs);
+}
+〜
+||<
+
+という形で connect 直前に処理を挟むことができます。
+connect 直後に何かしたい場合、connected という関数が呼ばれる事になっているので connect 時同様
+
+>|perl|
+〜
+package DBIx::OreOre::db;
+use parent qw(DBI::db);
+
+sub connected {
+  my $self = shift;
+  my ($dsn, $user, $credential, $attrs) = @_;
+
+  # なにがしかの処理
+}
+〜
+||<
+
+という形で後処理をさせることができます。
+また、独自のアトリビュートをつけることで、処理時の挙動を変更するなども容易です。
+やり方は簡単で、DSN に1行追加するだけです。
+
+>|perl|
+use DBIx::OreOre;
+
+my @dsn = (
+  'dbi:mysql:host=localhost;database=mysql;mysql_socket=/tmp/mysql.sock;',
+  'root',
+  '',
+  {
+      RootClass => 'DBIx::OreOre',
+      foo       => 1,
+  },
+);
+
+my $dbh = DBI->connect(@dsn) or die;
+||<
+
+というような形で追加すると
+
+>|perl|
+〜
+sub connect {
+  my $self = shift;
+  my ($dsn, $user, $pass, $attrs) = @_;
+
+  if ($attrs->{foo}) {
+    print STDERR "foo is $attrs->{foo}";
+  }
+
+  $self->SUPER::connect($dsn, $user, $pass, $attrs);
+}
+||<
+
+渡した内容で処理を分岐するなども可能です。
+foo を DBI::OreOre::st 側でも使いたい場合
+
+>|perl|
+sub connected {
+  my $self = shift;
+  my ($dsn, $user, $credential, $attrs) = @_;
+  $self->{private_dbix_oreore} = { 'foo' => $attrs->{foo} };
+}
+||<
+
+として値を入れておくことで
+
+>|perl|
+〜
+package DBIx::OreOre::st;
+use parent qw(DBI::st);
+
+sub execute {
+  my $self = shift;
+  my (@args) = @_;
+  my $foo = $self->{private_dbix_oreore}->{foo};
+
+  if ($foo) {
+    print STDERR "foo is $foo";
+  }
+
+  return $self->SUPER::execute(@args);
+}
+〜
+||<
+
+のように持ちまわることが可能になります。
+
+** まとめ
+
+2日目はオレオレDBIxの作り方を紹介しました。
+最初にも申し上げたとおり、ここで紹介しているオレオレDBIxモジュールの作成方法で作ったモジュールは、大きくDBIの挙動を変えてしまうこともできるので注意が必要だと思います。
+
+しかしながらこの手法でしか解決が難しい or ここでしかできない処理を入れ込む、といった問題や目的がある場合は有効な手段であるとも思いますので、用法用量を守って正しくお使いください。
+
+明日は bayashi さんです。お楽しみに！
