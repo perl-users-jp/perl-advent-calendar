@@ -1,0 +1,91 @@
+DBIx::Handlerで安心DB生活
+
+こんにちは！
+今年はボクが作ってるDBIx::Handlerというものを紹介してみる。
+
+DBIx::HandlerはDBIのラッパーでありDBのコネクション周りの管理に重点を置いたモジュールである。
+ORMを使わずにDB周りの処理を行いたい場合はこのDBIx::Handlerを使うことをおすすめする。
+
+自分でDBIのインスタンスを生成し利用する場合どこまで正しくコネクション管理をあなたはできますか？
+そもそも親プロセスで接続したdbのインスタンスを子プロセス側でも利用することの問題を正確に把握していますか？
+そこまで正しく細かく理解し自分で実装できたとしてもだ、新しいプロジェクトを作るたびにそのコードをコピペするのか？
+
+そこでDBIx::Handlerの出番だ。
+
+DBIx::Handlerはそのあたりの処理をすべて面倒みてくれる。
+もうあなたは
+いつDBとの接続が着られるか分からないわ！
+とか
+forkした場合に処理がおかしくなるの！
+とか
+一切かんがえなくてよくなる。
+
+以下使い方である
+
+>||
+use strict;
+use warnings;
+use DBIx::Handler;
+
+my $handler = DBIx::Handler->new($dsn, $user, $pass, $opts);
+while (1) {
+    $handler->dbh->$some_method();
+}
+||<
+
+DBIx::Handlerでつくったオブジェクトにはdbhメソッドがあり、
+このメソッドを呼び出すと、その時点でデータベースに接続可能なhandleが取得することができる。
+
+また複数回dbhメソッドを呼び出すと自分で明示的にdisconnectを実行するもしくはデータベース側から切断されない限り
+同一の接続済handleがかえされることになる。
+
+次によくハマるforkする場合の例であるが、
+
+>||
+use strict;
+use warnings;
+use DBIx::Handler;
+
+my $handler = DBIx::Handler->new($dsn, $user, $pass, $opts);
+$handler->dbh;
+
+if (fork) {
+    $handler->dbh;
+} else {
+    $handler->dbh;
+}
+||<
+
+このような場合、親プロセス側はforkの後も同一のdb handleを取得することができるが
+子プロセス側は新しくDB接続をおこなったdb handleを取得し、親プロセスと子プロセスで
+socketの通信内容が混ざるといったようなことをふせいでくれる。
+
+つぎにtransactionだ
+
+>||
+use strict;
+use warnings;
+use DBIx::Handler;
+
+my $handler = DBIx::Handler->new($dsn, $user, $pass, $opts);
+my $txn = $handler->txn_scope;
+
+    # ここでトランザクションを効かせたい処理を行う
+    $handler->dbh->do('insert...');
+
+$txn->commit;
+||<
+
+txn_scopeメソッドで取得できるguardオブジェクトが存在する間、トランザクションが有効となり、
+不意にtxnオブジェクトが消えてしまった場合はそれまで実行されていたトランザクションはrollbackされる。
+またtxn_scope実行中にforkした処理をおこない、そこでdb処理を行おうとすると例外を発生させる。
+これはfork時の挙動として親プロセスとこプロセスが別のdb sessionとなるため正しいトランザクションとして扱えなくなるための
+保護である。
+
+
+DBIx::Handlerにはほかにも幾つか便利メソッドがあるが、
+一番の目的はDBIの正しい操作を簡単におこなうことである。
+
+DBを使ったアプリケーション開発の一助になれば幸いである。
+
+
