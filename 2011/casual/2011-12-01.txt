@@ -167,7 +167,7 @@ svn diff . | colordiff | lv
 
 Windows版のlessは色がおかしくなるので、<a href="https://github.com/mattn/lv421-windows">lvのWindows版</a>を使いましょう。
 
-<img src="2011-12-01/image01.png" alt="oneliner" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/casual/2011-12-01/image01.png" alt="oneliner" />
 
 まぁ綺麗。
 
