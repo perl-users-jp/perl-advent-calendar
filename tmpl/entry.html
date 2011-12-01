@@ -75,7 +75,7 @@ function foo(){
 
         <div id="banner">
             <div id="banner-inner" class="pkg">
-                <h1 id="banner-header">[% title %] - <a href="[% uri_for('../../') %]">[% conf.title %]</a> <a href="[% uri_for('../') %]">[% name | ucfirst %] Track</a></h1>
+                <h1 id="banner-header">[% title %] - <a href="[% uri_for( year _ '/' ) %]">[% conf.title %]</a> <a href="[% uri_for( year _ '/' _ name _ '/') %]">[% name | ucfirst %] Track</a></h1>
                 <p id="banner-description">[% conf.description %]</p>
             </div>
         </div>

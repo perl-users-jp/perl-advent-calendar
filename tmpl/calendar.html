@@ -32,7 +32,7 @@ function foo(){
 
         <div id="banner">
             <div id="banner-inner" class="pkg">
-                <h1 id="banner-header"><a href="[% uri_for( year _ '/') %]">[% conf.title %]</a> [% name | ucfirst %] Track</h1>
+                <h1 id="banner-header">[% title %] - <a href="[% uri_for( year _ '/' ) %]">[% conf.title %]</a> <a href="[% uri_for( year _ '/' _ name _ '/') %]">[% name | ucfirst %] Track</a></h1>
                 <p id="banner-description">[% conf.description %]</p>
             </div>
         </div>
