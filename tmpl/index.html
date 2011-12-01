@@ -4,7 +4,7 @@
 <head profile="http://purl.org/net/ns/metaprof">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" />
-    <title>[% name %] - [% conf.title %]</title>
+    <title>[% conf.title %] [% name | ucfirst %] Trac</title>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="[% uri_for(year _ '/' _ name _ '/rss') %]" />
 <script type="text/javascript">
 function foo(){
@@ -24,8 +24,8 @@ function foo(){
 
         <div id="banner">
             <div id="banner-inner" class="pkg">
-                <h1 id="banner-header">[% name %] - <a href="[% uri_for( year _ '/') %]">[% conf.title %]</a></h1>
-                <p id="banner-description">Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</p>
+                <h1 id="banner-header"><a href="[% uri_for( year _ '/') %]">[% conf.title %]</a> [% name | ucfirst %] Track</h1>
+                <p id="banner-description">[% conf.description %]</p>
             </div>
         </div>
     </div>
