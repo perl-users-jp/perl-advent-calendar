@@ -147,8 +147,9 @@ sugyanさん28歳なんですね。-p オプションだと
 perl -MDateTime -le "print+(DateTime->now - DateTime->new(day,pop,month,pop,year,pop))->years" 1982 12 10
 ||<
 
-http://d.hatena.ne.jp/sugyan/20090702/1246522768
 **svn diff をカラフルに表示させるワンライナー
+
+http://d.hatena.ne.jp/sugyan/20090702/1246522768
 
 これはパイプに渡されるコマンドなので -p で実行して部分的にコピペします。
 
