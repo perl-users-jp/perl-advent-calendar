@@ -6,7 +6,7 @@ meta-tags: perl, rrdtool
 
 こんにちは。gfx です。みなさん、意識は高まっていますか？ 僕は上々です。今回は拙作の [https://github.com/gfx/p5-Alien-RRDtool:title=Alien::RRDtool] というモジュールを紹介いたします。
 
-[https://github.com/kazeburo/cloudforecast:title=CloudForecast]や[https://github.com/kazeburo/GrowthForecast:GrowthForecast]を使いたい！と思ったとき、RRDtoolのPerlバインディングであるRRDs.pmをインストールするのが面倒だったりします。特にperlbrewで入れたperlではRRDtoolsのソースコードをとってきてビルドしなければならず、「CloudForecastはsystem perlで動かす」というのが今までのベストプラクティスでした。
+[https://github.com/kazeburo/cloudforecast:title=CloudForecast]や[https://github.com/kazeburo/GrowthForecast:title=GrowthForecast]を使いたい！と思ったとき、RRDtoolのPerlバインディングであるRRDs.pmをインストールするのが面倒だったりします。特にperlbrewで入れたperlではRRDtoolsのソースコードをとってきてビルドしなければならず、「CloudForecastはsystem perlで動かす」というのが今までのベストプラクティスでした。
 
 Alien::RRDtoolはRRDtoolをCPAN経由でインストールするためのモジュールで、RRDtoolの各種コマンドとPerlバインディングを簡単にインストールすることができるようになりました。
 
