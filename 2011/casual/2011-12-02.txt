@@ -1,0 +1,91 @@
+Encode::Locale - 環境に合わせたエンコーディングを提供する
+meta-author: Cside
+meta-tags: perl
+
+こんにちは、Csideです。最近はtwitterでウザ絡みするのが楽しくて仕方がありません。
+さて、3分で読める軽い話をば。Encode::Localeというモジュールの紹介です。
+
+
+Perlでマルチバイト文字を処理する際は、「外から受け取るときはdecode、出力するときはencode」というのは基本ですね。自分で使うスクリプトを書くぶんには、自分のターミナルのエンコーディングに合わせてencode/decodeしてやればいいですね。
+しかし、作ったスクリプトを他の人にも使ってもらいたくなったときに問題は発生します。あなたの作ったスクリプトを使う人のターミナルのエンコーディングはUTF-8とは限らず、EUC-JPかもしれませんし、WindowsであればShiit_JISかもしれないからです。
+
+
+それでは、その環境のターミナルのエンコーディングに合わせてencode/decodeするにはどうすれば良いでしょう。Encode::Guessで頑張るというテもありますが、我らがCPANにはそこをうまく抽象化してくれるEncode::Localeというモジュールが存在するので、これを使えばOKです。
+
+
+Encode::Localeは、そのターミナルで使われているエンコーディングを返すconsole_in/console_outというエンコーディング名を提供します。
+
+>|perl|
+#!perl
+use strict;
+use warnings;
+use Encode::Locale;
+
+# 標準入力をターミナルのエンコーディングでdecodeするように
+binmode STDIN  => ':encoding(console_in)';
+# 標準出力をターミナルのエンコーディングでencodeするように
+binmode STDOUT => ':encoding(console_out)';
+# 標準エラー出力をターミナルのエンコーディングでencodeするように
+binmode STDERR => ':encoding(console_out)';
+
+my $in = <STDIN>;  # decode済の文字列が渡される
+print $in;  # Wide character in print at ... 警告が出ない
+print STDERR $in;  # 上に同じ
+||<
+とても便利ですね！
+
+
+さて、標準入出力・エラー出力はこれでよさそうですが、コマンドライン引数も自動でエンコーディングを判定してデコードしてほしいですね。
+Encode::Localeにはこれをやってくれるdecode_argvなるfunctionが存在します。使い方は、コマンドライン引数を受けとる処理の前で呼ぶだけです。
+>|perl|
+#!perl
+use strict;
+use warnings;
+use utf8;
+use Encode::Locale;
+use opts;
+
+binmode STDOUT => ':encoding(console_out)';
+
+Encode::Locale::decode_argv;
+
+# $from, $subject, $body すべてdecode済なのがポイント
+opts $from => 'Str',
+     $subject => 'Str';
+  my $body = shift;
+
+print "送信者：$from\n";
+print "件名：$subject\n";
+print "本文：$body\n";
+||<
+>|sh|
+$ perl script.pl --from Cside --subject けんめい ほんぶん
+
+送信者：Cside
+件名：けんめい
+本文：ほんぶん
+||<
+これでdecodeの手間はだいぶ省けますね。
+
+
+**オマケ
+ちなみに上のテクニックは、テスト出力で日本語を扱う場合（滅多ないと思いますが）にも使えます。
+
+>|perl|
+use strict;
+use utf8;
+use Test::More;
+use Encode::Locale;
+
+my $builder = Test::More->builder;
+binmode $builder->output, ':encoding(console_out)'
+binmode $builder->failure_output, ':encoding(console_out)'
+binmode $builder->todo_output, ':encoding(console_out)'
+
+ok 1, "日本語のテストケース名";
+
+# Your tests ...
+||<
+
+
+次はytnobodyさんです！
