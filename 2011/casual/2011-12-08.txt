@@ -1,0 +1,81 @@
+Perlでのソーシャルゲーム開発
+meta-author: Songmu
+meta-format: markdown
+
+こんにちは。Songmuです。鎌倉の面白法人でPerlでソーシャルゲームの開発をおこなっています。
+「ぼくらのワールドリーグ」や「ぼくらの甲子園熱闘編」の開発に携わっております。
+
+アプリはArk+DBIx::Class+Text::MicroTemplate::Extendedという構成でつくることが多いのですが、その他ソーシャルゲーム開発にあたって便利なモジュールを紹介したいと思います。
+
+## OAuth認証をどうするか
+
+hidekさん作の Plack::Middleware::Auth::OAuthを使うと良いと思います。
+
+psgiファイルをPlack::Builderを使って以下のように書くことができます。
+
+    use Plack::Builder;
+    ...
+    builder {
+        enable 'Plack::Middleware::Auth::OAuth',
+            'consumer_key'    => 'your_consumer_key',
+            'consumer_secret' => 'your_consumer_secret',
+            'validate_post'   => 1;
+        $app;
+    };
+
+これで解決です。簡単ですね。アプリケーション側では特に意識する必要はありません。
+
+ただ、これだと全てのアクセスにOAuth認証が必要になってしまい困る局面が出てきます。
+
+例えば死活監視のためのURLを用意し、監視スクリプトに定期的にアクセスして貰う場合などです。
+
+この場合監視スクリプト側がAuthヘッダーを付けてリクエストを送るのは現実的ではありません。
+実装コストの問題や、たとえ実装ができたとしてもconsumer_key等の秘匿情報を監視スクリプト側に持たせたくないからです。
+
+なので、enable_ifを使って、特定条件の場合にのみMiddlewareを読みこませるようしてみましょう。
+
+    builder {
+        enable_if {$_[0]->{PATH_INFO} !~ m!^/ping(?:$|/)!}
+            'Plack::Middleware::Auth::OAuth',
+            'consumer_key'    => 'your_consumer_key',
+            'consumer_secret' => 'your_consumer_secret',
+            'validate_post'   => 1;
+        $app;
+    };
+
+上記の例だと、/ping 以下にアクセスした際にはOAuth認証を通さないようにしています。
+/pingはDBのレコードを一行引き、問題なかったら200を返すようなURLです。それにより一気通貫のアプリケーションの死活監視を行うことができます。
+
+`$_[0]->{PATH_INFO}`みたいな生に近い情報を書くのは綺麗じゃないと思うかもしれません。
+
+その場合は、kazeburoさん作のPlack::Middleware::Conditionalsを使うと綺麗に書くことができます。
+
+    use Plack::Middleware::Conditionals;
+    
+    builder {
+        enable match_if path('!', qr!^/ping(?:$|/)!),
+            'Plack::Middleware::Auth::OAuth',
+            'consumer_key'    => 'your_consumer_key',
+            'consumer_secret' => 'your_consumer_secret',
+            'validate_post'   => 1;
+        $app;
+    };
+
+コードの見通しが良くなりました。
+
+
+## SWFの動的生成
+
+ガラケー向けのSWF生成はPerlは他の言語に比べて遅れをとっている部分です。今やっているプロジェクトではSWF::Changerというswfmillのラッパーを作ってそれを利用しています。
+
+文字列・画像・色の置き換え等はこれで出来ます。MovieClipの置き換えは実現できていません。
+
+SWF::Editor IO::SWF::Editorとかもあるようです。
+
+
+## マスタデータ管理
+
+Net::Google::SpreadSheet
+
+
+
