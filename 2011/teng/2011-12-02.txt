@@ -1,0 +1,84 @@
+#02 schemaの定義方法
+
+Tengを使うにはまずSchemaの定義を行う必要があります。
+なお、今回はProj::DBというnamespaceで統一して記述していきます。
+コードは特記しない限りSQLiteを前提としています。
+
+以下のようなテーブルがあるとし、
+
+>||
+create table user (
+    id integer,
+    name text,
+    primary key ( id )
+);
+create table status (
+    id integer,
+    user_id integer,
+    body text,
+    primary key ( id )
+);
+||<
+
+コレに対応するTengのSchemaは以下の様に書きます。
+
+>||
+package Proj::DB::Schema;
+use strict;
+use warnings;
+use Teng::Schema::Declare;
+
+table {
+    name 'user';
+    pk   'id';
+    columns qw/id name/;
+};
+
+table {
+    name 'status';
+    pk   'id';
+    columns qw/id user_id body/;
+};
+
+1;
+||<
+
+table毎にtableブロックを作成し、table名、pk、columnsなどを設定します。
+Teng::Schema::Declareの実装はなかなかhackishなので、興味のある人は見てみるといいと思います。
+
+Schemaクラスを作成したら次にTengを継承したクラスを作成します。
+
+>||
+package Proj::DB;
+use parent 'Teng';
+1;
+||<
+
+通常はTengを継承するだけでOKです。
+
+Tengでは利用者が独自に拡張するコード置き場としてTeng::Plugin::というnamespaceがありますが
+Plugin化するほどでなく、プロジェクト固有のロジック定義を行いたい場合は、
+このTengを継承したProj::DBにmethod定義をおこなえばよいです。
+
+
+ただし、複数のプロジェクトで共通して利用できそうなロジックの場合はTeng::Pluginのnamespaceに置き、
+読みこむようにするとよいでしょう。
+Pluginの詳細については後々紹介します。
+
+
+これでTengを使ってdb操作する準備は完了です。
+明日以降はこれをベースに話をすすめます。
+
+なお定義したProj::DBは以下のようにしてインスタンス化します。
+
+>||
+use strict;
+use warnings;
+use Proj::DB;
+ 
+my $teng = Proj::DB->new(+{connect_info => ['dbi:SQLite:./sample.db','','']});
+||<
+
+以降は特別言及しないかぎり上記インスタンスの生成部分は省略します。
+
+明日はINSERTに関する処理方法を紹介したいと思います。
