@@ -1,0 +1,79 @@
+Alien::RRDtool - RRDtoolをCPANから入れる
+meta-author: gfx
+meta-tags: perl, rrdtool
+
+** 前置き
+
+こんにちは。gfx です。みなさん、意識は高まっていますか？ 僕は上々です。今回は拙作の [https://github.com/gfx/p5-Alien-RRDtool:title=Alien::RRDtool] というモジュールを紹介いたします。
+
+[https://github.com/kazeburo/cloudforecast:title=CloudForecast]や[https://github.com/kazeburo/GrowthForecast:GrowthForecast]を使いたい！と思ったとき、RRDtoolのPerlバインディングであるRRDs.pmをインストールするのが面倒だったりします。特にperlbrewで入れたperlではRRDtoolsのソースコードをとってきてビルドしなければならず、「CloudForecastはsystem perlで動かす」というのが今までのベストプラクティスでした。
+
+Alien::RRDtoolはRRDtoolをCPAN経由でインストールするためのモジュールで、RRDtoolの各種コマンドとPerlバインディングを簡単にインストールすることができるようになりました。
+
+** RRDtool
+
+RRDtoolはシステムログなどにグラフに書き出すためのツールで、たとえば以下のギャラリーで紹介されているようなものが作れます。美麗ですね！かっこいいですね！
+
+- [http://oss.oetiker.ch/rrdtool/gallery/:title=RRDtool]
+
+使い方についてはRRDtoolのサイトやRRDs.pmのドキュメントを参考にしてください。
+
+- [http://oss.oetiker.ch/rrdtool/:title=RRDtool]
+- [http://oss.oetiker.ch/rrdtool/prog/RRDs.en.html:title=RRDs]
+
+使用例としてはGrowthForecast::RRDがこなれていると思います。
+
+- [https://github.com/kazeburo/GrowthForecast/blob/master/lib/GrowthForecast/RRD.pm:title=GrowthForecast::RRD]
+
+** インストール
+
+このディストリビューションはRRDtoolのインストールが目的です。
+
+まず、RRDtoolの依存している以下のCライブラリをyum, rpm, homebrewなどのパッケージマネージャインストールしてください（システムによっては既にいくつかのライブラリがインストール済みかもしれません）。
+
+- pkg-config
+- gettext
+- glib
+- xml2
+- pango
+- cairo
+
+Alien::RRDtoolについてはこれで終わりです。
+
+*** Alien名前空間について
+
+さてこの[https://metacpan.org/module/Alien:title=Alien]という名前空間はCPANでも特殊な位置づけとなっています。この名前空間はPerlのライブラリのためのものではなく、異なる言語の（主にCの）ライブラリをインストールするためのものなのです。これは、そのライブラリのバインディングという意味ではなく、純粋のそのライブラリをインストールするということです。
+
+たとえばこのAlien::RRDtoolモジュールこれ自体は何の機能もなく、インストールしたRRDtoolのヘッダファイルやCライブラリの情報をいくらか提供しているだけです。RRDtoolをビルドするためのレシピがこのディストリビューションの中心です。同様に、Alien::PNGやAlien::MeCabなどのディストリビューションもそれぞれCのライブラリをインストールするためのものです。
+
+非PerlのライブラリをAlienディストリビューションで管理することのメリットは、Makefile.PLなどで依存関係を管理できるということにあります。上のセクションではAlien::RRDtoolのためにいくつかのCライブラリをインストールする必要がある、と書きましたが、将来的にそれらのビルドレシピがAlien名前空間に置かれるようになれば、Makefile.PLに依存を書けるようになるでしょう。
+
+Alien名前空間はOSのパッケージマネージャとは独立しているため、最新版を使ったりバージョンを固定したりするのが簡単にできるというメリットもあります。またシステムに依存しないため、CPANクライアントを使える環境でなら同様に使えます。
+
+このAlien名前空間のアイデアはMacで使用されるhomebrewというシステムとよく似ています。システムが持っているのはビルドするレシピ（あるいはビルド済みバイナリのURL）とインストール先の情報だけです。Alien名前空間はCPAN生態系におけるhomebrewといえるでしょう。
+
+一方で課題もあります。Alien名前空間はアイデアとしては素晴らしいのですが、フレームワークや仕様の詳細を提供していないのでレシピの実装方法がまちまちですし、インストールしたライブラリのヘッダファイルやリンカフラグへのアクセス方法も統一されていません。うまく発展すればシステムに依存しない汎用パッケージマネージャとして使える可能性のあるアイデアなので、もう少し考えたいと思っています。
+
+** Module::Build
+
+さてこのAlienディストリビューションの実装ですが、ExtUtils::MakeMakerやModule::Installといったオーサリングツールではなく、Module::Buildを使うのが一般的となってです。なにしろPerlのライブラリではないものをビルドしてインストールしなければならないので、細かな制御が必要なのです。
+
+Module::Buildを使う際にあたってのポイントはまだあまり把握していませんが、以下のようなものがあるでしょう。
+
+- Build.PL (Makefile.PL) は基本設定(configure)を行う
+- build/test/installはinc::MyBuilderなどのModule::Buildのサブクラスで行う
+- Build.PLとinc::MyBuilderのデータのやり取りにはnotes()メソッドを使う
+- Module::Build::CompatでMakefileを出力し、EU::MMやM::Iと同じインターフェイスで開発できるようにする
+
+具体例としてはAlien::RRDtoolのコードが参考になるかと思います。
+
+- [https://github.com/gfx/p5-Alien-RRDtool/blob/master/Build.PL:title=Build.PL] (Makefile.PLはBuild.PLのsymlinkにしています)
+- [https://github.com/gfx/p5-Alien-RRDtool/blob/master/inc/MyBuilder.pm:title=inc::MyBuilder]
+
+Alien名前空間のために必要なことを抜き出してフレームワークにするといいかもしれませんね。
+
+Module::Buildは今回はじめて使ってみましたが、カスタマイズが簡単でプログラマブルなので、EU::MMやM::Iで頑張るくらいならModule::Buildを使ったほうよさそうです。
+
+** まとめ
+
+Alien::RRDtool というRRDtoolのインストール用ディストリビューションを紹介しました。またAlien名前空間とModule::Buildについても簡単に解説しました。これらについて感心を持っていただければ幸いです。
