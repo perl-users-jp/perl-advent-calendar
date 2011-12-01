@@ -9,7 +9,7 @@ meta-tags: perl, windows
 
 もちろん、<a href="https://github.com/c9s/perlomni.vim">perlomni.vim</a> や <a href="https://github.com/hotchpotch/perldoc-vim">perldoc.vim</a> は必須です。入れておきましょう。
 
-僕がWindowsユーザがPerlを書いてて良くやらかすのが
+僕がWindowsでPerlを書いてて良くやらかすのが
 
 - ファイルのエンコーディングをcp932のままリリースしちゃった
 - ファイルのフォーマットをdosのままリリースしちゃった
