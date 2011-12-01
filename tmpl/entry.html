@@ -8,15 +8,15 @@
 <head profile="http://purl.org/net/ns/metaprof">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" />
-    <title>[% title %] - JPerl advent calendar [% year %] [% name %] Track</title>
+    <title>[% title %] - [% conf.title %] [% name | ucfirst %] Track</title>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="[% uri_for(year _ '/' _ name _ '/rss') %]" />
     <link rel="stylesheet" href="http://perl-users.jp/articles/advent-calendar/prettify.css" type="text/css" media="screen" />
     <link rel="stylesheet" href="http://perl-users.jp/css/adcal.css" type="text/css" media="screen" />
 
-    <meta property="og:description" content="JPerl Advent Calendar [% year %]に投稿された記事です" />
+    <meta property="og:description" content="[% conf.title %] [% name | ucfirst %] Track に投稿された記事です" />
     <meta property="og:type"  content="article" />
     <meta property="og:url"   content="[% uri_for(req.path_info) %]" />
-    <meta property="og:site_name" content="JPerl Advent Calendar [% year %]" />
+    <meta property="og:site_name" content="[% conf.title %]" />
     <meta property="og:image" content="http://perl-users.jp/articles/advent-calendar/img/adcal2010.jpg" />
     <link rel="mixi-check-image" type="image/jpeg"
           href="http://perl-users.jp/articles/advent-calendar/img/adcal2010.jpg" />
@@ -75,7 +75,7 @@ function foo(){
 
         <div id="banner">
             <div id="banner-inner" class="pkg">
-                <h1 id="banner-header">[% title %] - [% year %] advent calendar [% name %]</h1>
+                <h1 id="banner-header">[% title %] - <a href="[% uri_for('../../') %]">[% conf.title %]</a> <a href="[% uri_for('../') %]">[% name | ucfirst %] Track</a></h1>
                 <p id="banner-description">Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</p>
             </div>
         </div>
