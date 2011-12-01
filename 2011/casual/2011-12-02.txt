@@ -3,7 +3,7 @@ meta-author: Cside
 meta-tags: perl
 
 こんにちは、Csideです。最近はtwitterでウザ絡みするのが楽しくて仕方がありません。
-さて、3分で読める軽い話をば。Encode::Localeというモジュールの紹介です。
+さて、3分で読める軽い話をば。Gisle Aas氏の書いたEncode::Localeというモジュールの紹介です。
 
 
 Perlでマルチバイト文字を処理する際は、「外から受け取るときはdecode、出力するときはencode」というのは基本ですね。自分で使うスクリプトを書くぶんには、自分のターミナルのエンコーディングに合わせてencode/decodeしてやればいいですね。
