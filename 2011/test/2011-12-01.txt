@@ -1,0 +1,438 @@
+perl でテストを始めよう！！
+meta-author: xaicron
+meta-tags: perl, test
+
+** はじめに
+
+こんにちはこんにちは！最近会社のモニターが二枚になって持て余している xaicron です。
+
+さて、Test Track と称して始まった本トラック。全部よめばあなたもテストを書かずには生きていけない、そんな身体に大変身していること間違いなしです。
+
+とりあえず今日は初日なので、perl でテストを書くときに必ずと言っていいほど利用する Test::More を使ったテストの書き方を書こうと思ます。
+
+また、「テスト」とざっくりといってもいろいろなものがありますが、その辺の細かい話はきっと ikasam_a さんが書いてくれるのでスルーします。
+
+** Test::More チートシート
+
+まず、More というだけあって、結構機能がいっぱいあるので、チートシートを先にあげておきます。perldoc Test::More のほぼコピペですが、きっと皆さんは perldoc Test::More とかしてくれないので！！
+
+>|perl|
+use strict;
+use warnings;
+use Test::More;
+
+ok $got;                      # 真なら ok
+ok !$got;                     # not ok とかないので逆にしたい場合はこうすると吉
+is $got, $expected;           # ok $a eq $b のいい感じ版
+isnt $got, $expected;         # is の逆。ほぼつかわない。
+cmp_ok $got, '<' $expected;   # ok $a < $b のいい感じ版。'>=' とか '==' とか指定可能
+like $got, qr/$expected/;     # $got に qr/foo/ が含まれる場合に OK
+unlike $got, qr/$expected/;   # like の逆
+is_deeply $got, $expected;    # 構造体の比較。超使う。最強
+
+pass $test_name;              # ここ通過したら OK みたいな感じで使うけどあんまり使わない
+fail $test_name;              # ここ通過したら NG みたいな感じで使う
+
+note $message;                # メッセージを出力。make test とかでは出力されないので debug 用に使うイメージ
+diag $message;                # メッセージを出力
+explain $deep_structure;      # Data::Dumper::Dumper みたいなもん。出力自体はしないので note explain $got みたいにつかうとよい
+
+BAIL_OUT $why;                # ベイルアウト！！！！ 滅多に使わない
+
+# このブロックの中ならこけても許してくれる
+TODO: {
+    local $TODO = $why;
+    ok 0;
+    is 'foo', 'bar';
+    fail ':)';
+}
+
+# このブロックはとばす
+SKIP: {
+    skip $why, $how_many unless $some_feature;
+    ok $some_feature->foo();
+    ok $some_feature->bar();
+}
+
+# テストのブロックを明示するようなあれ。あとで説明。
+subtest $desc => sub {
+    ok got;
+    is $got, $explain;
+};
+
+done_testing; # テストの最後に書くおまじない
+||<
+
+という感じで大体これぐらい使えばいい感じにかけますね。
+
+** 初めてのテスト
+
+さて、なにはともあれテストを書いてみましょう。テストを書けるようになるにはひたすらテストを書くしかないのでとにかく書きましょう。書きすぎて怒られるぐらい書きましょう。
+
+まず、適当に以下のようなモジュールを書きましょう。こいつは lib/SomeModule.pm に書きます。
+
+>|perl|
+package SomeModule;
+
+use strict;
+use warnings;
+
+sub new {
+    my ($class, %args) = @_;
+    bless \%args, $class;
+}
+
+sub sum {
+    my $self = shift;
+    my $ret = 0;
+    for my $num (@_) {
+        $ret += $num;
+    }
+    return $ret;
+}
+
+1;
+||<
+
+簡単なモジュールですね。<del>テストとかいらなそう。</del>
+
+テスト駆動開発的には、まずはテストを書け！ボケナスがぁ！！って言われるかもしれませんが、現実はそんな風には出来ていないので、まずはテスト対象のコードが存在してしまうことの方が多いでしょう。
+
+こいつのテストを書く訳ですが、perl の慣習的にテストは t/ 配下に置くことが多いのと、拡張子は .t にしとくと捗るのでで t/01_use.t とか書きましょう。
+
+>|perl|
+# t/01_use.t
+use strict;
+use warnings;
+use Test::More;
+
+use_ok('SomeModule');
+
+done_testing;
+||<
+
+短いですね。でも立派なテストです。
+Test::More の use_ok() と done_testing() という関数を利用してます。
+
+use_ok はそのままの意味で、モジュールを use できたら ok ってことです。
+done_testing はテストはここまでですよーっていう意味ですが、深く考えずにテストファイルの末尾に書けばいいと覚えておけばいいでしょう。
+
+さて、テストを書いたのでこいつを実行しようと思います。
+
+単なる perl スクリプトなので、
+
+>||
+$ perl -Ilib t/01_use.t
+||<
+
+とすれば、
+
+>||
+ok 1 - use SomeModule;
+1..1
+||<
+
+という風にでて、テストが全部通りました！やった！！
+
+ちなみに、この出力ですが、TAP という形式になっていて、まぁくわしくは http://testanything.org をご覧ください。
+
+** テストの追加
+
+use だけ出来たところでなんも嬉しくないので、new を出来るようにしたいなと思います。
+
+皆さんはもうさっき書いたモジュールのコードなんてすっかり忘れてしまったここと思いますので、テスト対象の new の部分をもう一度提示しておきます。親切ですね。
+
+>|perl|
+sub new {
+    my ($class, %args) = @_;
+    bless \%args, $class;
+}
+||<
+
+簡単なコードですね。テスト書きましょう。
+
+>|perl|
+# t/02_new.t
+use strict;
+use warnings;
+use Test::More;
+use SomeModule;
+
+my $obj = SomeModule->new;
+isa_ok $obj, 'SomeModule';
+
+done_testing;
+||<
+
+出来ました！早速実行しましょう！！
+
+>||
+$ perl -Ilib t/02_new.t
+ok 1 - The object isa SomeModule
+1..1
+||<
+
+いやっほおおおおーーーい！！
+
+でもこれだけだと new() 引数になんも入れてない場合のテストしか出来てないですね。
+というわけで、引数与える奴も追加しましょう。
+
+>|perl|
+# t/02_new.t
+use strict;
+use warnings;
+use Test::More;
+use SomeModule;
+
+my $obj = SomeModule->new;
+isa_ok $obj, 'SomeModule';
+
+my $obj2 = SomeModule->new(foo => 'bar');
+isa_ok $obj2, 'SomeModule';
+
+done_testing;
+||<
+
+出来ましたね！しかしまぁ $obj2 とかないわーって感じです。
+
+** subtest を使う
+
+こういうときは昔は { ... } とかで囲んでスコープを分けてましたが、いまは subtest っていうのが使えるので素直にそれを使っておきましょう。
+subtest が嫌いな人もいますが、それはそれです。
+
+>|perl|
+# t/02_new.t
+use strict;
+use warnings;
+use Test::More;
+use SomeModule;
+
+subtest 'no args' => sub {
+    my $obj = SomeModule->new;
+    isa_ok $obj, 'SomeModule';
+};
+
+subtest 'foo => bar' => sub {
+    my $obj = SomeModule->new(foo => 'bar');
+    isa_ok $obj, 'SomeModule';
+};
+
+done_testing;
+||<
+
+subtest は description が必須なので、これから俺はこんなテストをやる！っていう意思表示にもなっていいですね。
+
+これを実行するとこんな感じになります。
+
+>||
+$ perl -Ilib t/02_new.t
+    ok 1 - The object isa SomeModule
+    1..1
+ok 1 - no args
+    ok 1 - The object isa SomeModule
+    1..1
+ok 2 - foo => bar
+1..2
+||<
+
+なんかみにくいですね。でもこういうもんですね。
+これをちょこっと見やすくする Test::Flatten とかいうモジュールもありますが、今回はスルーしときます。
+
+というわけで subtest 使うといい感じに書ける！っていうお話です。
+
+** そろそろ sum() のテストを書く
+
+このモジュールのおそらく核の機能であるっぽい sum() のテストをいいかげん書きましょう。そろそろ飽きてきたので。
+
+テスト対象は
+
+>|perl|
+sub sum {
+    my $self = shift;
+    my $ret = 0;
+    for my $num (@_) {
+        $ret += $num;
+    }
+    return $ret;
+}
+||<
+
+です。簡単ですね。
+
+>|perl|
+# t/03_sum.t
+use strict;
+use warnings;
+use Test::More;
+use SomeModule;
+
+my $obj = SomeModule->new;
+
+subtest 'basic' => sub {
+    my $got = $obj->sum(1, 2, 3);
+    is $got, 6;
+};
+
+done_testing;
+||<
+
+>||
+$ perl -Ilib t/03_sum.t
+    ok 1
+    1..1
+ok 1 - basic
+1..1
+||<
+
+とおりましたね！
+
+これだけではつまらないので、ちょっと意地悪なテストを追加しましょう。
+
+>|perl|
+# t/03_sum.t
+use strict;
+use warnings;
+use Test::More;
+use SomeModule;
+
+my $obj = SomeModule->new;
+
+subtest 'basic' => sub {
+    my $got = $obj->sum(1, 2, 3);
+    is $got, 6;
+};
+
+# 追加
+subtest 'skip undef' => sub {
+    my $got = $obj->sum(undef, 2, 3);
+    is $got, 5;
+};
+
+done_testing;
+||<
+
+引数に undef が含まれている奴ですね。これを走らせてみましょう。
+
+>||
+$ perl -Ilib t/03_sum.t
+    ok 1
+    1..1
+ok 1 - basic
+Use of uninitialized value $num in addition (+) at lib/SomeModule.pm line 15.
+    ok 1
+    1..1
+ok 2 - skip undef
+1..2
+||<
+
+テストは通りましたが、なんか warnings がでてる！これは悲しいので、warnings がでたらテストがこけるようにしてやりましょう。
+
+warnings をキャッチする方法はいろいろとありますが、とりあえず今回は一番てっとり早い $SIG{__WARN__} さんを使うことにします。
+
+>|perl|
+# t/03_sum.t
+use strict;
+use warnings;
+use Test::More;
+use SomeModule;
+
+my $obj = SomeModule->new;
+
+subtest 'basic' => sub {
+    local $SIG{__WARN__} = sub { fail shift }; # 追加
+    my $got = $obj->sum(1, 2, 3);
+    is $got, 6;
+};
+
+subtest 'skip undef' => sub {
+    local $SIG{__WARN__} = sub { fail shift }; # 追加
+    my $got = $obj->sum(undef, 2, 3);
+    is $got, 5;
+};
+
+done_testing;
+||<
+
+これでテストを走らせましょう。
+
+>||
+$ perl -Ilib t/03_sum.t
+    ok 1
+    1..1
+ok 1 - basic
+    not ok 1 - Use of uninitialized value $num in addition (+) at lib/SomeModule.pm line 15.
+    # 
+    #   Failed test 'Use of uninitialized value $num in addition (+) at lib/SomeModule.pm line 15.
+    # '
+    #   at t/03_sum.t line 15.
+    ok 2
+    1..2
+    # Looks like you failed 1 test of 2.
+not ok 2 - skip undef
+#   Failed test 'skip undef'
+#   at t/03_sum.t line 18.
+1..2
+# Looks like you failed 1 test of 2.
+||<
+
+無事テストがこけました。
+
+しょうがないので、テストを通すように SomeModule を修正します。
+
+>|perl|
+sub sum {
+    my $self = shift;
+    my $ret = 0;
+    for my $num (@_) {
+        next unless $num; # 追加
+        $ret += $num;
+    }
+    return $ret;
+}
+||<
+
+これでテストをもっかいはしらせます。
+
+>||
+$ perl -Ilib t/03_sum.t
+    ok 1
+    1..1
+ok 1 - basic
+    ok 1
+    1..1
+ok 2 - skip undef
+1..2
+||<
+
+無事に通りましたね！！
+
+あとはこんな要領で、文字列を渡されたらエラーにするとかその辺のテストをかいたりなんだりしていけばいいでしょう！
+
+** テストを一括で走らせたい
+
+さて、ここまで3つのテストを書いてきましたが、普通に考えて一気に走らせたいなっていう欲求があることかと思います。
+
+そんなときは、prove というコマンドを使うといいでしょう。perl のコアに入っているのでいつでもオールレディーでございます。
+
+>|perl|
+$ prove -lc t
+t/01_use.t .. ok   
+t/02_new.t .. ok   
+t/03_sum.t .. ok   
+All tests successful.
+Files=3, Tests=5,  0 wallclock secs ( 0.10 usr  0.02 sys +  0.20 cusr  0.05 csys =  0.37 CPU)
+Result: PASS
+||<
+
+いい感じですね！！
+
+コンソールが ANSIColor に対応してたら色付きで表示されたりと便利です。prove の詳しい使い方は今後誰かが書いてくれることでしょう！！
+
+** おわりに
+
+さて、今回は初日ということもあって、ざっくりと Test::More の使い方を説明しました。
+今後、ここで紹介した関数とかが突然現れても、「あ、これは Test::More のやつだな」ってことに気付けると思います。
+
+こんな感じでゆるゆるやっていくので気軽に見てね♡
+
+というわけで、明日はあんまりにもアイコンが気持ち悪いことで有名な nekokak さんです！！
