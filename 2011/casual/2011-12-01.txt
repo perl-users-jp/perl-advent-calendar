@@ -2,7 +2,7 @@ DISられても負けないWindows Perl Hacker養成講座
 meta-author: mattn
 meta-tags: perl, windows
 
-こんにちわ。Linuxも使ってるのに何故かWindowsハッカー扱いされていて、主にPerl Geekからは毎度WIN32パッチを送ってくる面倒な奴として知れ渡ってしまったmattnです。
+こんにちわ。Linuxも使ってるのに何故かWindowsハッカー扱いされていて、主にPerl Geekからは毎度WIN32パッチを送ってくる面倒な奴として知れ渡ってしまった<a href="http://mattn.kaoriya.net">mattn</a>です。
 
 そんな僕がPerl Hackerに<del>粘着する</del>パッチを提供する為に使っているツールを紹介します。
 エディタはVimです。僕の人生の何分の一かはVimのパッチ書きに費やされているかもしれませんね。
