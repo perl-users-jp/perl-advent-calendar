@@ -1,0 +1,90 @@
+Crypt::SaltedHash - パスワードを安全に保存するための一手段
+meta-author: ytnobody
+meta-tags: perl
+
+ytnobodyです。こんにちは。Hachioji.pmの準備をしながらこの記事を書いています。
+Casual Track 3日目は、Crypt::SaltedHashを紹介します。
+
+ユーザーから預かっているパスワードをシステムへ保存するにあたって、そのまま平文で保存するのは非常にハイリスクです。
+また、MD5のようなハッシュ化では、「レインボーテーブル」という逆引き表を用いることで、元のパスワード文字列をかなり簡単に特定できてしまいます。
+このようなお話を、今年のYAPC::Asiaで徳丸さんが「Webアプリでパスワード保護はどこまでやればいいか」というセッションで発表されていましたが、
+その中で、ユーザーのパスワードを安全に保存する「手段のひとつ」として、「Salt(ソルト)」というものが紹介されていました。
+
+このような仕組みを自前で実装するのは、あまり難しくないかもしれません。しかし折角Perlを使うのであれば、CPANモジュールの力を借りておきたいですよね。
+そこで登場するのがCrypt::SaltedHash。このモジュールを使うと、とても簡単にソルトの恩恵に預かることが出来ます。
+
+**ハッシュ化
+
+以下のように、文字列をハッシュ化できます。
+
+>|perl|
+use Crypt::SaltedHash;
+
+# パスワード
+my $secret = 'HirakeGom@';
+
+# Crypt::SaltedHashのインスタンスを生成
+my $crypt = Crypt::SaltedHash->new();
+
+# 秘密の文字列を渡す
+$crypt->add( $secret );
+
+# ハッシュ化
+my $salted = $crypt->generate();
+
+||<
+
+これだけです。とても簡単ですね。
+あとは、ハッシュ化された文字列をDBなりに保存すれば良いでしょう。
+
+**パスワードがあっているか確認
+
+では、ハッシュ化された文字列を使って、どのようにしてパスワードの正当性を確認すればよいのでしょうか。
+
+>|perl|
+use Crypt::SaltedHash;
+
+# $secretにはパスワード、$saltedにはハッシュ化された文字列を
+# あらかじめ格納しておく
+
+my $is_valid = Crypt::SaltedHash->validate( $salted, "$secret" );
+
+# パスワードが正しければOK,間違えていればNGを出力
+if ( $is_valid ) {
+    print "OK";
+} else {
+    print "NG";
+}
+
+||<
+
+たったのこれだけ。内容が薄くて不安になってしまいますが、これでいいのです。
+
+**Authen::Simple::Passwordでのチェック
+
+CPANにはAuthen::Simpleという認証専門のモジュールがあるのですが、このモジュールに含まれるAuthen::Simple::Passwordでも、Crypt::SaltedHashでハッシュ化された文字列をそのまま正当性のチェックに使うことが可能です。
+
+>|perl|
+use Authen::Simple::Password;
+
+# $secretにはパスワード、$saltedにはハッシュ化された文字列を
+# あらかじめ格納しておく
+
+my $is_valid = Authen::Simple::Password->check( "$secret", $salted );
+
+# パスワードが正しければOK,間違えていればNGを出力
+if ( $is_valid ) {
+    print "OK";
+} else {
+    print "NG";
+}
+
+||<
+
+**まとめ
+
+パスワードの正当性チェックを通して、Crypt::SaltedHashの簡単な使い方を紹介しました。
+ただし、あくまでパスワードを安全に保存するための「手段のひとつ」であって、これだけでゼッタイ安全ダイジョーブ！というものではありませんので、ご承知おきを。
+
+
+さて、次回はokamuuuさんです。お楽しみに！
