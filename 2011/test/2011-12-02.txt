@@ -2,7 +2,7 @@ use Test::Attribute::AutoLevel
 
 こんにちは、ｶﾜ(・∀・)ｲｲ!!アイコンで有名なnekokakだよ。
 
-今日はｶﾜ(・∀・)ｲｲ!!僕がつくったTest::Attribute::AutoLevelという
+今日はｶﾜ(・∀・)ｲｲ!!僕がつくった<a href="http://search.cpan.org/dist/Test-Attribute-AutoLevel/">Test::Attribute::AutoLevel</a>という
 イカしたモジュールを紹介してみたいと思うんだ。
 
 僕はテストを書く時にテスト用の便利関数を定義することがよくあるんだ。
