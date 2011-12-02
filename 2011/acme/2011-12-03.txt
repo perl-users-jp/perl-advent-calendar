@@ -1,0 +1,64 @@
+Acme::AirRead - perl初心者が初心を一歩抜け出すために
+meta-author: koji**(koji_magi) <kojiel@gmail.com>
+meta-tags: perl, acme
+
+こんにちは。perl初心者見習い足軽系のkoji_magiです。主に<a href="http://hokkaido.pm.org/">Hokkaido.pm</a>によくお邪魔させてもらったりしてます。
+koji**とかkoji*とかkoji--とか名前を適当に付けすぎて涙が止まらないです。
+
+さて、今回は空気を読まない系でいいらしいので、こんなAcmeをご用意しました。
+
+<a href="https://github.com/koji--/p5-acme-airread">Acme::AirRead</a>
+
+中身は何の変哲も無いアクセサです。<a href="https://metacpan.org/module/Class::Accessor::Lite">Class::Accessor::Lite</a>とか見てなんとなく作りました。
+ただし、空気読めない系です。
+
+>|perl|
+use strict;
+use warnings;
+use Acme::AirRead;
+
+write_air(
+    air     => 'cant read air',
+    declair => 'cant read near air',
+    luft    => 'kann keine Luft lesen',
+    yomeru  => 'kuuki yome',
+);  
+
+my $air     = read_air('air');     # undef
+my $declair = read_air('declair'); # undef
+my $luft    = read_air('luft');    # undef
+my $yometa  = read_air('yomeru');  # kuuki yome
+||<
+
+そこはかとなく空気が読めていません。
+こんな感じで空気っぽいキーワードでアクセスするとundefを返します。
+なんとなくドイツ語の空気も読めなくしてあります。
+他の言語は<del>めんどくさかったので</del>未対応です。
+
+ただ、このまま空気が読めないと悔しい気持ちでいっぱいになりそうなので
+適当に空気読めるようにできます。
+
+>|perl|
+write_air( air => 'yomeru' );
+local $Acme::AirRead::NO_READ = qr{ky};
+
+my $air   = read_air('air');     # yomeru
+my $tokyo = read_air('tokyo');   # undef
+||<
+
+汚した空気を綺麗にする機能も付けました。エコって大事ですね。
+
+>|perl|
+write_air( air => 'kieru' );
+empty_air();
+my $air = read_air('air'); # undef
+||<
+
+自分が空気読めない系なので、そんな不条理でもにょもにょした何かをAcmeで表現してみました。
+いかがでしたでしょうか。
+
+Acmeは何でもアリなので、色々な発想でコードを書くことができますね。
+自分はようやくgithubを触り始めた程度の、perlというかハッカー文化の初心者なのですが
+Acmeのような文化があるとその人なりの楽しみ方ができるので初心者にも優しい文化だなーと思いました。
+
+…Acmeなのにまじめに締めちゃって、良かったのかな…
