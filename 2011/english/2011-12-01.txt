@@ -23,3 +23,5 @@ Test is important. Again, test is important. This fact is widely known among Jap
 Acme Track is for fun. In Japanese Perl community, Acme modules are so popular that a certain Perl hacker wrote [http://www.donzoko.net/gakuya/#Acmencyclopedia2011:title=Acmencyclopedia]. In this track you will see some funny modules. Most of them are useless, but entertainment is necessary for human's life.
 
 We are sorry many of articles are written in Japanese. If you interested in an article but you could not read it, please try to translate it via [http://translate.google.com/:title=http://translate.google.com/]. Otherwise tweet to request translation with permalink of the article and [http://twitter.com/#!/search/%23perladvent:title=#perladvent] hash tag, maybe someone translate it for you ;)
+
+Kensuke Nagae ([http://twitter.com/kyanny:title=@kyanny])
