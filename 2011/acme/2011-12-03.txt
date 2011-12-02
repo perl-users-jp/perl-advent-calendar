@@ -39,7 +39,10 @@ my $yometa  = read_air('yomeru');  # kuuki yome
 適当に空気読めるようにできます。
 
 >|perl|
-write_air( air => 'yomeru' );
+write_air(
+    air   => 'yomeru',
+    tokyo => 'kowai'
+);
 local $Acme::AirRead::NO_READ = qr{ky};
 
 my $air   = read_air('air');     # yomeru
