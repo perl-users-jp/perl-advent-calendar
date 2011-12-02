@@ -1,0 +1,85 @@
+#03 insert / fast_insert
+
+昨日でTengを利用するのに必要なクラス定義は終了しているので早速
+次のステップとして新しいレコードをデータベースに登録する
+INSERTの方法を紹介します。
+
+
+* insertメソッド
+
+
+SQLのINSERT文を実行するには以下のようにします。
+>||
+my $row = $teng->insert('user', +{id => 1, name => 'nekokak'});
+||<
+
+このようにすると、
+>||
+INSERT INTO user (id,name) VALUES(1,'nekokak');
+||<
+
+というようなSQLが実行され、データベースに新しい行が登録されます。
+
+Tengのinsertメソッドの返り値として、insertしたtableに対応するRowクラスでインスタンス化された
+Rowオブジェクトがかえってきますので、
+
+>||
+$row->id;   # 1
+$row->name; # nekokak
+||<
+
+といったようにアクセスすることが可能です。
+
+Tengのinsertメソッドではinsertに利用したrowデータを元にRowオブジェクトを生成していますが、
+rowオブジェクトが必要でない場合、無駄なコストが発生します。
+
+
+* fast_insertメソッド
+
+その場合はfast_insertメソッドを利用するとよいでしょう。
+fast_insertメソッドの引数はinsertメソッドと全く同じで、返却値がことなるだけです。
+fast_insertの時の返却値はlast insert idとなります。
+
+>||
+my $id = $teng->fast_insert('user', +{id => 2, name => 'xaicron'});
+||<
+
+* bulk_insertメソッド
+
+大量のデータをまとめてINSERTしたい場合、insertメソッド、fast_insertメソッドでは
+毎回INSERT文を発行することになるので、パフォーマンスの劣化が激しくなります。
+大量のデータをまとめてINSERTする場合はbulk_insertメソッドを利用してください。
+
+
+>||
+$teng->bulk_insert('user', [
+    +{ id => 3, name => 'zigorou'},
+    +{ id => 4, name => 'hidek48'},
+]);
+||<
+
+bulk_insertメソッドを利用するるとバックエンドのRDBMSに応じて適切なINSERT文を生成し、
+実行することができます。
+これにより、高速なデータ登録が可能となります。
+
+bulk_insertメソッドは昔のバージョンではPlugin扱いとなっていましたが、
+現在はPluginをloadしなくても利用できるようになっています。
+
+
+INSERTの実行方法を紹介しました。
+
+自分で
+
+>||
+INSERT INTO user (id,name) VALUES(?,?);
+||<
+
+のようなSQLをかいて実行するよりもかなり楽にかけるようになってますよね。
+今回の例ではcolumn数が少ないので生SQLでもそんなに難しくはないですが、
+多くのcolumnを持つtableのINSERT文を書くのは結構面倒です。
+さらに、通常?を使ったプレスホルダを利用することになりますが、
+?と実際に対応するデータの順番がずれると変なレコードが作られてしまったりするので、
+ORMだったりクエリビルダーでINSERT文を生成すると大分楽になるとおもいます。
+
+明日は今日登録したデータを取得する色々な方法を紹介しようとおもいます。
+
