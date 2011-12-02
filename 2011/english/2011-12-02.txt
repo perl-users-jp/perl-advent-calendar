@@ -1,0 +1,24 @@
+There's more than one Perl Mongers in Japan
+meta-author: Kensuke Nagae <kyanny@gmail.com>
+meta-tags: perlmongers, community
+
+Perl Mongers is, you know, regional/local Perl user groups. Many Perl Mongers are here in Japan. Today I introduce some active Perl Mongers.
+
+**[http://shibuya.pm.org/:title=Shibuya.pm]
+Shibuya.pm is the most larger Perl Mongers in Japan. In the past, Shibuya.pm was practically the parent organization of [http://tokyo.yapcasia.org/blog/ja/:title=YAPC::Asia]. Recently, Shibuya.pm holds specific-topic-related technical talks  about every 6 months.
+
+**Kansai.pm
+Kansai.pm is located at Osaka but it covers wide areas of west japan including Kyoto. Kansai.pm is long-standing Perl Mongers. They holds meetup at least once per year.
+
+**Fukuoka.pm
+Fukuoka.pm is most western Perl Mongers in Japan. They holds tech talks and workshops. In Fukuoka, many of Perl programmers are exchange with programmers who belong to other programming language community such as Ruby, PHP, etc.
+
+**Yokohama.pm
+Yokohama.pm is yet another Perl Mongers around Tokyo. They holds tech talks that has variety of topic. Some Perl programmers say that this group is casual, easy to join.
+
+**Hokkaido.pm
+Hokkaido.pm is young Perl Mongers. Hokkaido is north edge of Japan, so members of community are less than other big-city located Perl Mongers. Hokkaido.pm did an interesting trial with JPA, Japan Perl Association. In this trial, JPA dispatch famous Perl hackers as a special lecturer to Hokkaido.pm tech talks. This trial got good reputation, so other Perl Mongers get a chance of dispatching lecturer system.
+
+Of course, these are not at all. If you come to Japan in the future, feel free to join Japanese Perl Mongers.
+
+Kensuke Nagae ([http://twitter.com/kyanny:title=@kyanny])
