@@ -1,0 +1,128 @@
+自己参照の階層構造を持つテーブルをツリー形式にする DBIx::Tree
+meta-author: bayashi
+meta-tags: perl, dbi, dbix
+
+こんにちは！こんばんは！毎日フェッチしてますか！[http://twitter.com/bayashi:title=bayashi] です！
+
+DBIx 系を自分で書いたことがなく、果てしなくネタに困り、しょうがないから CPAN で DBIx 検索して見つけた、面白そうなモジュールを紹介します。もちろん、ニッチなのを攻めてみますよ！
+
+その名も、<a href="https://metacpan.org/module/DBIx::Tree" title="DBIx::Tree">DBIx::Tree</a>。なんだこれ！
+
+
+** DBIx::Tree
+
+このモジュールは、いわゆる Adjacency List Model のテーブルを、ツリー形式で見るためのモジュールです。
+
+Adjacency List Model というのは、階層構造を持つデータです。RDBMSにおいては、通常、シンプルにフラットな複数のリスト同士を、関連するidでヒモ付けることで階層構造のようなものをつくることが多いと思いますが、Adjacency List Model においては、ひとつのテーブルのレコードそれぞれにユニークなIDと、同じテーブルのレコードにヒモ付く親IDを持ちます。
+
+例えば、以下のようなテーブルを見てみましょう！
+
+>||
+    food                food_id   parent_id
+    ==================  =======   =========
+    Food                001       NULL
+    Beans and Nuts      002       001
+    Beans               003       002
+    Nuts                004       002
+    Black Beans         005       003
+    Pecans              006       004
+    Kidney Beans        007       003
+    Red Kidney Beans    008       007
+    Black Kidney Beans  009       007
+    Dairy               010       001
+    Beverages           011       010
+    Whole Milk          012       011
+    Skim Milk           013       011
+    Cheeses             014       010
+    Cheddar             015       014
+    Stilton             016       014
+    Swiss               017       014
+    Gouda               018       014
+    Muenster            019       014
+    Coffee Milk         020       011
+||<
+
+最初のレコードの "Food" が、ルート要素(レコード)で、food_id がユニークキー、parent_id がレコードの親を指すIDになります。よくあるパターンなら、親IDは別テーブルに存在しますが、今回の場合は、この同じテーブル内のレコードを指しています。
+
+とはいっても、こうしたデータを見慣れない僕にはビクンッビクンッときにくかったので、さっそく DBIx::Tree でごにょごにょしてみました！
+
+*** Adjacency List Model の視覚化
+
+>|perl|
+#!/usr/bin/perl
+use strict;
+use warnings;
+use DBIx::Tree;
+
+my $result;
+
+my $dbh = DBI->connect(
+    "dbi:mysql:database=DBNAME;host=localhost",
+    'USERNAME',
+    'PASSWORD',
+    +{ RaiseError => 1, },
+) or die "Cannot connect to DB: $DBI::errstr";
+
+my $tree = DBIx::Tree->new(
+    connection => $dbh,
+    table      => 'food',
+    method     => sub { disp_tree(@_) },
+    columns    => ['id', 'food', 'parent_id'],
+    start_id   => '001',
+);
+
+$tree->traverse;
+
+print "$result\n";
+
+sub disp_tree {
+    my (%param) = @_;
+
+    my $item = $param{item};
+    my $p_id = ${$param{parent_id}}[-1] ? ${$param{parent_id}}[-1] : 'ROOT';
+    my $id   = $param{id};
+    $result .= (' ' x ($param{level}*2) ). "$p_id: ". "$item($id)\n";
+}
+||<
+
+上記のコードを実行すると、以下のように結果が表示されます。
+
+>||
+  ROOT: Food(001)
+    001: Beans and Nuts(002)
+      002: Beans(003)
+        003: Black Beans(005)
+        003: Kidney Beans(007)
+          007: Black Kidney Beans(009)
+          007: Red Kidney Beans(008)
+      002: Nuts(004)
+        004: Pecans(006)
+    001: Dairy(010)
+      010: Beverages(011)
+        011: Coffee Milk(020)
+        011: Skim Milk(013)
+        011: Whole Milk(012)
+      010: Cheeses(014)
+        014: Cheddar(015)
+        014: Gouda(018)
+        014: Muenster(019)
+        014: Stilton(016)
+        014: Swiss(017)
+||<
+
+なるほど、こういうことか！
+
+モジュールの使い方は <a href="https://metacpan.org/module/DBIx::Tree" title="DBIx::Tree">DBIx::Tree</a> のドキュメントの通りで難しくないと思いますが、なかなかどうしてこうしたデータ構造は興味をそそりますよね。
+
+例えば Food テーブルのデータを追加、更新、削除するときどうするか、検索するときどうするか。スタックするのが快感な、再帰脳にはたまらない分野なのではないでしょうか。
+
+ただ、上記のようなテーブルは Adjacency List Model でしたが、例えば MySQL で扱うには Nested Set Model の方が都合が良く、<a href="https://metacpan.org/module/DBIx::Tree::NestedSet" title="DBIx::Tree::NestedSet">DBIx::Tree::NestedSet</a> というモジュールも存在します。さらには、各レコードに ツリー構造そのものを保持する Path Emuneration Model がもっとも都合が良いと言われています(上記コードの disp_tree 内で取得できる $param{parent_id} をカラムとして持っている状態かな)。
+
+それぞれ興味がわいた人はModel名で検索してみると、詳細な解説記事がたくさん見つかるでしょう！
+
+
+** まとめ
+
+3日目は <a href="https://metacpan.org/module/DBIx::Tree" title="DBIx::Tree">DBIx::Tree</a> を取り上げました。ある DBIx モジュールをきっかけに、新たなデータ構造について学ぶことができるなんて、とっても素敵なことですね！
+
+明日は nihen さんです。お楽しみに！
