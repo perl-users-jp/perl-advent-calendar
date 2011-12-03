@@ -2,14 +2,11 @@ Groonga Casual Tutorial - Groongaをカジュアルに使ってみたい
 meta-author: okamuuu
 meta-tags: perl, groonga
 
-JPerl Advent Calendar 4日目を担当しますokamuraです。
-Advand Calendar は初参加なのでお手柔らかにお願いします。
+JPerl Advent Calendar 4日目を担当しますokamuraです。Advand Calendar は初参加なのでお手柔らかにお願いします。
 
-皆さん帰宅後に俺々アプリを書いていますか？DBはSQLite派ですか？MySQL派ですか？
-私は最近Groongaという全文検索エンジンを使ってアプリを作っています(やや猪木口調で)。
+皆さん帰宅後に俺々アプリを書いていますか？DBはSQLite派ですか？MySQL派ですか？私は最近Groongaという全文検索エンジンを使ってアプリを作っています(やや猪木口調で)。
 
-ということで今回Groogaをカジュアルに使えるようになるためのチュートリアルを書いてみたいと思います。
-groongaのインストール方法は割愛しますのでご了承下さい。
+ということで今回Groogaをカジュアルに使えるようになるためのチュートリアルを書いてみたいと思います。groongaのインストール方法は割愛しますのでご了承下さい。
 
 ** ディレクトリ構成について前置き
 
@@ -29,8 +26,7 @@ groonga/db/
 
 ** DBschema
 
-今回はblogのようなデータモデルを使ったサンプルを紹介します。
-登場するテーブルは以下のとおりです。
+今回はblogのようなデータモデルを使ったサンプルを紹介します。登場するテーブルは以下のとおりです。
 
 - Keywrod
 - Article
@@ -135,21 +131,17 @@ load --table Article
 http://localhost:10041/
 ||<
 
-groongaは管理画面が最初から実装されています。
-テーブル一覧にサマリー,Article,Keyword,Termsが表示されていて、レコードを追加、編集、削除する事ができますので後で試して見て下さい。
+groongaは管理画面が最初から実装されています。テーブル一覧にサマリー,Article,Keyword,Termsが表示されていて、レコードを追加、編集、削除する事ができますので後で試して見て下さい。
 
 ** Basicaly commands
 
-続いてGroongaをアプリから実行する時に使用するであろうコマンドを紹介します。このチュートリアルではselect,load,deleteを使います。
-とりあえず他のコマンドは覚えなくてもカジュアルに使う分には問題ない気がカジュアルにしています。
+続いてGroongaをアプリから実行する時に使用するであろうコマンドを紹介します。このチュートリアルではselect,load,deleteを使います。とりあえず他のコマンドは覚えなくてもカジュアルに使う分には問題ない気がカジュアルにしています。
 
 なお、groongaはコマンドによって帰ってくるデータ構造がちょっと違いますので本家のドキュメントをご確認下さい。
 
 *** データをinsert
 
-RDBのようにcreateとupdateのコマンドが存在しますが、Groongaではloadしか存在しません。
-
-それではloadコマンドを試してみます。script/load.plを作成してください。
+RDBのようにcreateとupdateのコマンドが存在しますが、Groongaではloadしか存在しません。まずはloadコマンドを試してみます。script/load.plを作成してください。
 
 >|perl|
 #!/usr/bin/env perl
@@ -191,8 +183,9 @@ print $res->content if $res->is_success;
 
 *** ifexistsオプション
 
-さて、Groongaではcreateもupdateも区別せずにloadのみとなっていますが、もし既存のレコードが存在しているとは知らずにloadすると上書きしてしまう事になります。
-それをさける為にはifexistsオプションを使います。先ほどのscript/load.plをコピーします。
+さて、Groongaではcreateもupdateも区別せずにloadのみとなっていますが、もし既存のレコードが存在しているとは知らずにloadすると上書きしてしまう事になります。それをさける為にはifexistsオプションを使います。
+
+先ほどのscript/load.plをコピーします。
 
 >||
 % cp script/load.pl script/create.pl
@@ -216,8 +209,7 @@ print $res->content if $res->is_success;
               {  
 ||<
 
-実行します。ここで登録件数が0である事から既にレコードが存在していたため、登録をしないで処理を終えています。
-ひとまず上書き問題は回避できたのでカジュアル度が増したと思います。
+実行します。ここで登録件数が0である事から既にレコードが存在していたため、登録をしないで処理を終えています。ひとまず上書き問題は回避できたのでカジュアル度が増したと思います。
 
 >||
 % perl script/create.pl
@@ -256,8 +248,7 @@ print $res->content if $res->is_success;
 
 *** 検索条件を指定してselect
 
-主キーである_keyをつかって1レコード取得したい場合は次のようにします。
-script/select2.plとしてファイルを作成して下さい。
+主キーである_keyをつかって1レコード取得したい場合は次のようにします。script/select2.plとしてファイルを作成して下さい。
 
 >|perl|
 #!/usr/bin/env perl
@@ -322,8 +313,7 @@ print $res->content if $res->is_success;
 
 *** 関連テーブルのカラムを指定してselect
 
-Article.keywords.nameを検索語句として検索したい場合。
-script/select4.plとしてファイルを作成して下さい。
+Article.keywords.nameを検索語句として検索したい場合。script/select4.plとしてファイルを作成して下さい。
 
 >|perl|
 #!/usr/bin/env perl
@@ -356,7 +346,7 @@ print $res->content if $res->is_success;
 *** delete
 
 groongaでは1件ずつdeleteを行います。いまのところは複数同時に削除する事はできないようです。
-こちらのコマンドの説明をカジュアルに割愛させて頂きます。
+deleteコマンドの説明はカジュアルに割愛させて頂きます。
 
 ** まとめ
 
@@ -369,8 +359,7 @@ groongaでは1件ずつdeleteを行います。いまのところは複数同時
 - レコードの更新
 - レコードの削除(紹介していないけど)
 
-とりあえず以上を覚えておけばカジュアルにgroogaを使えると思います。
-なお、今回紹介したコードはこちらでカジュアルに晒しているので参考にしてください。
+とりあえず以上を覚えておけばカジュアルにgroogaを使えると思います。なお、今回紹介したコードはこちらでカジュアルに晒しているので参考にしてください。
 
 https://github.com/okamuuu/Casual-Groonga
 
