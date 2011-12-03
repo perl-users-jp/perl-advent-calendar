@@ -91,9 +91,9 @@ through: 1
 
 ** コマンドラインツールの書き方
 
-個人的に、コマンドラインツールを書くときは、ほとんどいつも同じコードをベースに書いています。もともとは Module::Starter あたりからコピペした気がしますが、興味のある人はソース覗いてみてください。[https://metacpan.org/module/Getopt::Long:title=Getopt::Long] や [https://metacpan.org/module/Pod::Usage:title=Pod::Usage] を使ってオプション値を取得したりヘルプを表示したりといった基本的なつくりや、設定ファイルの読み込みなどは鉄板化していますね。
+個人的に、コマンドラインツールを書くときは、ほとんどいつも同じコードをベースに書いています。もともとは Module::Starter あたりからコピペした気がしますが、興味のある人はソース覗いてみてください。<a href="https://metacpan.org/module/Getopt::Long" title="Getopt::Long">Getopt::Long</a> や <a href="https://metacpan.org/module/Pod::Usage" title="Pod::Usage">Pod::Usage</a> を使ってオプション値を取得したりヘルプを表示したりといった基本的なつくりや、設定ファイルの読み込みなどは鉄板化していますね。
 
-ただ、コマンドラインツールはテストがけっこう大変になったりすることがあり、[https://metacpan.org/module/App::Cmd:title=App::Cmd] をベースにして、[https://metacpan.org/module/App::Cmd::Tester:title=App::Cmd::Tester] を使うのがいいかもと、App::Rolling を書いた後で気づいたりしました。
+ただ、コマンドラインツールはテストがけっこう大変になったりすることがあり、<a href="https://metacpan.org/module/App::Cmd" title="App::Cmd">App::Cmd</a> をベースにして、<a href="https://metacpan.org/module/App::Cmd::Tester" title="App::Cmd::Tester">App::Cmd::Tester</a> を使うのがいいかもと、App::Rolling を書いた後で気づいたりしました。
 
 今後、この手のモジュールを書く人は、検討してみるといいと思います！
 
