@@ -6,16 +6,15 @@ Win32 Trackが懐かしい techno-cat (@techno_neko) デス。
 
 * 探し求めていたモジュールはAcmeでした
 
-画像データを扱うと、なかなか結果が返って来なくて。
-それで、プログレスバーみたいなのがあればいいなーって思ってたのですが、
-そんな大げさじゃなくていいから、
-動いてるよって教えてくれるモジュールを探してました。<br />
-<br />
+画像データを扱うと、なかなか結果が返って来なくて。それで、プログレスバーみたいなのがあればいいなーって思ってたのですが、
+そんな大げさじゃなくていいから、動いてるよって教えてくれるモジュールを探してました。<br />
+
 それで、ついに見つけてしまったのです、Acme::Spinnerを。
+<br />
 
 * 使い方
 
->|perl|>
+>|perl|
 use strict;
 use Acme::Spinner;
 
@@ -29,3 +28,62 @@ for my $i (0..100) {
 }
 ||<
 
+すると、
+>||
+|
+\
+-
+/
+||<
+の順番でアニメーションする。
+
+* ちゃんとやる
+
+ちゃんとアニメーションさせるには、
+>|perl|
+print STDERR $spinner->next . "\r";
+||<
+が呼ばれるタイミングだったり、回数を制御しなきゃいけなくて、例えば画像処理する場合はこんな感じ。
+
+>|perl|
+use warnings;
+use strict;
+use Imager;
+use Acme::Spinner;
+
+my $img = Imager->new( file=>$ARGV[0] ) or
+	die Imager->errstr();
+
+my $spinner = Acme::Spinner->new();
+for my $y (0..$img->getheight-1) {
+
+	# ここで出力タイミングを制御
+	# この例だと、16の倍数で1回出力
+	if ( ($y & 0x0F) == 0 ) {
+		print STDERR $spinner->next . "\r";
+	}
+
+	my @colors = $img->getscanline( y=>$y );
+	my @pixels = ();
+	foreach my $color (@colors) {
+		my ($red, $green, $blue, $alpha) = $color->rgba;
+ 
+		my $y = $red + $green + $green + $blue;
+		$y = int( $y / 4 );
+ 
+		push @pixels, ( $y, $y, $y, $alpha );
+	}
+	$img->setscanline( y=>$y, pixels=>pack('C*', @pixels) );
+}
+ 
+$img->write( file=>'result.jpg' ) or
+	die "Cannot write: ",$img->errstr;
+ 
+__END__
+||<
+
+* まとめ
+
+ね、便利でしょ。（棒）
+<br />
+さ〜て、明日はどなたでしょうか？？？
