@@ -5,7 +5,7 @@ the difference between AnyEvent::IRC::Client
 参加したい人は http://atnd.org/events/22890 からどしどし頼むぜ！
 
 昨日は AnySan を使うと簡単に irc bot をかけるって話をしたね。
-じゃぁ、 AnyEvent::IRC::Client 生と比べてどう違うか？ってのを yusukebe 作の<a href="http://web.archive.org/web/20101202214658/http://yusukebe.com/archives/10/11/17/121307.html">IRC 版全裸 bot</>との比較をしてみましょう。
+じゃぁ、 AnyEvent::IRC::Client 生と比べてどう違うか？ってのを yusukebe 作の<a href="http://web.archive.org/web/20101202214658/http://yusukebe.com/archives/10/11/17/121307.html">IRC 版全裸 bot</a>との比較をしてみましょう。
 
 元のページが消えてて archive.org にしか残ってなくて、ページ開くのが遅いので元ノーコードをリファクタリングしつつ抜粋すると以下のようになります。
 
