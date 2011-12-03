@@ -15,6 +15,7 @@ JPerl Advent Calendar 4日目を担当しますokamuraです。Advand Calendar �
 >||
 groonga/
 groonga/db/
+script/
 ||<
 
 さくっと作ってしまいましょう。
