@@ -2,7 +2,7 @@ Groonga Casual Tutorial - Groongaをカジュアルに使ってみたい
 meta-author: okamuuu
 meta-tags: perl, groonga
 
-JPerl Advent Calendar X日目を担当しますokamuraです。
+JPerl Advent Calendar 4日目を担当しますokamuraです。
 Advand Calendar は初参加なのでお手柔らかにお願いします。
 
 皆さん帰宅後に俺々アプリを書いていますか？DBはSQLite派ですか？MySQL派ですか？
@@ -277,6 +277,8 @@ my $res = $ua->get($uri);
 print $res->content if $res->is_success;
 ||<
 
+実行します。
+
 >||
 :!perl script/select2.pl
 [[0,1322889965.14106,0.000735],[[[1],[["_id","UInt32"],["_key","ShortText"],["name","ShortText"],["display_fg","Bool"]],[1,"perl","Perl",true]]]]
@@ -320,9 +322,7 @@ print $res->content if $res->is_success;
 
 *** 関連テーブルのカラムを指定してselect
 
-またArticle.keywordsにはKeyword._keyが格納されています。
-このKeywordのnameカラムを検索語句として指定する場合を考えます。
-
+Article.keywords.nameを検索語句として検索したい場合。
 script/select4.plとしてファイルを作成して下さい。
 
 >|perl|
