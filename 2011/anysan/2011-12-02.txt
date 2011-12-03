@@ -1,0 +1,108 @@
+the difference between AnyEvent::IRC::Client
+
+こんばんわ！今日もれっつえにーさん！
+
+参加したい人は http://atnd.org/events/22890 からどしどし頼むぜ！
+
+昨日は AnySan を使うと簡単に irc bot をかけるって話をしたね。
+じゃぁ、 AnyEvent::IRC::Client 生と比べてどう違うか？ってのを yusukebe 作の<a href="http://web.archive.org/web/20101202214658/http://yusukebe.com/archives/10/11/17/121307.html">IRC 版全裸 bot</>との比較をしてみましょう。
+
+元のページが消えてて archive.org にしか残ってなくて、ページ開くのが遅いので元ノーコードをリファクタリングしつつ抜粋すると以下のようになります。
+
+>||
+use strict;
+use warnings;
+use utf8;
+use Acme::Zenra;
+use AnyEvent;
+use AnyEvent::IRC::Client;
+use Encode;
+
+my $channel = $ARGV[0]          or die 'channel name is needed!';
+my $appid   = $ENV{YAHOO_APPID} or die 'set $ENV{YAHOO_APPID}';
+my $zenra = Acme::Zenra->new( yahoo_appid => $appid );
+
+my $c   = AnyEvent->condvar;
+my $irc = AnyEvent::IRC::Client->new;
+
+$irc->reg_cb(
+    publicmsg => sub {
+        my ( $irc, $chan, $msg ) = @_;
+        my $message = decode_utf8( $msg->{params}->[1] );
+        my $result = $zenra->zenrize( $message );
+        if ($message ne $result ) {
+            $message = encode_utf8(
+                '「' . $result . '」ですね。わかります' );
+            $irc->send_chan( $channel, "NOTICE", $channel, $message );
+        }
+    }
+);
+$irc->connect( "chat.freenode.net", 6667, { nick => 'zenra_bot' } );
+$irc->send_srv( "JOIN", $channel );
+$c->recv;
+||<
+
+良くある感じの AnyEvent::IRC::Client を使ったコードですね。
+
+以下は AnySan 版です。
+
+>||
+use strict;
+use warnings;
+use utf8;
+use Encode;
+use Acme::Zenra;
+use AnySan;
+use AnySan::Provider::IRC;
+
+my $channel = $ARGV[0]          or die 'channel name is needed!';
+my $appid   = $ENV{YAHOO_APPID} or die 'set $ENV{YAHOO_APPID}';
+my $zenra   = Acme::Zenra->new( yahoo_appid => $appid );
+
+my $irc = irc 'chat.freenode.net',
+    nickname => 'zenra_bot',
+    channels => {
+        $channel => {},
+    };
+
+AnySan->register_listener(
+    zenra => {
+        cb => sub {
+            my $receive = shift;
+            my $message = $receive->message;
+            return unless $message;
+            my $result = $zenra->zenrize( decode_utf8($message) );
+            if ($message ne $result ) {
+                $receive->send_reply('「' . $result . '」ですね。わかります');
+            }
+        },
+    },
+);
+AnySan->run;
+||<
+
+あんまり変わらないじゃないか！と思うでしょう。
+生の AnyEvent::IRC::Client を使った場合は、実装者は以下のコードを書く必要があります。
+
+- condvar の準備
+- irc オブジェクトを作る
+- callback の追加
+- irc server への接続
+- channnel join
+- AnyEvent のループを走らせる
+
+しかし AnySan のを使うと
+
+- irc オブジェクトの作成
+- callback の追加
+- AnySan のイベントループを走らせる
+
+部分だけを書けば良いです。
+bot 等を書く場合の関心ごとは発言に対する反応をどう処理するかという所に絞られるので、 AnySan を使うとその関心ごとに集中する事が出来ます。
+
+また、出来る事も AnyEvent::IRC::Client を生で使うよりも少ないので、必然的にドキュメントも少なくなるので使い方忘れた時に見るべきドキュメントが限られてすぐに使い方を思い出せる利点もあります。
+このへん bot とかしょっちゅう作らないので重要になりますね。
+
+** まとめ
+
+今日は、生の AnyEvent::IRC::Client と比べて何が嬉しいのかを紹介しました。
