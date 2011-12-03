@@ -89,7 +89,12 @@ load --table Keyword
     "_key": "php",
     "name": "PHP",
     "display_fg": true,
-  }  
+  },
+  {
+    "_key": "key",
+    "name": "hogehoge",
+    "display_fg": true,
+  } 
 ]
 load --table Article
 [
