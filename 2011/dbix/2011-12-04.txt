@@ -1,0 +1,247 @@
+続DBIとforkの関係
+meta-author: nihen
+meta-tags: perl, dbi, dbix
+
+** はじめに
+
+DBIxといえばSkinnyです。nihenです。
+DBIｘトラックといいながらDBIの話でもよいみたいなので[http://nihen.hatenablog.com/entry/2011/11/17/102557:title]に書いたことの続編tipsを一つ書きますです。
+
+** DBI->connect_cachedとforkの罠
+
+[http://search.cpan.org/~timb/DBI-1.616/DBI.pm#connect_cached:title=DBI->connect_cached]は同一プロセスで生成された同一connectオプションのデータベースハンドルをキャッシュしてくれそれを返してくれる便利なものなのですが、これとforkの組み合わせにはやはり罠が存在します。
+
+>|perl|
+use strict;
+use warnings;
+
+use DBI;
+use Data::Dumper;
+
+my $dbh = DBI->connect_cached('dbi:mysql:sandbox', 'sandbox', 'sandbox')
+    or die $DBI::errstr;
+
+$dbh->do(q{DROP TABLE IF EXISTS users});
+$dbh->do(q{CREATE TABLE users (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255)) ENGINE=InnoDB});
+$dbh->do(q{INSERT INTO users (name) values('Masahiro Chiba')});
+
+$dbh->begin_work;
+$dbh->do(q{INSERT INTO users (name) values('nihen')});
+
+$dbh->rollback;
+print Dumper($dbh->selectall_arrayref(q{SELECT * FROM users}, { Slice => {}}));
+||<
+
+さて、このようなコードがあったとします。DBI->connect_cachedを使っています。usersテーブルに'Masahiro Chiba'と'nihen'のレコードをINSERTしますが、後者はrollbackをしているので
+
+>||
+$VAR1 = [
+          {
+            'name' => 'Masahiro Chiba',
+            'id' => '1'
+          }
+        ];
+||<
+
+結果はこのようになります。
+さて、ここでrollbackの前に、forkをしてなにやら同僚が作ったというグレートなモジュールの仕事をやらせることにしました。(実際にはParallel::ForkManagerなどを使い複数のプロセスを作ると思いますがこの例では説明のために一度のみforkしています）
+
+
+>|perl|
+use strict;
+use warnings;
+
+use DBI;
+use Data::Dumper;
+use Some::Great::Module;
+
+my $dbh = DBI->connect_cached('dbi:mysql:sandbox', 'sandbox', 'sandbox')
+    or die $DBI::errstr;
+
+$dbh->do(q{DROP TABLE IF EXISTS users});
+$dbh->do(q{CREATE TABLE users (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255)) ENGINE=InnoDB});
+$dbh->do(q{INSERT INTO users (name) values('Masahiro Chiba')});
+
+$dbh->begin_work;
+$dbh->do(q{INSERT INTO users (name) values('nihen')});
+
+if ( fork ) {
+    wait;
+}
+else {
+    $dbh->{InactiveDestroy} = 1;
+    Some::Great::Module->some_work();
+    exit(0);
+}
+
+$dbh->rollback;
+print Dumper($dbh->selectall_arrayref(q{SELECT * FROM users}, { Slice => {}}));
+||<
+
+[http://nihen.hatenablog.com/entry/2011/11/17/102557:title]で学んだ通り、fork後に子で$dbh->{InactiveDestroy}を設定しているので、子のexit時にも親の$dbhの接続は失われません。ふうこれで安心…と思い実行してみると…。
+
+>||
+$VAR1 = [
+          {
+            'name' => 'Masahiro Chiba',
+            'id' => '1'
+          },
+          {
+            'name' => 'nihen',
+            'id' => '2'
+          },
+          {
+            'name' => 'guts',
+            'id' => '3'
+          }
+        ];
+||<
+
+なんと、rollbackしているつもりのname => 'nihen'がINSERTされたままです。そこでSome::Great::Moduleの中身をみてみると。
+
+>|perl|
+package Some::Great::Module;
+use strict;
+use warnings;
+
+use DBI;
+
+sub some_work {
+    my $dbh = DBI->connect_cached('dbi:mysql:sandbox', 'sandbox', 'sandbox')
+        or die $DBI::errstr;
+    $dbh->do(q{INSERT INTO users (id, name) values(3, 'guts')});
+}
+
+1;
+||<
+
+という処理を行っていました。偶然にも同一のコネクトオプションをでDBI->connect_cachedをよんでいました。実はDBI->connect_cachedはforkを考慮しないため、親で作っていたdbhを子供が取得できてしまうのです。そのためnihenレコードは子供によりcommitされてしまっていたというわけです。これを回避するには、InactiveDestroyの設定と同一タイミングにおいてcacheのクリアを行うとよいです。cacheのクリアは
+
+>|perl|
+my $CachedKids_hashref = $dbh->{Driver}->{CachedKids};
+%$CachedKids_hashref = () if $CachedKids_hashref;
+||<
+
+で行えます。このコードを含めた最終的な修正コードは以下のようになります。
+
+
+>|perl|
+use strict;
+use warnings;
+
+use DBI;
+use Data::Dumper;
+use Some::Great::Module;
+
+my $dbh = DBI->connect_cached('dbi:mysql:sandbox', 'sandbox', 'sandbox')
+    or die $DBI::errstr;
+
+$dbh->do(q{DROP TABLE IF EXISTS users});
+$dbh->do(q{CREATE TABLE users (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255)) ENGINE=InnoDB});
+$dbh->do(q{INSERT INTO users (name) values('Masahiro Chiba')});
+
+$dbh->begin_work;
+$dbh->do(q{INSERT INTO users (name) values('nihen')});
+
+if ( fork ) {
+    wait;
+}
+else {
+    $dbh->{InactiveDestroy} = 1;
+    my $CachedKids_hashref = $dbh->{Driver}->{CachedKids};
+    %$CachedKids_hashref = () if $CachedKids_hashref;
+    Some::Great::Module->some_work();
+    exit(0);
+}
+
+$dbh->rollback;
+print Dumper($dbh->selectall_arrayref(q{SELECT * FROM users}, { Slice => {}}));
+||<
+
+
+実行結果は
+>||
+
+$VAR1 = [
+          {
+            'name' => 'Masahiro Chiba',
+            'id' => '1'
+          },
+          {
+            'name' => 'guts',
+            'id' => '3'
+          }
+        ];
+||<
+
+と、期待通りになりました。
+
+** この例だと別にforkは関係ない
+
+ここまで書いてから自分も気づいたのですが、別にsome_work()はforkしなくても同じことがおきてしまいます。
+
+>|perl|
+use strict;
+use warnings;
+
+use DBI;
+use Data::Dumper;
+use Some::Great::Module;
+
+my $dbh = DBI->connect_cached('dbi:mysql:sandbox', 'sandbox', 'sandbox')
+    or die $DBI::errstr;
+
+$dbh->do(q{DROP TABLE IF EXISTS users});
+$dbh->do(q{CREATE TABLE users (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255)) ENGINE=InnoDB});
+$dbh->do(q{INSERT INTO users (name) values('Masahiro Chiba')});
+
+$dbh->begin_work;
+$dbh->do(q{INSERT INTO users (name) values('nihen')});
+
+Some::Great::Module->some_work();
+
+$dbh->rollback;
+print Dumper($dbh->selectall_arrayref(q{SELECT * FROM users}, { Slice => {}}));
+||<
+
+の実行結果は
+
+>||
+$VAR1 = [
+          {
+            'name' => 'Masahiro Chiba',
+            'id' => '1'
+          },
+          {
+            'name' => 'nihen',
+            'id' => '2'
+          },
+          {
+            'name' => 'guts',
+            'id' => '3'
+          }
+        ];
+||<
+
+になってしまいます。ただしforkをしない場合にはそのdbhを同時に使うのは1プロセスだけですがforkをしていると親と子供が同時にそのdbhを使う可能性がありDBサーバとの通信が混ざり、トランザクションが絡まなくても問題が生じ得ます。
+
+で、このforkしない場合で、別のよくわからないモジュールを呼ぶけどトランザクション中だったりする場合にconnect_cachedを安全にするためには
+
+>|perl|
+{
+    local $dbh->{Driver}->{CachedKids} = $dbh->{Driver}->{CachedKids};
+    my $CachedKids_hashref = $dbh->{Driver}->{CachedKids};
+    %$CachedKids_hashref = () if $CachedKids_hashref;
+    Some::Great::Module->some_work();
+}
+||<
+
+のように$dbh->{Driver}->{CachedKids}をlocalしてからキャッシュをクリアして呼ぶとよいでしょう。そこまでしてconnect_cached使いたいのかという気もしないでもないですが!
+
+** まとめ
+
+DBI->connect_cachedとforkの組み合わせの罠とその回避策を紹介しました。
+
+自分は実はconnect_cachedを実運用で使ったことは無いのですが、独立したミドルウェアやプラグインを作る時などにパフォーマンスを考慮して使う場合があるかもしれません。そんな時にforkとの関係は大丈夫かな？とこのエントリのことを思い出していただければ幸いです。
+
+さて明日は hirobanex さんです。んがんぐ
