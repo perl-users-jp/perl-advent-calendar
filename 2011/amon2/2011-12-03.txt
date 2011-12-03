@@ -1,0 +1,30 @@
+strftime.js
+meta-author: tokuhirom
+meta-tags: javascript
+
+さて、3日目です。 tokuhirom です。
+
+今日は Amon2 の next release にふくまれる予定の strftime.js にかんする話題です。初日の JS の話のつっこんだ話題というかんじですね。
+
+JavaScript をつかっているとなくてこまるなーとおもう関数の一つが strftime ですが、これの実装を Amon2 の次期版にはバンドルします。
+
+Web 上をあさると strftime の実装はいくつかでてくるのですが、i18n されていて、フリーな実装で、おおきいライブラリに依存していなくて、いいかんじのものが意外となかったりしてこまります。
+
+というわけでそういう条件をみたすものをつくりました。
+
+こちらになります。
+
+https://github.com/tokuhirom/strftime-js
+
+>|javascript|
+(new Date).strftime('%H:%M:%S');
+||<
+
+のように、なんとなく期待した動作が達成されます。
+
+まあたいがい strftime とかなくても生活できますが、ないとちょっとめんどくさいわけです。
+
+依存関係とかないんで、 Amon2 以外でもご利用いただければいいのではないかとおもいます。
+
+なお、strftime の実装としては、YUI のものがこれ以外だといい出来です。
+
