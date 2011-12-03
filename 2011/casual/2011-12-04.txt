@@ -1,0 +1,378 @@
+Groonga Casual Tutorial - Groongaをカジュアルに使ってみたい
+meta-author: okamuuu
+meta-tags: perl, groonga
+
+JPerl Advent Calendar 4日目を担当しますokamuraです。
+Advand Calendar は初参加なのでお手柔らかにお願いします。
+
+皆さん帰宅後に俺々アプリを書いていますか？DBはSQLite派ですか？MySQL派ですか？
+私は最近Groongaという全文検索エンジンを使ってアプリを作っています(やや猪木口調で)。
+
+ということで今回Groogaをカジュアルに使えるようになるためのチュートリアルを書いてみたいと思います。
+groongaのインストール方法は割愛しますのでご了承下さい。
+
+** ディレクトリ構成について前置き
+
+次のようなディレクトリ構成を想定して記事を書いて行きます。
+
+>||
+groonga/
+groonga/db/
+||<
+
+さくっと作ってしまいましょう。
+
+>||
+% mkdir -p groonga/db/
+% mkdir script/
+||<
+
+** DBschema
+
+今回はblogのようなデータモデルを使ったサンプルを紹介します。
+登場するテーブルは以下のとおりです。
+
+- Keywrod
+- Article
+- Terms(語彙表)
+
+それでは次のようなschemaファイルをカジュアルに作成してださい。
+
+>||
+# groonga/schema.grn
+table_create Keyword TABLE_HASH_KEY ShortText
+column_create Keyword name COLUMN_SCALAR ShortText
+column_create Keyword display_fg COLUMN_SCALAR Bool
+
+table_create Article TABLE_HASH_KEY ShortText
+column_create Article title COLUMN_SCALAR ShortText
+column_create Article keywords COLUMN_VECTOR Keyword
+column_create Article content COLUMN_SCALAR Text
+column_create Article display_fg COLUMN_SCALAR Bool
+column_create Article published_at COLUMN_SCALAR Time
+column_create Article created_at COLUMN_SCALAR Time
+column_create Article updated_at COLUMN_SCALAR Time
+
+table_create --name Terms --flags TABLE_PAT_KEY|KEY_NORMALIZE --key_type ShortText --default_tokenizer TokenBigram
+column_create --table Terms --name article_title --flags COLUMN_INDEX|WITH_POSITION --type Article --source title
+column_create --table Terms --name article_keywords --flags COLUMN_INDEX|WITH_POSITION --type Article --source keywords
+column_create --table Terms --name keyword_name --flags COLUMN_INDEX|WITH_POSITION --type Keyword --source namecolumn_create --table Terms --name article_content --flags COLUMN_INDEX|WITH_POSITION --type Article --source content
+||<
+
+次のコマンドを実行するとDBファイルとテーブルがカジュアルにできあがります。
+
+>||
+% groonga -n groonga/db/test.db < groonga/schema.grn
+||<
+
+** 初期データを作成
+
+つぎにサンプルとなるデータファイルを作成して下さい。
+
+>||
+# groonga/data.grn
+load --table Keyword
+[
+  {
+    "_key": "perl",
+    "name": "Perl",
+    "display_fg": true,
+  },  
+  {
+    "_key": "html5",
+    "name": "HTML5",
+    "display_fg": false,
+  },  
+  {
+    "_key": "javascript",
+    "name": "javascript",
+    "display_fg": true,
+  },
+  {
+    "_key": "php",
+    "name": "PHP",
+    "display_fg": true,
+  }  
+]
+load --table Article
+[
+   {
+    "_key": "key1",
+    "title": "perl",
+    "keywords": ["perl","php"],
+    "content": "content1",
+    "display_fg": true,
+  },
+  {
+    "_key": "key2",
+    "title": "title2",
+    "keywords": ["perl","php", "javascript"],
+    "content": "perl",
+    "display_fg": true,
+  }
+]
+||<
+
+カジュアルを装いつつ、次のコマンドでデータをloadします。
+
+>||
+% groonga groonga/db/test.db < groonga/data.grn 
+||<
+
+先ほどと違って-nという引数が指定されていないのは-nはdbファイルが存在していない時に使用するからです。
+
+** httpモードで起動する
+
+カジュアルな面持ちで次のコマンドを実行して下さい。
+
+>||
+% groonga -s --default-command-version 2 --port 10041 --protocol http groonga/db/test.db
+||<
+
+次に以下のURLをブラウジングして下さい。
+
+>||
+http://localhost:10041/
+||<
+
+groongaは管理画面が最初から実装されています。
+テーブル一覧にサマリー,Article,Keyword,Termsが表示されていて、レコードを追加、編集、削除する事ができますので後で試して見て下さい。
+
+** Basicaly commands
+
+続いてGroongaをアプリから実行する時に使用するであろうコマンドを紹介します。このチュートリアルではselect,load,deleteを使います。
+とりあえず他のコマンドは覚えなくてもカジュアルに使う分には問題ない気がカジュアルにしています。
+
+なお、groongaはコマンドによって帰ってくるデータ構造がちょっと違いますので本家のドキュメントをご確認下さい。
+
+*** データをinsert
+
+RDBのようにcreateとupdateのコマンドが存在しますが、Groongaではloadしか存在しません。
+
+それではloadコマンドを試してみます。script/load.plを作成してください。
+
+>|perl|
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use URI;
+use LWP::UserAgent;
+use JSON (); 
+
+my $port = $ENV{GROONGA_PORT} || 10041; 
+
+my $uri = URI->new("http://localhost:$port/d/load"); 
+$uri->query_form(
+    table  => 'Article',
+    values => JSON::encode_json(
+        [   
+            {   
+                "keywords" => [ "perl", "javascript", "php" ],
+                "_key"     => "new_record",
+                "content"  => "this is new record.",
+                "display_fg" => "0",
+                "title" => "new record",
+            }   
+        ]
+    )
+);
+
+my $ua = LWP::UserAgent->new();
+my $res = $ua->get($uri);
+print $res->content if $res->is_success;
+||<
+
+実行結果がjsonで返ってきました。[[リターンコード, 処理開始時間, 処理時間], 登録件数]となっています。
+
+>||
+% perl script/load.pl
+[[0,1322889076.15943,0.056639],1]
+||<
+
+*** ifexistsオプション
+
+さて、Groongaではcreateもupdateも区別せずにloadのみとなっていますが、もし既存のレコードが存在しているとは知らずにloadすると上書きしてしまう事になります。
+それをさける為にはifexistsオプションを使います。先ほどのscript/load.plをコピーします。
+
+>||
+% cp script/load.pl script/create.pl
+||<
+
+次のようにscript/load.plに1行を追加してください。
+
+>||
+% diff -c script/load.pl script/create.pl  
+*** script/load.pl      2011-12-03 13:28:30.000000000 +0900
+--- script/create.pl    2011-12-03 14:00:21.000000000 +0900
+***************
+*** 10,15 ****
+--- 10,16 ----
+  my $uri = URI->new("http://localhost:$port/d/load"); 
+  $uri->query_form(
+      table  => 'Article',
++     ifexists => 0,
+      values => JSON::encode_json(
+          [   
+              {  
+||<
+
+実行します。ここで登録件数が0である事から既にレコードが存在していたため、登録をしないで処理を終えています。
+ひとまず上書き問題は回避できたのでカジュアル度が増したと思います。
+
+>||
+% perl script/create.pl
+[[0,1322889691.12119,0.000299],0]
+||<
+
+
+*** 単純なselect 
+
+とりあえずKeywordテーブルのデータを全部欲しい場合は次のようにします。次のようなscript/select.plを作成します。
+
+>|perl|
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use URI;
+use LWP::UserAgent;
+
+my $port = $ENV{GROONGA_PORT} || 10041;
+
+my $uri = URI->new("http://localhost:$port/d/select"); 
+$uri->query_form( table => 'Keyword' );
+
+my $ua = LWP::UserAgent->new();
+my $res = $ua->get($uri);
+
+print $res->content if $res->is_success;
+||<
+
+結果は次のようになります。
+
+>||
+% perl script/select.pl
+[[0,1322889965.12739,0.005888],[[[5],[["_id","UInt32"],["_key","ShortText"],["name","ShortText"],["display_fg","Bool"]],[1,"perl","Perl",true],[2,"html5","HTML5",false],[3,"javascript","javascript",true],[4,"php","PHP",true],[5,"hoge","hogehoge",true]]]]
+||<
+
+*** 検索条件を指定してselect
+
+主キーである_keyをつかって1レコード取得したい場合は次のようにします。
+script/select2.plとしてファイルを作成して下さい。
+
+>|perl|
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use URI;
+use LWP::UserAgent;
+
+my $port = $ENV{GROONGA_PORT} || 10041;
+
+my $uri = URI->new("http://localhost:$port/d/select"); 
+$uri->query_form( table => 'Keyword',  query => "_key:perl" );
+
+my $ua = LWP::UserAgent->new();
+my $res = $ua->get($uri);
+
+print $res->content if $res->is_success;
+||<
+
+実行します。
+
+>||
+:!perl script/select2.pl
+[[0,1322889965.14106,0.000735],[[[1],[["_id","UInt32"],["_key","ShortText"],["name","ShortText"],["display_fg","Bool"]],[1,"perl","Perl",true]]]]
+||<
+
+*** 検索語句を指定してselect
+
+script/select3.plとしてファイルを作成して下さい。
+
+>|perl|
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use URI;
+use LWP::UserAgent;
+
+my $port = $ENV{GROONGA_PORT} || 10041;
+
+my $uri = URI->new("http://localhost:$port/d/select"); 
+$uri->query_form(
+    table         => 'Article',
+    match_columns => 'title,content',
+    query          => 'perl',
+    query_cache    => 'no',
+); 
+
+my $ua = LWP::UserAgent->new();
+my $res = $ua->get($uri);
+
+print $res->content if $res->is_success;
+||<
+
+実行結果を確認します。
+
+>||
+% perl script/select3.pl
+[[0,1322889965.15333,0.005095],[[[2],[["_id","UInt32"],["_key","ShortText"],["updated_at","Time"],["title","ShortText"],["published_at","Time"],["keywords","Keyword"],["display_fg","Bool"],["created_at","Time"],["content","Text"]],[1,"key1",0.0,"perl",0.0,["perl","php"],true,0.0,"content1"],[2,"key2",0.0,"title2",0.0,["perl","php","javascript"],true,0.0,"perl"]]]]
+||<
+
+検索語句の指定はTermテーブルを正しく作成していないと動作しませんのでカジュアルといえども抜かりなく作成しておく必要があります。
+
+*** 関連テーブルのカラムを指定してselect
+
+Article.keywords.nameを検索語句として検索したい場合。
+script/select4.plとしてファイルを作成して下さい。
+
+>|perl|
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use URI;
+use LWP::UserAgent;
+my $port = $ENV{GROONGA_PORT} || 10041;
+
+my $uri = URI->new("http://localhost:$port/d/select"); 
+$uri->query_form(
+    table         => 'Article',
+    query          => 'keywords.name:hogehoge',
+    query_cache    => 'no',
+); 
+
+my $ua = LWP::UserAgent->new();
+my $res = $ua->get($uri);
+
+print $res->content if $res->is_success;
+||<
+
+実行結果を確認します。
+
+>||
+:!perl script/select4.pl
+[[0,1322889965.16729,0.003763],[[[1],[["_id","UInt32"],["_key","ShortText"],["updated_at","Time"],["title","ShortText"],["published_at","Time"],["keywords","Keyword"],["display_fg","Bool"],["created_at","Time"],["content","Text"]],[3,"key3",0.0,"title2",0.0,["hoge"],true,0.0,"fuga fuga fuga"]]]]
+||<
+
+*** delete
+
+groongaでは1件ずつdeleteを行います。いまのところは複数同時に削除する事はできないようです。
+こちらのコマンドの説明をカジュアルに割愛させて頂きます。
+
+** まとめ
+
+このチュートリアルでは以下のことを学べていると思います。
+
+- GroongaのDBファイルを作成
+- Groonga Server を起動する
+- 主キーによるレコードのルックアップ
+- 検索条件指定によるレコードの検索
+- レコードの更新
+- レコードの削除(紹介していないけど)
+
+とりあえず以上を覚えておけばカジュアルにgroogaを使えると思います。
+なお、今回紹介したコードはこちらでカジュアルに晒しているので参考にしてください。
+
+https://github.com/okamuuu/Casual-Groonga
+
+明日はnihenさんです。お楽しみに。
+
