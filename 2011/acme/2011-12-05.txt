@@ -62,7 +62,7 @@ my @params = qw/麺 固さ 野菜 背脂 タレ にんにく/;
 for my $i (1..100) {
     my %parameter;
     for my $key (@params) {
-        my @volumes = Acme::Jiro->get_valid_volume($key);
+        my @volumes = Acme::Jiro->get_valid_param($key);
         $parameter{$key} = (shuffle @volumes)[0];
     }
 
