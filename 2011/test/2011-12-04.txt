@@ -1,0 +1,159 @@
+Module::Build で let's `make love`
+meta-author: tokuhirom
+meta-tags: perl, hacker, love+
+
+Win32 の プリンスキー((プリンが大好きな人のこと)) として知る人ぞ知るところの [http://d.hatena.ne.jp/tokuhirom/:title=tokuhirom] です。
+マリオカート7にいそがしくてアドベントカレンダーをかく暇がありません。
+
+さて、クリスマスも近いということで、みなさんも make love したいところだと思います。
+しかし、自力で Makefile をいじるのも大変です。
+「愛のためにはその程度の障害はむしろご褒美だ！」という人もいるかもしれませんが、僕は昨今話題の草植、もとい草食男子ですので、そんな面倒なことはできません。
+ここでは、perl で簡単に `make love` をするために書いたという経緯がない Module::Build を紹介します。
+
+Module::Build ではハックっぽいことをしなくても簡単にいろいろと hook できるんです。make love も出来るのでリア充も安心！！
+
+** 使い方
+
+たとえば、Module::Build で新しいテストのターゲット 「test_sl」 を定義すると以下のようになります。
+
+inc/MyBuilder.pm を以下のようにかきます。
+>|perl|
+package inc::MyBuilder;
+use strict;
+use warnings;
+use parent qw(Module::Build);
+
+sub ACTION_test_sl {
+    my $self = shift;
+    $self->do_system('sl');
+    $self->SUPER::ACTION_test(@_);
+    $self->do_system(qw/sl -aF/);
+}
+
+1;
+||<
+
+そしたら、以下のように Build.PL をかきます。
+>|perl|
+use strict;
+use warnings;
+use inc::MyBuilder;
+
+my $build = inc::MyBuilder->new(
+    license              => 'perl',
+    dynamic_config       => 0,
+
+    build_requires       => {
+        'Test::More' => '0.98',
+        'Test::Requires' => 0,
+    },
+    configure_requires   => { 'Module::Build' => '0.38' },
+    requires             => {
+        # 'Exporter'                      => '0',
+        'parent'                        => '0',
+        # 'Plack'                         => '0.9949',
+    },
+
+    no_index    => { 'directory' => [ 'inc' ] },
+    name        => 'Love-Plus',
+    module_name => 'Love::Plus',
+
+    # script_files => [''],
+
+    test_files => (-d '.git' || $ENV{RELEASE_TESTING}) ? 't/ xt/' : 't/',
+    recursive_test_files => 1,
+   
+    create_readme  => 1,
+    create_license => 1,
+    create_makefile_pl => 'small',
+);
+$build->create_build_script();
+||<
+
+仕上げに以下のようにして Build script をはしらせます
+>||
+perl Build.PL
+./Build distmeta
+||<
+
+こうすると、`make test_sl` したときに、sl コマンドが走り、その後何事もなかったかのように test が走り、test が終わるとすかさず、助けを求めながら飛んでいく機関車が走ります。
+「俺らはいつだって走り続ける、一秒だって止まってられねェンだ！」って感じでかっこいいですね！
+また、このケースでは sl コマンドが入っている必要がありますが、基本的にはインストール済みなはずなので特に問題ないでしょう。
+
+** 説明
+
+さて、Module::Build ではどのように拡張していったらいいのでしょうか。
+
+*** perl -Ilib と同等のことをしたい。
+
+t/lib とかは割と指定しそうです。
+@INC にライブラリパスをいれておくと、いいかんじに処理してくれます。
+
+>|perl|
+sub ACTION_test_libs {
+    my $self = shift;
+
+    local @INC = @INC;
+    unshift @INC, "$ENV{HOME}/perl5/acme-lib/";
+    $self->SUPER::ACTION_test(@_);
+}
+||<
+
+** モジュールのプリロード
+perl -MFoo と同等です。あらかじめ読み込んでおきたいモジュールを指定しておくとよいですね。
+
+>|perl|
+sub ACTION_test_mods {
+    my $self = shift;
+
+    local $ENV{HARNESS_PERL_SWITCHES} = ($ENV{HARNESS_PERL_SWITCHES} ||'') . ' -MAcme::FizzBuzz';
+
+    $self->SUPER::ACTION_test(@_);
+}
+||<
+
+** 前処理と後処理
+これについてはさきほど sl でやりましたね。
+
+テストの開始時に memcached や MySQL を起動したり、後処理としてテンポラリーファイルをお掃除したりするような処理を書くことがありそうな感じです。
+
+*** テスト対象のファイル
+デフォルトではないテスト対象のファイルをつかいたい場合はこんなかんじにします。
+
+>|perl|
+sub ACTION_test_files {
+    my $self = shift;
+
+    local $self->{properties}->{test_files} = 't/*.t';
+
+    $self->SUPER::ACTION_test(@_);
+}
+||<
+
+*** 環境変数
+普通に環境変数をさしかえれば OK です。
+
+>|perl|
+sub ACTION_test_env {
+    my $self = shift;
+
+    local %ENV = %ENV;
+    $ENV{FOO} = 'BAR';
+
+    $self->SUPER::ACTION_test(@_);
+}
+||<
+
+** まとめ
+
+テストの時にいろいろとフックしたいお！という要望から生まれたわけではないモジュールですが、なかなか重宝しています。
+
+あと、なんかめんどくさかったらアクションをぜんぶ Perl でかけるわけなので App::Prove や TAP::Harness などを手でよんで、失敗したら die する、みたいなかんじのコードをかいちゃってもおなじことです。
+
+>|perl|
+sub ACTION_love {
+    die "Love was not found\n";
+}
+||<
+
+:p

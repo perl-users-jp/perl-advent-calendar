@@ -1,0 +1,45 @@
+=encoding utf8
+
+
+This is Perl module B<WWW::Foo8>.
+
+
+=head1 INSTALLATION
+
+WWW::Foo8 installation is straightforward. If your CPAN shell is set up,
+you should just be able to do
+
+    % cpan WWW::Foo8
+
+Download it, unpack it, then build it as per the usual:
+
+    % perl Makefile.PL
+    % make && make test
+
+Then install it:
+
+    % make install
+
+
+=head1 DOCUMENTATION
+
+WWW::Foo8 documentation is available as in POD. So you can do:
+
+    % perldoc WWW::Foo8
+
+
+=head1 REPOSITORY
+
+WWW::Foo8 is hosted on github
+L<http://github.com/bayashi/WWW-Foo8>
+
+
+=head1 LICENSE
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic>.
+
+
+=head1 AUTHOR
+
+Dai Okabayashi E<lt>bayashi@cpan.orgE<gt>
