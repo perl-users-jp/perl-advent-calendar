@@ -4,34 +4,22 @@ meta-tags: perl
 
 **前置き
 
-こんにちは. [http://twitter.com/#!/syohex:title=syohex]と申します. みなさん意識は高まっていますか ?
-私は上々(若干微妙)です. 今回は拙作の [https://github.com/syohex/p5-Text-UnicodeTable-Simple:title=Text::UnicodeTable::Simple]というモジュールを紹介します.
+こんにちは. [http://twitter.com/#!/syohex:title=syohex]と申します. みなさん意識は高まっていますか ? 私は若干微妙ですが, 上々です. 今回は拙作の [https://github.com/syohex/p5-Text-UnicodeTable-Simple:title=Text::UnicodeTable::Simple]というモジュールを紹介します.
 現在 CPANにアップされている私の唯一のモジュールでもあります.
 
-Text::UnicodeTable::Simpleはテキストで表を書くというモジュールです. 同様のモジュールは
-Text::Table, Text::ASCIITable, Text::SimpleTable等多数存在しているのですが, ひらがな,
-カタカナ, 漢字といった全角幅の文字を含めると表がずれるという問題があります.
-Text::ASCIITable::TWという一部の言語に特化したものはあるんですが, Moose依存であったり,
-何より使用言語が限られるのは避けたかったので一から作りました.
+Text::UnicodeTable::Simpleはテキストで表を書くというモジュールです. 同様のモジュールは Text::Table, Text::ASCIITable, Text::SimpleTable等多数存在しているのですが, ひらがな, カタカナ, 漢字といった全角幅の文字を含めると表がずれるという問題があります. Text::ASCIITable::TWという一部の言語に特化したものはあるんですが, Moose依存であったり, 何より使用言語が限られるのは避けたかったので一から作りました.
 
-Text::ASCIITableが複雑すぎてそれと同じものは無理かなって思って Simpleとつけたの
-ですが, いくつかの類似モジュールの機能も実装していっているので, 他のモジュールからの
-差し替えもできるものと考えています.
+Text::ASCIITableが複雑すぎてそれと同じものは無理かなって思って Simpleとつけたのですが, いくつかの類似モジュールの機能も実装していっているので, 他のモジュールからの差し替えもできるものと考えています.
 
 **バージョン
-バージョン 0.04は依存モジュール Term::ANSIColorのバージョンの指定が抜けていたので,
-古い Perlを使っている人はインストールが失敗してしまうかもしれません. 一応この記事が
-公開される頃には修正した 0.05がミラーサーバにも上がっているじゃないかなと思います.
+バージョン 0.04は依存モジュール Term::ANSIColorのバージョンの指定が抜けていたので, 古い Perlを使っている人はインストールが失敗してしまうかもしれません. 一応この記事が公開される頃には修正した 0.05がミラーサーバにも上がっているじゃないかなと思います.
 
 
 **使い方
-テーブルヘッダをコンストラクタの 'header'パラメータか, set_headerメソッドで設定します.
-テーブルヘッダに列数が決めているので, 必ず設定が必要です. 行については add_rowメソッド
-及び add_rowsメソッドで設定します. 区切りの線を入れたい場合は add_row_lineメソッドを
-使います. コンストラクタの borderパラメータでテーブルの罫線の有無を制御できます.
+テーブルヘッダをコンストラクタの 'header'パラメータか, set_headerメソッドで設定します. テーブルヘッダに列数が決めているので, 必ず設定が必要です. 行については add_rowメソッド及び add_rowsメソッドで設定します. 区切りの線を入れたい場合は add_row_lineメソッドを 使います. コンストラクタの borderパラメータでテーブルの罫線の有無を制御できます.
 デフォルトでは有効になっているので, 罫線を表示したくない場合は 'border => 0'としてください.
-
 テーブルの要素として指定するのは文字列(decode済み, not binary sequence)です.
+
 
 以下にサンプルを示します.
 
@@ -64,8 +52,7 @@ print "$table";
 
 
 ***色つき文字の対応
-コンストラクタに 'ansi_color => 1'を指定することで, ANSI Colorシーケンスを
-含む文字も扱うことが可能になります. 以下にその例を示します.
+コンストラクタに 'ansi_color => 1'を指定することで, ANSI Colorシーケンスを含む文字も扱うことが可能になります. 以下にその例を示します.
 >|perl|
 #!perl
 use strict;
@@ -102,14 +89,12 @@ print $table->draw, "\n";
 
 イメージ
 
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-05/image02.png" alt="with_ansi_color" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-05/image02.png" alt="with_ansi_color" width="80%" />
 
 
 **まとめ
-Text::UnicodeTable::Simpleという全角文字を含むテキストテーブルを描画できる
-モジュールを紹介しました. 私自身頻繁に使うわけではないですが, たまにテキストテーブルを
-書きたいなってときに使っています. みなさんもそんなときがあればぜひ利用を検討してみて
-ください.
+Text::UnicodeTable::Simpleという全角文字を含むテキストテーブルを描画できるモジュールを紹介しました. 私自身頻繁に使うわけではないですが, たまにテキストテーブルを書きたいなってときに使っています. みなさんもそんなときがあればぜひ利用を検討してみてください.
+
 
 明日は [http://twitter.com/#!/hide_o_55:title=hide_o_55]さんです.
 お楽しみに.
