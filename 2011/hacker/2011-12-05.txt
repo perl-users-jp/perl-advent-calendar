@@ -89,12 +89,11 @@ print $table->draw, "\n";
 
 イメージ
 
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-05/image02.png" alt="with_ansi_color" width="80%" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-05/image02.png" alt="with_ansi_color" width="90%" />
 
 
 **まとめ
 Text::UnicodeTable::Simpleという全角文字を含むテキストテーブルを描画できるモジュールを紹介しました. 私自身頻繁に使うわけではないですが, たまにテキストテーブルを書きたいなってときに使っています. みなさんもそんなときがあればぜひ利用を検討してみてください.
-
 
 明日は [http://twitter.com/#!/hide_o_55:title=hide_o_55]さんです.
 お楽しみに.
