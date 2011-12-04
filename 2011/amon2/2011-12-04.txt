@@ -1,0 +1,116 @@
+クライアントサイドJSでもサーバーサイドJSでもうごくテストを書く
+meta-author: tokuhirom
+meta-tags: perl, js
+
+こんにちは! tokuhirom です。日曜日ですね!
+今日は Test トラックにかこうとしたけど Perl 関係なさすぎて自重したネタをかこうかとおもいます。
+
+さて、Amon2 の重要なパーツといえる strftime.js ですが、こちらもちゃんとテストしなくてはなりません。strftime とかいちばんテストしやすいうえにバグりやすいのに、テストしてないライブラリがおおくてなさけなくなる今日この頃ですからね。
+
+** テストライブラリの選定
+
+さて、Perl ならば Test::More をとりあえずつかっておけばいいのですが、JS の場合はどれをつかうべきかなやむところです。JS の場合、いろんな人がオレオレなテストフレームワークをだしててややこしいことこの上ありません。
+
+こういう場合、Perl でも JavaScript でもライブラリの選定方法はかわりません。譲れない機能、ライブラリの出来などを評価していくのです。今回の場合、ゆずれない点としては
+- 「ブラウザでもコンソールでもおなじテストが実行できる」
+- 「けぶかくない」
+- 「vendor/ みたいなところにテストライブラリ自体をつっこめる」
+という点がありました。コンソールでテストしながら開発したいけど、ブラウザ上での動作確認もねんのためおこなっておきたいですからね。
+
+いくつか条件に合致するものとして
+- mocha( http://d.hatena.ne.jp/hokaccha/20111202/1322840375 )
+- QUnit
+あたりがあがったのですが、mocha はいいんですが、いかんせんググラビリティが低いのと、assertion をもちいたテストなのであって、should.js などとのくみあわせが必要だったりしてめんどくさいかんじがしました。
+
+そこで QUnit をつかうことにしたのですが、qunit の場合はセットアップは簡単で
+- qunit-git.css
+- qunit.js
+の2つのファイルをとってきて配置し、index.html をかけばよいです。なんなら index.html の中にテストをかいてもいいです。
+
+** ブラウザでのテスト
+
+今回は index.html を以下のようにしました。AJAX をつかうためだけに jQuery をつかっているところがゆとり乙的なかんじですが、まあいいでしょう。今回、node やブラウザに依存した部分を排除するために AJAX でデータをとってきてそれを eval するようにしています。また、subtest や is といった Perl で慣れた名前にエイリアスをはっています。
+>|html|
+<!DOCTYPE html>
+<html>
+<head>
+        <meta charset="UTF-8" />
+        <title>QUnit Test Suite</title>
+        <link rel="stylesheet" href="./qunit-git.css" type="text/css" media="screen">
+        <script type="text/javascript" src="./qunit.js"></script>
+        <script type="text/javascript" src="../strftime.js"></script>
+        <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery/jquery-1.6.1.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $.ajax({url:'../t/01_strftime.js', dataType: 'text'}).success(function (dat) {
+                with ({is: QUnit.equal, subtest: QUnit.test}) {
+                    subtest('strftime', function () {
+                        eval(dat);
+                    });
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+        <h1 id="qunit-header">QUnit Test Suite</h1>
+        <h2 id="qunit-banner"></h2>
+        <div id="qunit-testrunner-toolbar"></div>
+        <h2 id="qunit-userAgent"></h2>
+        <ol id="qunit-tests"></ol>
+        <div id="qunit-fixture">test markup</div>
+</body>
+</html>
+||<
+
+** node.js でのテスト
+
+さて、次はおなじテストスクリプトで node.js でもテストできるようにしましょう。
+
+node.js で QUnit するには t-wada さんのかいた qunit-tap というライブラリをつかえばいいそうです。このへんについては id:sugyan の記事が参考になるかとおもいます( http://d.hatena.ne.jp/sugyan/20110325/1301061279 )。
+
+まずは npm で以下のようにしてインストールしましょう。
+>|shell|
+npm install qunit-tap
+||<
+
+今回の場合にはテストローダは以下のようにかいてみました。簡単ですね。
+>|js|
+var QUnit = require('./qunit').QUnit,
+    qunitTap = require('qunit-tap').qunitTap,
+    sys = require('sys'),
+    fs = require('fs');
+
+qunitTap(QUnit, sys.puts, {noPlan: true});
+
+QUnit.init();
+QUnit.config.updateRate = 0;
+
+require('../strftime');
+with ({is: QUnit.equal, subtest: QUnit.test}) {
+    var content = fs.readFileSync('t/01_strftime.js', 'utf-8');
+    subtest('strftime', function () {
+        eval(content);
+    });
+}
+
+QUnit.start();
+||<
+
+しあげに Makefile をかきました。これでいつでも簡単に誰でもテストをうごかすことができます。
+>||
+test:
+        node test/node-test.js
+test-browser:
+        @echo "Access to http://localhost:9041/test/index.html"
+        plackup -p 9041 -e 'use Plack::App::Directory; Plack::App::Directory->new()->to_app()'
+test-setup:
+        npm install qunit-tap
+
+.PHONY: test test-browser test-setup
+||<
+
+** まとめ
+本日は<B>Amon2 のうち</B>strftime.jsのテスト、すなわち<B>ブラウザとクライアントの両方でうごくテストを書くの法</B>についてのべました。
+
+簡単なので、おためしあれ。
