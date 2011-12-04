@@ -30,6 +30,22 @@ my $jiro = Acme::Jiro->new(
 print $jiro->magic, "\n"; # カラメニンニクマシチョモランマ
 ||<
 
+私を含めそもそもどのパラメータにどんな値をいいかわからないので, そういう方のために promptメソッドがあります. こうすると各パラメータについて選択肢が表示されます.
+>|perl|
+#!perl
+use strict;
+use warnings;
+
+use Acme::Jiro;
+
+binmode STDOUT, ":utf8";
+
+my $jiro = Acme::Jiro->new();
+$jiro->prompt;
+print $jiro->magic, "\n";
+||<
+
+
 以下のようなプログラムを書いて, 呪文をみんなで当て合いっこするのも楽しいかもしれません.
 >|perl|
 #!perl
@@ -42,16 +58,15 @@ use List::Util qw(shuffle);
 
 binmode STDOUT, ":utf8";
 
+my @params = qw/麺 固さ 野菜 背脂 タレ にんにく/;
 for my $i (1..100) {
     my %parameter;
-    for my $key (qw/麺 野菜 背脂 タレ にんにく/) {
+    for my $key (@params) {
         my @volumes = Acme::Jiro->get_valid_volume($key);
         $parameter{$key} = (shuffle @volumes)[0];
     }
 
-    while (my ($key, $val) = each %parameter) {
-        print " $key: $val";
-    }
+    print " $_:$parameter{$_}" for @params;
     print "\n";
     sleep 2;
 
@@ -59,9 +74,6 @@ for my $i (1..100) {
     print " ==> ", $jiro->magic, "\n\n";
 }
 ||<
-
-**TODO
-オリジナルのサイトではいくつか機能拡張がされているので, 今後はそれにも対応しようと思います.
 
 
 **おわりに
