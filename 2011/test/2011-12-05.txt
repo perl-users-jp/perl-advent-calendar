@@ -1,4 +1,4 @@
-Perl で Hadoop を使ったテスト
+Perl から Hadoop と連携したテストをしてみる
 meta-author: yayohei
 meta-tags: perl, test, hadoop
 
@@ -120,7 +120,5 @@ done_testing;
 
 * まとめ
 
-** Hadoop など外部のプロダクトと連携するときも Test を書こう
-
-** オレオレでも作ったものがあればCPANにあげてみるのもあり。特に新しいものはCPANにもないこともあります
-
+- Hadoop など外部のプロダクトと連携するときも Test を書くことが重要ですね
+- オレオレでも作ったものがあればCPANにあげてみるのもあり。特に新しいものはCPANにもないこともあります
