@@ -1,0 +1,54 @@
+#04 single
+
+今日はTengをつかったデータの取得方法を紹介します。
+
+* single
+
+Tengのsingleメソッドを利用すると、PRIMARY KEYだったりUNIQUE KEYを使って簡単に１レコード取得することができます。
+返却値はRowオブジェクトとなります。
+
+>||
+my $row = $teng->single('user', +{id => 1});
+||<
+
+簡単ですね。
+実際に発行されるSQLは
+
+>||
+SELECT * FROM user WHERE id = 1 LIMIT 1;
+||<
+
+となります。
+
+たとえば複数columnをPRIMARY KEYにしている場合、
+
+>||
+my $row = $teng->single('user', +{id => 1, name => 'nekokak'});
+||<
+
+として、複数の条件を指定することができます。
+
+>||
+SELECT * FROM user WHERE id = 1 AND name = 'nekokak' LIMIT 1;
+||<
+
+便宜上PRIMARY KEYだったりUNIQUE KEYと言いましたが本当は何でもOKです。
+ただsingleメソッドの使い方としてはPRIMARY KEYだったりUNIQUE KEYを指定して使うものですので、
+そういうものだと思ってもらうほうが良いでしょう。
+
+singleメソッドではdefaultでは対象となるtableのcolumnを全て取得しますが、特定のcolumnだけ取得したい場合は
+optionで指定することも可能です。
+
+>||
+my $row = $teng->single('user', +{id => 1}, +{columns => [qw/id/]});
+||<
+
+optionでcolumnsを指定すると、指定したカラムだけ取得することができます。
+
+>||
+SELECT id FROM user WHERE id = 1 LIMIT 1;
+||<
+
+明日はinsertメソッドやsingleメソッドで取得できるRowオブジェクトについて説明してみようとおもいます。
+
+
