@@ -1,0 +1,137 @@
+#05 Teng::Row
+
+今日はTengでデータを取得した際に利用されるTeng::Rowについてを説明します。
+
+先日までに説明したinsertメソッドやsingleメソッドで取得されるRowオブジェクトは、
+Teng::Rowクラスを用いてオブジェクト化されています。
+
+Teng::Rowクラスは、カラムデータをメソッド呼び出しで取得するなどの機能が備わっています。
+
+>||
+my $row = $teng->single('name', +{id => 1});
+$row->id;   # 1
+$row->name; # nekokak
+||<
+
+もし存在しないカラムをメソッドコールしてしまうと、
+
+>||
+$row->age;
+||<
+
+以下のような例外が発生し、処理が停止します。
+
+>||
+Specified colum 'age' not found in row (query: SELECT "id", "name"
+FROM "user"
+WHERE ("id" = ?)
+LIMIT 1) at ./teng.pl line 19
+||<
+
+* get_column
+
+get_columnメソッドを利用すると、columnのナマデータを取得することができます。
+
+>||
+my $row = $teng->single('user', +{id => 1});
+$row->get_column('name');
+||<
+
+Tengではinflate / deflateという設定があり、その設定を行なっていると、
+column情報をメソッド経由で取り出すとinflate処理を通過してしまい、ナマのデータではなくなってしまいます。
+そこでinflate処理を行わないナマデータを取得する時などに利用することになります。
+
+* get_columns
+
+get_columnsメソッドを利用すると、SELECTしたカラムをまとめて取得することができます。
+
+>||
+my $row = $teng->single('user', +{id => 1});
+use Data::Dumper;
+warn Dumper $row->get_columns;
+__END__
+$VAR1 = { 
+          'name' => 'nekokak',
+          'id' => 1
+        };
+||<
+
+まとめて取り出したいときに大変便利ですね。
+
+* update
+
+Rowオブジェクトから直接update文を発行することもできます。
+
+>||
+my $row = $teng->single('user', +{id => 1});
+$row->update(+{name => 'inukaku'});
+# UPDATE user SET name = 'inukaku' WHERE id = 1
+||<
+
+Rowオブジェクト経由でupdateをかけると、現在のRowオブジェクトの値がuntrustedなデータになってしまいます。
+というのもupdateする際にscalarrefを指定して更新をかけることができるため、
+実際にdatabase側でどういった値になっているかは再度databaseに問い合わせる必要があります。
+
+その際は、refetchメソッドを利用すると簡単にデータをdatabaseから引き直すことができます。
+
+>||
+my $row = $teng->single('user', +{id => 1});
+$row->update(+{name => 'inukaku'});
+my $new_row = $row->refetch();
+||<
+
+* set_column / set_columns
+
+またupdateする際、いきなり
+
+>||
+$row->update(+{name => 'inukaku'});
+||<
+
+と、指定してもいいのですが条件によって複数の値を更新する可能性がある場合に一時的にhashを作るなどしないといけないのですが、
+set_columnメソッドを利用すれば、一時hashを作らずに更新することが可能です。
+
+>||
+$row->set_column(name => 'inukaku');
+$row->set_column(id   => 10);
+$row->update();
+||<
+
+もしくは
+
+>||
+$row->set_column(
+    +{
+        id   => 10,
+        name => 'inukaku',
+    }
+);
+$row->update();
+||<
+
+こすることで、set_columnで指定したデータを用いてupdateを行うことができます。
+
+* delete
+
+Rowオブジェクトからはupdateだけでなく直接deleteを発行することもできます。
+
+>||
+my $row = $teng->single('user', +{id => 1});
+$row->delete();
+# DELETE FROM user WHERE id = 1
+||<
+
+updateやdeleteはRowオブジェクト中にtableに対応するPRIMARY KEYを保持しておく必要があるので。
+以下のように取得するcolumnを絞って取得したRowオブジェクトからは発行することはできません。
+
+>||
+my $row = $teng->single('user', +{id => 1}, +{columns => [qw/name/]});
+$row->delete(); # can't get primary columns in your query. at ./teng.pl line 17
+||<
+
+
+Teng::Rowオブジェクトの基本的な使い方はこのようになります。
+
+明日は、検索系のメソッドをもう少し掘り下げて紹介しようと思います。
+
+
