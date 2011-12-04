@@ -83,7 +83,7 @@ subtest 'exists file on hdfs' => sub {
 subtest 'Run Pig' => sub {
 
   my $pig = <<PIG
-  A = LOAD '/path/to/hdfs/file
+  A = LOAD '/path/to/hdfs/file' AS (
     date: int,
     userid: int
   );
