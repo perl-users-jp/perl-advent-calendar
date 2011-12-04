@@ -47,6 +47,7 @@ $table->add_rows(
 print "$table";
 ||<
 
+
 イメージ
 <img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-05/image01.png" alt="with_ansi_color" />
 
@@ -87,8 +88,8 @@ while ( my ($color, $value) = splice @info_by_color, 0, 2 ) {
 print $table->draw, "\n";
 ||<
 
-イメージ
 
+イメージ
 <img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-05/image02.png" alt="with_ansi_color" width="90%" />
 
 
