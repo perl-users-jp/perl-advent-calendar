@@ -1,0 +1,115 @@
+Text::UnicodeTable::Simple - 全角文字を含むテキストテーブルを書く
+meta-author: syohex
+meta-tags: perl
+
+**前置き
+
+こんにちは. [http://twitter.com/#!/syohex:title=syohex]と申します. みなさん意識は高まっていますか ?
+私は上々(若干微妙)です. 今回は拙作の [https://github.com/syohex/p5-Text-UnicodeTable-Simple:title=Text::UnicodeTable::Simple]というモジュールを紹介します.
+現在 CPANにアップされている私の唯一のモジュールでもあります.
+
+Text::UnicodeTable::Simpleはテキストで表を書くというモジュールです. 同様のモジュールは
+Text::Table, Text::ASCIITable, Text::SimpleTable等多数存在しているのですが, ひらがな,
+カタカナ, 漢字といった全角幅の文字を含めると表がずれるという問題があります.
+Text::ASCIITable::TWという一部の言語に特化したものはあるんですが, Moose依存であったり,
+何より使用言語が限られるのは避けたかったので一から作りました.
+
+Text::ASCIITableが複雑すぎてそれと同じものは無理かなって思って Simpleとつけたの
+ですが, いくつかの類似モジュールの機能も実装していっているので, 他のモジュールからの
+差し替えもできるものと考えています.
+
+**バージョン
+バージョン 0.04は依存モジュール Term::ANSIColorのバージョンの指定が抜けていたので,
+古い Perlを使っている人はインストールが失敗してしまうかもしれません. 一応この記事が
+公開される頃には修正した 0.05がミラーサーバにも上がっているじゃないかなと思います.
+
+
+**使い方
+テーブルヘッダをコンストラクタの 'header'パラメータか, set_headerメソッドで設定します.
+テーブルヘッダに列数が決めているので, 必ず設定が必要です. 行については add_rowメソッド
+及び add_rowsメソッドで設定します. 区切りの線を入れたい場合は add_row_lineメソッドを
+使います. コンストラクタの borderパラメータでテーブルの罫線の有無を制御できます.
+デフォルトでは有効になっているので, 罫線を表示したくない場合は 'border => 0'としてください.
+
+テーブルの要素として指定するのは文字列(decode済み, not binary sequence)です.
+
+以下にサンプルを示します.
+
+>|perl|
+#!perl
+use strict;
+use warnings;
+
+use utf8;
+use Text::UnicodeTable::Simple;
+
+binmode STDOUT, ":utf8";
+
+my $table = Text::UnicodeTable::Simple->new(
+    header => [ qw/名前 在庫数 値段(円)/ ],
+);
+
+$table->add_rows(
+    [ qw/肉まん 100 88/ ],
+    [ qw/カレーマン 80 100/ ],
+    [ qw/スライムマン 2048 170/ ],
+    [ qw/ピザマン 70 120/ ],
+);
+
+print "$table";
+||<
+
+イメージ
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-05/image01.png" alt="with_ansi_color" />
+
+
+***色つき文字の対応
+コンストラクタに 'ansi_color => 1'を指定することで, ANSI Colorシーケンスを
+含む文字も扱うことが可能になります. 以下にその例を示します.
+>|perl|
+#!perl
+use strict;
+use warnings;
+
+use utf8;
+use Term::ANSIColor qw(:constants);
+use Term::ExtendedColor qw(:all);
+use Text::UnicodeTable::Simple;
+
+binmode STDOUT, ":utf8";
+
+my $table = Text::UnicodeTable::Simple->new(
+    header => [qw/名前 よみ 生年月日 キャッチフレーズ/],
+    ansi_color => 1,
+);
+
+my @info_by_color = (
+    purple  => [ qw/高城れに たかぎれに 1993年6月21日 感電少女/ ],
+    red1    => [ qw/百田夏菜子 ももたかなこ 1994年7月12日 茶畑のシンデレラ/ ],
+    green1  => [ qw/有安杏果 ありやすももか 1995年3月15日 小さな巨人/ ],
+    yellow1 => [ qw/玉井詩織 たまいしおり 1995年6月4日 みんなの妹/ ],
+    hotpink => [ qw/佐々木彩夏 ささきあやか 1996年6月11日 ももクロのアイドル/ ],
+);
+
+while ( my ($color, $value) = splice @info_by_color, 0, 2 ) {
+    $table->add_row(
+        [ map { fg('bold', fg($color, $_)) } @{$value} ]
+    );
+}
+
+print $table->draw, "\n";
+||<
+
+イメージ
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-05/image02.png" alt="with_ansi_color" />
+
+
+**まとめ
+Text::UnicodeTable::Simpleという全角文字を含むテキストテーブルを描画できる
+モジュールを紹介しました. 私自身頻繁に使うわけではないですが, たまにテキストテーブルを
+書きたいなってときに使っています. みなさんもそんなときがあればぜひ利用を検討してみて
+ください.
+
+明日は [http://twitter.com/#!/hide_o_55:title=hide_o_55]さんです.
+お楽しみに.
