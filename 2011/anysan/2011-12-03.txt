@@ -1,0 +1,84 @@
+AnySan with Twitter
+
+お兄さんじゃないよ、えにいさんだよ。
+
+このトラックに参加したい人は http://atnd.org/events/22890 からどしどし頼むぜ！
+
+初日に AnySan は Twitter や FriendFeed にも対応していると言いましたね、実際これらは IRC と同じくらいシンプル&同じインターフェィスで使えるんだ。
+
+今日はシンプルに Twitter を使って、自分宛に @ を飛ばされた時に返事を返すコードを紹介しますね。
+
+>||
+use strict;
+use warnings;
+use utf8;
+
+use AnySan;
+use AnySan::Provider::Twitter;
+use Config::Pit;
+
+my $username = shift;
+
+my $config = pit_get("example.com", require => {
+    consumer_key    => 'your twitter consumer_key',
+    consumer_secret => 'your twitter consumer_secret',
+    token           => 'your twitter access_token',
+    token_secret    => 'your twitter access_token_secret',
+});
+
+my $twitter = twitter
+    %{ $config },
+    method          => 'userstream',
+    ;
+
+AnySan->register_listener(
+    acotie => {
+        event => 'timeline',
+        cb => sub {
+            my $receive = shift;
+            return unless $receive->message;
+            return unless $receive->message =~ /^\@$username\s*(.+)$/;
+            $receive->send_reply(
+                sprintf '@%s txh %s', $receive->from_nickname, $1
+            );
+        },
+    },
+);
+
+AnySan->run;
+||<
+
+このスクリプトを response.pl として保存した場合は
+
+>||
+$ perl response.pl Yappo
+||<
+
+などとして実行します。
+
+consumer_key, consumer_secret, token, token_secret などは Twitter の OAuth する時に必要な情報を入れて下さいね。
+これらの情報はスクリプト中に直接書いておくと大変な事になるから Config::Pit を使って別の場所に保存しています。
+
+>||
+my $twitter = twitter
+    %{ $config },
+    method          => 'userstream',
+    ;
+||<
+
+で method を指定していますが、詳しくは<a href="http://search.cpan.org/dist/AnyEvent-Twitter-Stream/lib/AnyEvent/Twitter/Stream.pm">AnyEvent::Twitter::Stream</a> のドキュメントを見て下さい。
+また、具体的な設定例等は今後紹介するね。
+
+以下の設定を追加しないと、動かないので注意して欲しいです。
+ 
+>||
+        event => 'timeline',
+||<
+
+将来的に tweet 一覧以外のイベントに対応する時に別の値を入れて hook させる用になる予定です。
+
+OAuth の為の API Key 等を保存する為に Config::Pit を使って少々ややこしいとは思いますが、昨日の IRC の時と同じように関心ごとに集中してコードが書けると思います。
+
+** まとめ
+
+IRC と同じように Twitter の Bot も手軽にかけるという事を紹介しました。具体的な応用方法はまだ紹介していませんが、 AnySan に興味を持ってもらう為に完結に紹介しました。
