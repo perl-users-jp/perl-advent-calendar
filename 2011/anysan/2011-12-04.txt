@@ -25,39 +25,39 @@ $ cpanm App::Ikachan
 
 使い方もとても簡単で
 
-||<
- $ ikachan -S irc_server_address -N nickname[ -K irc_server_password][ -P irc_server_port]
 >||
+ $ ikachan -S irc_server_address -N nickname[ -K irc_server_password][ -P irc_server_port]
+||<
 
 という形でサーバを立ち上げるだけです。
 デフォルトでは http://localhost:4979/ に http server が立ち上がります。
 API 仕様などはサーバにブラウザでアクセスした時に表示されます。
 http server の address/port が気に食わなければ
 
-||<
-$ ikachan -h http_host -p http_port
 >||
+$ ikachan -h http_host -p http_port
+||<
 
 といったオプションも利用可能です。
 チャンネルに入るには
 
-||<
-$ curl -F channel=\#catalyst-ja http://localhost:4979/join
 >||
+$ curl -F channel=\#catalyst-ja http://localhost:4979/join
+||<
 
 が使えます。
 チャンネルを抜けるには
 
-||<
-$ curl -F channel=\#catalyst-ja http://localhost:4979/leave
 >||
+$ curl -F channel=\#catalyst-ja http://localhost:4979/leave
+||<
 
 が使えます。
 チャンネルにポストするには
 
-||<
-$ curl -F channel=\#catalyst-ja -F message=こんにちわこんにちわ！ http://localhost:4979/notice
 >||
+$ curl -F channel=\#catalyst-ja -F message=こんにちわこんにちわ！ http://localhost:4979/notice
+||<
 
 が使えます。
 
