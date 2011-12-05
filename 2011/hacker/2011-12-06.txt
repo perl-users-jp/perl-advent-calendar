@@ -1,0 +1,81 @@
+perl の locale 設定と autolocale
+meta-author: hide_o_55
+meta-tag: perl, locale
+
+こんにちは、[http://twitter.com/hide_o_55:title=hide_o_55]と申します。みなさん、意識は高まっていますか？ 私は上々です。
+今日は、perl の locale 設定に関する仕組みと拙作の [https://metacpan.org/module/autolocale:title=autolocale] モジュールの紹介をします。
+
+** perl の locale 設定
+
+みなさん、perl の locale 設定がいつ行われるかご存知でしょうか？
+
+実は、perl インタプリタのコンストラクタで行われています。
+
+perlのコンストラクタは perl.c の perl_construct() です。この perl_construct() から locale.c の Perl_init_i18nl10n() を呼び出し、locale 関係の初期化を行なっています。
+
+まず、シェルの環境変数 $LANG がセットされている場合は $LANG の値を locale として設定を試みます。設定が失敗した場合は、環境変数 $LC_CTYPE、$LC_COLLATE、$$LC_NUMERIC、$LC_ALL について対応する locale のカテゴリへの設定を試みます。
+(なお、上記は perl-5.14.2 の時点の挙動です)
+
+perl インタプリタが環境変数に基づいて locale 設定を行うのはインタプリタの初期化時のみであるため、perl コードで %ENV を変更しても反映されません。
+
+perl コードから locale 設定を行う場合は以下のようにする必要があります。
+
+>|perl|
+use strict;
+use warnings;
+use POSIX qw(locale_h)
+
+setlocale( LC_ALL, "C" );
+||<
+
+** autolocale
+
+次に拙作 autolocale の紹介をさせて頂きます。
+autolocale は上記のような状況を踏まえて、$ENV{"LANG"} が変更された時に自動的に locale 設定を変更するプラグマモジュールです。
+
+*** 使い方
+
+使い方は以下のようになります。
+
+>|perl|
+use autolocale;
+  
+$ENV{"LANG"} = "ja_JP.UTF8"; # locale 設定が "ja_JP.UTF8" に変更
+my $time;
+{
+    local $ENV{"LANG"} = "C";# locale 設定が "C" に変更
+	$time = localtime;
+}
+# スコープが変わり、$ENV{"LANG"} の値が "ja_JP.UTF8" に戻り、locale 設定も"ja_JP.UTF8" に
+  
+no autolocale; # locale の自動設定を無効化
+$ENV{"LANG"} = "en_US"; # locale 設定は変更されない
+||<
+
+上記のように、autolocle を使用することで localtime() など locale 設定によって出力が変わる関数のためにレキシカルスコープで locale 設定を変えることができます。
+
+*** autolocale の仕組み
+
+autolocale の挙動を実現するために利用しているのは %^H と、tie(もしくはVariable::Magic) です。
+
+%^H はヒントハッシュなどと呼ばれるレキシカルスコープの変数です。%^H は以下のように使用しています。
+
+>|perl|
+sub import {
+	$^H{"autolocale"} = 1;
+	catst $ENV{"LANG"}, $wiz;
+}
+
+sub unimport {
+	$^H{"autolocale"} = 0;
+}
+||<
+
+このようにすることで、use autolocale、no autolocale で$^H{"autolocale"} の値を制御できます。そして、特定のスコープの %^H は (caller($level))[10] で取り出すことができますので、$^H{"autolocale"} の値により自動で locale 設定を実行するか否かを判別しています。
+
+次に、tie についてですがこれは、$ENV{"LANG"} の更新にフック処理を仕掛けるために使用しています。なお、Variable::Magic が使用できる場合は Variable::Magic を使用し、使用できない場合は Tie::Scalar を使用することで Pure Perl でも使えるようになっています。
+
+** まとめ
+
+今日は perl の locale 設定と、autolocale モジュールについて紹介しました。locale 設定に関しては perl のソースコードを読んで知ったものなので、みなさんも perl のソースコードを読んでみると新たな発見があるかもしれませんので挑戦してみてはいかがでしょうか？
+
