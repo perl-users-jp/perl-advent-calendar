@@ -1,0 +1,240 @@
+Mojolicious::Liteでウェブツールを作ろう
+meta-author: memememomo
+meta-tags: perl, Mojolicious::Lite
+
+
+こんにちは、memememomoです。ゆるふわと聞いたので勢いで参加しました。
+最近はPHPをメインで書いていて、perlは補助ツールなどを作るときに使っています。なので本当にゆるふわにperlを使っています。
+perlはいいですよね。便利なモジュールがたくさんあるので、サクッとスクリプトが書けてしまいます。
+自分の場合、スクリプトは一つのファイルでパパッと書いちゃうことが多いです。
+今回ご紹介するMojolicious::Liteは、一つのファイルにウェブアプリを書くことができるフレームワークです。
+
+
+** インストール
+Mojolicious::Liteのインストールは簡単です。
+
+>>
+$ sudo sh -c "curl -L cpanmin.us | perl - Mojolicious"
+<<
+
+これだけです。perlbrew環境ならsudoも要りませんね。
+
+
+** アプリの記述
+
+おもむろにエディタを立ち上げて、以下のようなコードを書きます。
+
+>|perl|
+use Mojolicious::Lite;
+use utf8;
+
+# GETメソッドで「/hello」にアクセスしたときに行う処理を書く
+get '/hello' => sub {
+   my $self = shift;
+
+   # パラメータ取得
+   my $name = $self->param('name');
+
+   # テンプレートに使う変数をセット
+   $self->stash('name' => $name);
+
+   # 描画
+   $self->render();
+} => 'index';
+
+# アプリ起動
+app->start;
+
+# 以下テンプレート(Mojo::Template)
+__DATA__
+
+@@ index.html.ep
+<html>
+<head>
+<title>Hello, <%= $name %></title>
+</head>
+<body>
+こんにちは、<%= $name %>さん
+</body>
+</html>
+||<
+
+
+アプリケーション本体はすべて一つのファイルに記述します。HTMLテンプレートも同じファイルに記述します。
+これを「app.pl」というファイル名で保存し、付属のmorboという開発用ウェブサーバでアプリケーションを動かします。
+
+>>
+$ morbo app.pl
+<<
+
+すると「http://127.0.0.1:3000/」にアクセスできるようになります。
+ブラウザで「http://127.0.0.1:3000/hello?name=memememomo」にアクセスすると「Hello, memememomo」というメッセージが表示されます。
+このように、CLIのスクリプトを書く感じで、一つのファイルでウェブアプリが書けてしまいます。
+ちょっとしたウェブツールならこれで気軽に作れますよね。
+
+
+例えばBase64のデコードとエンコードを試せるウェブツールを作るとしたら、以下のように書けます。
+>|perl|
+use Mojolicious::Lite;
+use utf8;
+use Mojo::ByteStream 'b';
+
+# フォームページを表示
+get '/' => 'index';
+
+# base64に変換
+post '/base64' => sub {
+    my $self = shift;
+
+    # パラメータ取得
+    my $data = $self->param('data');
+    my $enc  = $self->param('enc');
+
+    my $result;
+    if ( $self->param('submit') eq 'エンコード' ) {
+
+        # 文字コード変換
+        $data = b($data)->encode($enc);
+
+        # エスケープ
+        $result = b($data)->b64_encode;
+    }
+
+    elsif ( $self->param('submit') eq 'デコード' ) {
+
+        # アンエスケープ
+        $result = b($data)->b64_decode;
+
+        # 文字コード変換
+        $result = b($result)->decode($enc);
+    }
+
+    # 結果をテンプレートにセット
+    $self->stash('result' => $result);
+
+    # 描画
+    $self->render();
+} => 'base64';
+
+# アプリ起動
+app->start;
+
+# テンプレートの記述（Mojo::Template）
+__DATA__
+
+@@ layouts/default.html.ep
+<html>
+<head><title><%= $title %></title></head>
+<body>
+<div class="container">
+<h1><%= $title %></h1>
+<%= content %>
+</div>
+</body>
+</html>
+
+@@ index.html.ep
+% layout 'default', title => 'Base64変換';
+<form action="<%= url_for('base64') %>" method="post">
+<table>
+<tr>
+    <td><textarea name="data" cols="40" rows="15"></textarea></td>
+</tr>
+<tr>
+    <td align="center">
+       <input type="radio" name="enc" value="sjis" checked>sjis&nbsp;
+       <input type="radio" name="enc" value="utf8">utf8<br>
+       <input type="submit" name="submit" value="エンコード">&nbsp;
+       <input type="submit" name="submit" value="デコード">
+    </td>
+</tr>
+</table>
+</form>
+
+@@ base64.html.ep
+% layout 'default', title => '変換結果';
+<a href="<%= url_for('index') %>">戻る</a><br />
+変換結果：<%= $result %>
+||<
+
+これを起動すると、テキストフォームが表示されます。
+フォームに文字列を入力して「エンコード」を押すと、Base64エンコードされた文字が表示されます。
+
+
+ページ遷移があるウェブアプリを書くときも、複数のファイルを行ったり来たりする必要がないので気軽で良いですね。
+
+
+
+** デプロイ
+
+作ったウェブツールをデプロイします。
+
+
+CGIで動かすのであれば、ファイルの拡張子を.cgiにして、公開ディレクトリに置くだけです。
+
+
+PSGIに対応しているので、以下のようにStarmanでも起動することができます。
+>>
+$ starman app.pl
+<<
+
+
+付属の本番用サーバhypnotoadでも起動できます。
+>>
+$ hypnotoad app.pl
+<<
+
+
+デプロイについての詳しい方法は、以下のページの「Deployment」の項目に載っています。
+https://github.com/kraih/mojo/wiki
+
+
+
+** 大規模になったら？
+
+ツールを作り込んでいて、プログラムが巨大になってしまうこともあるでしょう。
+そうなると、一つのファイルでプログラムが書かれているのは見づらいですよね。
+そのときは、大規模開発用フレームワークであるMojoliciousに簡単に移行できます。
+使い方はMojolicious::Liteとほぼ同じなので、知識が生かせるのがうれしいですね。
+
+移行するためのツールもついています。
+以下のコマンドを実行すると、__DATA__以下のテンプレートを複数のファイルに分割してくれます。
+
+>>
+$ perl app.pl inflate
+<<
+
+Mojolicious::LiteからMojoliciousへの移行については、以下のページに詳しく書いてあります。
+[http://mojolicio.us/perldoc/Mojolicious/Guides/Growing:title=Mojolicious：：Guides：：Growing - Growing]
+
+
+プロトタイプをMojolicious::Liteで一気に書いて、Mojoliciousに移行する、という使い方もできますね。
+
+
+
+** おわりに
+
+一つのファイルでウェブアプリが書けるMojolicious::Liteをご紹介しました。
+Mojolicious::Liteで書き方を覚えると、ちょっとしたウェブツールをさくっと作れることもできます。
+また、大規模開発でMojoliciousを使うときにも知識を生かすことができます。
+ぜひ使ってみてください。
+
+以上です。
+
+明日は、toritori0318さんです！
+
+
+
+** 参考
+
+Mojoliciousのマニュアルは分かりやすく書かれています。
+[http://mojolicio.us/perldoc:title=Mojolicious：：Guides - Mojolicious guide to the galaxy]
+[https://github.com/yuki-kimoto/mojolicious-guides-japanese/wiki:title=Mojoliciousドキュメント 日本語訳 - GitHub]
+
+
+マニュアルでは分からないことはperlcodesampleさんのページが参考になるかもしれません。
+[http://d.hatena.ne.jp/perlcodesample/20110402/1305602329:title=Mojolicious リファレンス - サンプルコードによるPerl入門]
+
+
+サンプルを読むと、Mojoliciousにどういう機能があるのか分かります。
+[https://github.com/kraih/mojo/wiki/Example-applications:title=Example applications - GitHub]
