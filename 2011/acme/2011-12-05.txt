@@ -9,7 +9,7 @@ meta-tags: perl, acme
 
 
 **使い方
-各パラメータをコンストラクタに与えるだけです. コンストラクタのキーは '麺', '野菜', '背脂', 'タレ', 'にんにく'です.
+各パラメータをコンストラクタに与えるだけです. コンストラクタのキーは '麺', '固さ', '野菜', '背脂', 'タレ', 'にんにく'です.
 >|perl|
 #!perl
 use strict;
@@ -62,7 +62,7 @@ my @params = qw/麺 固さ 野菜 背脂 タレ にんにく/;
 for my $i (1..100) {
     my %parameter;
     for my $key (@params) {
-        my @volumes = Acme::Jiro->get_valid_volume($key);
+        my @volumes = Acme::Jiro->get_valid_param($key);
         $parameter{$key} = (shuffle @volumes)[0];
     }
 
@@ -77,4 +77,6 @@ for my $i (1..100) {
 
 
 **おわりに
-Acme::Jiroというモジュールを紹介しました.
+Acme::Jiroというモジュールを紹介しました. こういうのを書いているととても「ラーメン食いてぇ」ってなってきますね.
+
+さぁ, 明日は誰が書いてくれるんでしょうか ?

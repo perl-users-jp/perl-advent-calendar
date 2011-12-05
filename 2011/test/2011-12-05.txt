@@ -1,0 +1,124 @@
+Perl から Hadoop と連携したテストをしてみる
+meta-author: yayohei
+meta-tags: perl, test, hadoop
+
+* はじめに
+
+はじめまして。xaicron さんに誘われて advent calendar に挑戦してみることにしました yayohei です。お手柔らかにお願いします。
+
+今日は、テストを行う際に作ったオレオレテスト Module の Test::HadoopSingleNode を紹介したいと思います。
+
+* データ増による課題
+
+データ量の増加に伴ってくるとDatabaseからデータを取り出す処理が重すぎて処理が期待した時間に終わらないということが起きることもあると思います。
+
+そこで処理を分割したり並列化したりして解決しようとするわけですが、最近流行の汎用的な分散処理基盤としてApache Hadoopがあります。
+
+Apache Hadoopとは、”Apache Hadoopは大規模データの分散処理を支えるJavaソフトウェアフレームワークであり、フリーソフトウェアとして配布されている。Hadoopはアプリケーションが数千ノードおよびペタバイト級のデータを処理することを可能としている。HadoopはGoogleのMapReduceおよびGoogle File System(GFS)論文に触発されたものである。” というものです。wikipedia に書いてありました。
+
+Hadoopについての詳細は、書籍も徐々に増えてきていますし、英語であればある程度インターネット上にも情報がありますので割愛します。
+
+** なぜPerlでHadoopか
+
+そんな訳でHadoopを使って大量データの集計を行おうということになるわけですが、もちろんJavaで書いてHadoopを走らせた方がとっても処理は効率的ではあるのですが、そもそもDatabaseからWhere句やGroup句を使って取り出していたデータの置き換えを想定している場合には Hadoop Pig や Hive のようなSQLライクなデータを扱うためのレイヤーで十分なこともあると思います。
+
+また、集計した結果データの書き込みについても既存のバッチで利用しているロギング、DB接続情報などまでをJavaで置き換えるのはSQLの置き換えのためにはやり過ぎだったりするので、PerlからHadoop Pigと連携させて、まさにDatabseからの置き換えとして利用するというケースを考えて見ました。
+
+** テスト
+
+テストがないとかレガシー過ぎてあり得ないとか言われDISられることもあるのではないでしょうか。はい。
+
+最初からどうやってテストするかも考えて実装しましょう。
+
+databaseを使った処理のテストの際にはTest::Mysqldを使ってdatabaseのテストを行っていると思いますが、Hadoopもテストも同様に書きたくなりますね。
+
+ということで、Test::HadoopSingleNode を書いてみました。
+
+テストの実行時にローカル環境にSingle NodeのHDFSを立ち上げて、Mapreduceを実行できる状態にしているものです。
+
+Test::mysqld の発想を参考にして作ってみました。
+
+** Hadoop準備
+
+まずは Single Node で稼働する Hadoop環境を構築する必要がありますが、Hadoop単体で利用することは少ないと思いますので、Hadoopのコンサルティングサービスを行っているCloudera社の環境で関連するモジュールも一式構築するのが良いとと思います。
+<a href="https://ccp.cloudera.com/display/SUPPORT/Downloads">Cloudera Downloads</a>
+
+** Single Node の起動
+
+続いて Single Node 環境のセットアップをします。以下のurlを参考にしてください。
+
+<a href="http://hadoop.apache.org/common/docs/stable/single_node_setup.html">Hadoop single node setup</a>
+
+* テストの実行
+
+準備ができたところでテストを実行してみることにします。
+
+>|perl|
+use Test::More;
+use Test::HadoopSingleNode;
+
+use File::Which qw(which);
+use File::Temp qw(tempfile);
+
+# 設定を読み込み。特に設定がなければ最小構成でローカルに起動
+my $hadoop = Test::HadoopSingleNode->new( default_hadoop_conf_dir => "./hadoop_conf", );
+
+# Single Node の起動
+$hadoop->start_all();
+
+# データの投入済みを前提としたテストケースの場合には、データを投入
+$hadoop->construct_fixture( '/path/to/hdfs/file' => '/path/to/local/file', );
+
+# ファイルの存在を確認
+subtest 'exists file on hdfs' => sub {
+  is (
+    $hadoop->cmd(
+      scalar( which('hadoop') ),  $hadoop->_add_hadoop_opt,
+      'fs', '-test', '-e', '/path/to/hdfs/file'
+    ),
+    0, 'OK');
+};
+
+# Hadoop Pig の実行
+subtest 'Run Pig' => sub {
+
+  my $pig = <<PIG
+  A = LOAD '/path/to/hdfs/file' AS (
+    date: int,
+    userid: int
+  );
+  B = GROUP row BY ( userid );
+  C = FOREACH B {
+    GENERATE flatten(group), COUNT(A);
+  }
+  STORE C INTO '/path/to/hdfs/result';
+PIG
+
+  my ($fh, $pig_file) = tempfile( SUFFIX => '.pig', UNLINK => 1 );
+  print $fh $pig;
+  close $fh;
+  
+  $ENV{HADOOP_CONF_DIR} = $self->{hadoop_conf_dir};
+  
+  $hadoop->cmd( scalar( which('pig') ), '-f', $pig_file );
+  
+  is (
+    $hadoop->cmd(
+      scalar( which('hadoop') ),  $hadoop->_add_hadoop_opt,
+      'fs', '-test', '-e', '/path/to/hdfs/result'
+    ),
+    0, 'OK');
+};
+
+# Node の停止
+$hadoop->stop_all();
+
+done_testing;
+||<
+
+まだα品質なので恐縮ですが、このような感じで Hadoop と連携したテストが書けます。
+
+* まとめ
+
+- Hadoop など外部のプロダクトと連携するときも Test を書くことが重要ですね
+- オレオレでも作ったものがあればCPANにあげてみるのもあり。特に新しいものはCPANにもないこともあります
