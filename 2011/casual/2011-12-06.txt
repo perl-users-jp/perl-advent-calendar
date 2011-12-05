@@ -1,0 +1,215 @@
+配列操作をカジュアルに
+meta-author: neko_gata_s(shinpei)
+meta-tags: perl, cpan, list
+
+こんにちは。新潟在住Perl人、neko_gata_sです。AdventCalendarの敷居を下げにきました。ものっそいカジュアルな話をします。今日はList::Utilについて書こうと思います。
+
+* どちらが良いコード？
+
+さて、いきなりですが、以下のふたつのコードを比べてみてください。
+
+>|perl|
+use strict;
+use warnings;
+
+my @shugo_charas = qw/ran miki suu dia/;
+
+my @shugo_charas_uc;
+foreach my $shugo_chara (@shugo_charas) {
+    push @shugo_charas_uc, uc $shugo_chara;
+}
+||<
+
+>|perl|
+use strict;
+use warnings;
+
+my @shugo_charas = qw/ran miki suu dia/;
+
+my @shugo_charas_uc = map { uc $_ } @shugo_charas;
+||<
+
+どちらのコードも、@shugo_charasに入った各要素を大文字に変換しているコードですが、どちらが「良いコード」でしょう？　私は、下のmapを使ったコードのほうが良いコードだと考えます。なぜなら、後者のほうが「配列を変換したい」という"意図"が汲み取りやすいからです。前者はforeachの中身を精査しなければ「古い配列を変換して新しい配列を作っている」という意図が汲み取れませんが、mapが使ってあればコードを読んだ瞬間に、「あ、配列を変換してるんだな」と気づくことができます。
+
+なにが言いたいかというと、適切な配列操作関数を使うことで、自分が楽をできるだけではなく、コードの意図を読み手に伝えることもできるので捗りますねということが言いたいのです。
+
+perlでよく使われる配列操作の関数はmapの他にgrepがあり、これは配列の中から条件に一致するような要素だけを抜き出すのに使います。
+
+>|perl|
+use strict;
+use warnings;
+
+my @gardians = (
+    {name => 'Amu',       chair => 'Joker'},
+    {name => 'Tadase',    chair => 'King' },
+    {name => 'Nadeshiko', chair => 'Queen'},
+    {name => 'Kuukai',    chair => 'Jack' },
+    {name => 'Yaya',      chair => 'Ace'  },
+    {name => 'Rima',      chair => 'Queen'},
+    {name => 'Kairi',     chair => 'Jack' },
+    {name => 'Nagihiko',  chair => 'Jack' },
+);
+
+my @jacks_chairs = grep { $_->{chair} eq 'Jack' } @gardians;
+||<
+
+* map, grepを超えて
+List::Utilを使うと、map,grepの他にも、いろんなことができます。それぞれ見ていきましょう。
+
+** first
+
+条件に一致した最初の要素を取り出します。
+
+>|perl|
+use strict;
+use warnings;
+use List::Util qw/first/;
+
+my @gardians = (
+    {name => 'Amu',       chair => 'Joker'},
+    {name => 'Tadase',    chair => 'King' },
+    {name => 'Nadeshiko', chair => 'Queen'},
+    {name => 'Kuukai',    chair => 'Jack' },
+    {name => 'Yaya',      chair => 'Ace'  },
+    {name => 'Rima',      chair => 'Queen'},
+    {name => 'Kairi',     chair => 'Jack' },
+    {name => 'Nagihiko',  chair => 'Jack' },
+);
+
+my $first_jacks_chair = first { $_->{chair} eq 'Jack' } @gardians;
+warn $first_jacks_chair->{name}; #Kuukai
+||<
+
+
+** max
+
+配列の中で、数値コンテクストで最もおおきな要素を返します。
+
+>|perl|
+use strict;
+use warnings;
+use List::Util qw/max/;
+
+max 1..10; # 10
+||<
+
+** maxstr
+
+配列の中で、文字列コンテクストで比較して最も大きな要素を返します。
+
+>|perl|
+use strict;
+use warnings;
+use List::Util qw/maxstr/;
+
+my @gardians = (
+    'Amu',
+    'Tadase',
+    'Nadeshiko',
+    'Kuukai',
+    'Yaya',
+    'Rima',
+    'Kairi',
+    'Nagihiko',
+);
+
+maxstr @gardians; # 'Yaya'
+||<
+
+** min
+
+maxの逆に数値コンテクストで最も小さいものを返します
+
+>|perl|
+use strict;
+use warnings;
+use List::Util qw/min/;
+
+min 1..10; # 1
+||<
+
+** minstr
+
+maxstrの逆で、配列の中で、文字列コンテクストで比較して最も小さな要素を返します。
+
+>|perl|
+use strict;
+use warnings;
+use List::Util qw/minstr/;
+
+my @gardians = (
+    'Amu',
+    'Tadase',
+    'Nadeshiko',
+    'Kuukai',
+    'Yaya',
+    'Rima',
+    'Kairi',
+    'Nagihiko',
+);
+
+minstr @gardians; # 'Amu'
+||<
+
+** shuffle
+
+配列をシャッフルします。
+>|perl|
+use strict;
+use warnings;
+use List::Util qw/shuffle/;
+
+my @gardians = (
+    'Amu',
+    'Tadase',
+    'Nadeshiko',
+    'Kuukai',
+    'Yaya',
+    'Rima',
+    'Kairi',
+    'Nagihiko',
+);
+
+my @shuffled = shuffle @gardians;
+||<
+
+** sum
+
+足し算して合計を出します。
+
+>|perl|
+use strict;
+use warnings;
+use List::Util qw/sum/;
+
+sum 1..10; # 55
+||<
+
+配列が空の場合はundefを返してしまうので、空の配列が渡されたときに0を返してほしい場合は0を最初に書いてあげると良いでしょう。
+
+>|perl|
+sum 0, @list;
+||<
+
+** reduce
+
+まず配列の最初のふたつの要素を取り出してブロックの $a, $bに適用します。そのブロックの返り値を$a,配列の次の値を$bに再度適応します。最後に評価された値を返り値とします。配列が空の場合undef,要素がひとつの場合その要素をそのまま返します。ちょっと説明が難しいので例を見たほうが早いかもです。
+
+>|perl|
+use strict;
+use warnings;
+use List::Util qw/reduce/;
+
+my @words = qw/Amulet Spade is my wife/;
+my $statement = reduce {our $a . ' ' . our $b} @words;
+>||
+
+上のコードでは、join(' ', @words)と同じことをやっています。この場合joinを使ったほうが意図が明確になるためjoinを使うべきですが、今回はあえて説明のためにreduceを使っています。
+
+reduceの実行がどのようになっているか詳細に見てみましょう。
+
+まずは、配列の最初のふたつの要素'Amulet'と'Spade'が取り出され、それがブロック中の$aと$bに入ってきます。このときブロックの返り値は'Amulet Spade'となります。次はこの返り値である'Amulet Spade'と配列の次の要素である'is'が$aと$bに入るため、この時のブロックの返り値は'Amulet Spade is'となります。このように最後まで繰り返すと、最終的に'Amulet Spade is my wife'という値を得ることができます。List::Utilの他の関数では実現できないような操作も、reduceを使えば実現することができるわけです。
+
+** まとめ
+
+とってもカジュアルに、List::Utilの紹介をしてみました。これよりもいろんなことをしたい場合はList::MoreUtilsというモジュールもあるので、一度目を通しておくといいのではないでしょうか。今日の内容はとってもカジュアルでしたね！
