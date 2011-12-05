@@ -1,0 +1,69 @@
+hellow ikachan!
+
+今日は AnySan を利用したプロダクトを紹介するよ！
+
+このトラックに参加したい人は http://atnd.org/events/22890 からどしどし頼むぜ！
+
+皆さんは、日々のお仕事の中で様々なバッチ処理やデプロイツールまたはCIツールを動かすと思います。
+一般的なネット系のエンジニアは仕事のコミュニケーション手段として IRC を用いているというのが有名ですが、これらバッチ処理の処理状況等を普段の生活環境である IRC に流せたら便利だとおもいませんか？
+いや、便利なんです！すごいですよ！
+
+そこで僕はどんな環境からでも IRC 通知をするための環境として ikachan を作りました。
+IRC への発言を Web API 経由で操作出来るんです。
+
+Perl とかすら入ってないサーバでも curl などの HTTP が喋れる環境 or echo コマンドと telnet コマンドさえ入っていれば IRC にポストするサーバなんだ。
+
+もう CPAN にあるから
+
+>||
+$ cpanm App::Ikachan
+||<
+
+だけでインストール出来るよ！
+
+** 使い方
+
+使い方もとても簡単で
+
+||<
+ $ ikachan -S irc_server_address -N nickname[ -K irc_server_password][ -P irc_server_port]
+>||
+
+という形でサーバを立ち上げるだけです。
+デフォルトでは http://localhost:4979/ に http server が立ち上がります。
+API 仕様などはサーバにブラウザでアクセスした時に表示されます。
+http server の address/port が気に食わなければ
+
+||<
+$ ikachan -h http_host -p http_port
+>||
+
+といったオプションも利用可能です。
+チャンネルに入るには
+
+||<
+$ curl -F channel=\#catalyst-ja http://localhost:4979/join
+>||
+
+が使えます。
+チャンネルを抜けるには
+
+||<
+$ curl -F channel=\#catalyst-ja http://localhost:4979/leave
+>||
+
+が使えます。
+チャンネルにポストするには
+
+||<
+$ curl -F channel=\#catalyst-ja -F message=こんにちわこんにちわ！ http://localhost:4979/notice
+>||
+
+が使えます。
+
+基本的には notice メソッドを叩くだけで勝手にチャンネルに join してくれるから、細かい事気にしなくて大丈夫だよ！
+
+** まとめ
+
+今日は HTTP to IRC proxy である ikachan の紹介をしました。
+ikachan を使ってこんなに便利になるよ！的なお話は後々紹介したいとおもいます。
