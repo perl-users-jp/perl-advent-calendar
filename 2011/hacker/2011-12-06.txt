@@ -63,7 +63,7 @@ autolocale の挙動を実現するために利用しているのは %^H と、t
 >|perl|
 sub import {
 	$^H{"autolocale"} = 1;
-	catst $ENV{"LANG"}, $wiz;
+	cast $ENV{"LANG"}, $wiz;
 }
 
 sub unimport {
