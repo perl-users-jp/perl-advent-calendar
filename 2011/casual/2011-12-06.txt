@@ -202,7 +202,7 @@ use List::Util qw/reduce/;
 
 my @words = qw/Amulet Spade is my wife/;
 my $statement = reduce {our $a . ' ' . our $b} @words;
->||
+||<
 
 上のコードでは、join(' ', @words)と同じことをやっています。この場合joinを使ったほうが意図が明確になるためjoinを使うべきですが、今回はあえて説明のためにreduceを使っています。
 
