@@ -1,0 +1,71 @@
+#06 search_by_sql / search_named
+
+今日はTengをつかったデータの取得方法の続きになります。
+
+* search_by_sql
+
+Tengではsingleメソッドなどを使うと自分でSELECT文を書く必要が無く、
+内部でクエリを自動生成し、databaseに問い合わせをおこないますが、
+複雑なクエリ担ってきた場合、クエリビルダーをつかってSQLを生成すると問題が発生することがあります。
+
+JOINするようなクエリをクエリビルダで生成する場合、
+実際のPerlのロジックからどういうSQLが生成されるかを考えるのが以外に面倒だったりします。
+
+まぁちょっと込み入ったクエリを発行したい場合は生のSQLを使うのが一番だと懐います。
+
+そういった場合にTengではsearch_by_sqlメソッドを利用します。
+
+>||
+my $itr = $teng->search_by_sql('select * from user where id = ?', [qw/1/]);
+||<
+
+search_by_sqlの返却値はTeng::Iteratorのオブジェクトとなっていますので
+イテレータ経由でRowオブジェクトを取得し、データにアクセスすることになります。
+
+イテレータの使い方についての詳細は明日説明します。
+
+search_by_sqlではJOINしたクエリを実行することがあると思います。
+その場合複数テーブルにまたがったクエリになることがおおく、イテレータから取得されるRowオブジェクトを
+どのtableに紐付けるかがむずかしくなります。
+
+その場合search_by_sqlの第三引数にRowオブジェクトに紐付けしたいtable名を指定することで解決できます。
+
+>||
+my $itr = $teng->search_by_sql('SELECT * FROM user WHERE id = ?', [qw/1/], 'user');
+||<
+
+今回の例のような単純なSELECTクエリの場合は、Tengが自動で対応付けるtableをみつけだすので
+特別指定する必要はありません。
+
+なぜRowオブジェクトに対応するtableを指定する必要があるかは後日説明します。
+
+* search_named
+
+search_by_sqlでは
+
+>||
+my $itr = $teng->search_by_sql('SELECT * FROM user WHERE id = ?', [qw/1/]);
+||<
+
+プレスホルダーとして?を指定することになりますが、?での指定だとbindする値の順番を厳密に守る必要があります。
+また同じ値をbindの値として指定したい場合にも若干面倒なのでそういった場合にsearch_namedメソッドを利用するとよいでしょう。
+
+>||
+my $itr = $teng->search_named('SELECT * FROM user WHERE id = :user_id', +{user_id => 1});
+||<
+
+search_namedメソッドを利用すればプレスホルダーの指定の部分を?ではなく:{key_name}として指定します。
+この場合は:user_idですね。
+これに対応するhashrefを第二引数で指定してあげればあとはTengが自動的に?に置き換え、bindの値も生成してくれます。
+
+search_namedの第三引数にはsearch_by_sqlと同じようにRowオブジェクトに対応するtable名を指定することができます。
+
+
+複雑なSQLはsearch_by_sqlやsearch_namedメソッドを利用すればいいのですが、
+単純なSQLの発行に毎回SQLかいてられっか！ってこともあるのでそういう場合はsearchメソッドをつかうとよいでしょう。
+searchメソッドは後日説明します。
+
+
+明日はイテレータについての説明をしたいと思います
+
+
