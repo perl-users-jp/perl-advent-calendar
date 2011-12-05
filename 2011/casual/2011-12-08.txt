@@ -2,8 +2,8 @@ Plack::Middlewareの使い所
 meta-author: Songmu
 meta-format: markdown
 
-こんにちは。Songmuです。鎌倉の面白法人でPerlでソーシャルゲームの開発をおこなっています。
-「ぼくらの甲子園熱闘編」や「ぼくらのワールドリーグ」の開発に携わっております。
+こんにちは。[Songmu](http://twitter.com/songmu)です。鎌倉の面白法人でPerlでソーシャルゲームの開発をおこなっています。
+「[ぼくらの甲子園熱闘編](http://www.kayac.com/service/socialgame/baseball-nettou/index.html)」や「[ぼくらのワールドリーグ](http://www.kayac.com/service/socialgame/690)」の開発に携わっております。
 
 アプリはArk + DBIx::Class + Text::MicroTemplate::Extendedという構成で作ることが多いのですが、
 今回はソーシャルゲーム開発で活用しているPlack::Middlewareを2つ紹介させていただきます。
@@ -19,7 +19,7 @@ OAuthの署名チェックは少し面倒です。これをアプリケーショ
 
 と言った理由からです。こういった処理は、PlackのMiddleware層でやるべき処理です。
 
-すでにhidekさんが書かれた Plack::Middleware::Auth::OAuthがgithubに上がっているのでそれを使うと良いと思います。
+すでにhidekさんが書かれた [Plack::Middleware::Auth::OAuth](https://github.com/hidek/Plack-Middleware-Auth-OAuth)がgithubに上がっているのでそれを使うと良いと思います。
 
 psgiファイルをPlack::Builderを使って以下のように書くことができます。
 
@@ -62,7 +62,7 @@ psgiファイルをPlack::Builderを使って以下のように書くことが�
 
 さて、問題は解決しましたが、`$_[0]->{PATH_INFO}`みたいな生に近い情報を書くのは綺麗じゃないと思うかもしれません。
 
-その場合は、kazeburoさん作のPlack::Middleware::Conditionalsを使うと綺麗に書くことができます。
+その場合は、kazeburoさん作の[Plack::Middleware::Conditionals](http://search.cpan.org/dist/Plack-Builder-Conditionals/)を使うと綺麗に書くことができます。
 
     use Plack::Middleware::Conditionals;
     
@@ -86,10 +86,9 @@ psgiファイルをPlack::Builderを使って以下のように書くことが�
 - PlackのMiddleware層
 
 で解決できないかを考えると、アプリケーションをシンプルにできることがあります。
-
-特に、アプリケーションの本質とは関係ない処理をガリガリ実装してしまっている時に視点を広げてみることが大事です。
+特に、アプリケーションの本質とは関係ない処理をガリガリ実装してしまっている時に視点を広げてみると幸せになれることがあります。
 
 また、便利だからといって、Plack::Middlewareをたくさん読み込ませると逆にpsgiファイルの見通しが悪くなってしまうことがあります。
 そういう時は、Plack::Middleware::Conditionalsを使うと良いでしょう。
 
-さて、明日はhisaichi5518さんです。お楽しみに。
+さて、明日はhisaichi5518さんです。おや、会社の後輩ですね。お楽しみに。
