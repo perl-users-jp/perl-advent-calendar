@@ -31,13 +31,13 @@ print encode('utf8',$glitched_string);
 
 newでAcme::Text::Glitchのインスタンスを得て、glitchメソッドを呼ぶだけです。簡単ですね。コンストラクタにglitch_levelというパラメータを渡すと、グリッチ度合いを指定することができます。
 
- >|perl|
+>|perl|
 Acme::Text::Glitch->new(glitch_level => 4);
 ||<
 
 glitch_levelは、インスタンス化したあとにも設定できます。
 
- >|perl|
+>|perl|
 my $tg = Acme::Text::Glitch->new;
 my $glitched_string = $tg->glitch_level(4);
 ||<
