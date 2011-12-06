@@ -1,0 +1,68 @@
+Test::MockTime - 時間にまつわるtest
+meta-author: k12u
+meta-tags: perl, test
+
+はい、[http://twitter.com/k12u:title=kawamoto]です
+[http://d.hatena.ne.jp/k12u/:title=blog]は書いているとはとても言えないぐらいサボっております。
+
+右も左もわからぬひよっこですので奇をてらわずにTest::名前空間のモジュールの紹介をしようと思います。
+
+Test::MockTime は testの最中に実行される time() などの時間に関する関数の振る舞いを書き換える便利なモジュールです。
+
+以下のような症状によく効きます。
+- テストの期待する結果に時刻を入れたいが固定の値を指定できない。
+- 外部のコンポーネントに存在する、時間で変動する要素に依存しないテストを書きたい(たとえば MySQL で時系列のパーティションを使っているなど)
+- テストを実行するたびに経過時間が変動してtestが通ったりこけたりする
+
+使い方は[http://d.hatena.ne.jp/tsucchi1022/20090409/1239290637:title=こちらの記事]でも説明されていますが、
+>||
+$ cat ~/test.pl
+use feature qw( say );
+use Test::MockTime qw( :all );
+
+say time;
+set_absolute_time(0);
+say "# set_absolute_time(0);";
+say time;
+say "# ----- sleep(2); -----";
+sleep 2;
+say time;
+
+say "";
+
+set_fixed_time(0);
+say "# set_fixed__time(0);";
+say time;
+say "# ----- sleep(2); -----";
+sleep 2;
+say time;
+||<
+
+>||
+$ perl test.pl
+$ perl test.pl
+1323183883
+# set_absolute_time(0);
+0
+# ----- sleep(2); -----
+2
+
+# set_fixed__time(0);
+0
+# ----- sleep(2); -----
+0
+||<
+
+こんな感じです。
+- set_fixed_time() を使うとtime()はどれだけ時間が経過しても常に同じ時刻を返します。
+- set_absolute_time() を使うとtime()は引数に$timeを与えた直後は$timeを返しますが、時間の経過に従って2秒後には$time+2を返します。
+
+注意点としては time() などの関数の書き換えはコンパイルフェーズに行われるので、使う順番を間違えると正しく動かずはまることになります(xaicron++)。
+
+「よくわかんねーぞ」という人は、このモジュールをなるべく早くuseし、BEGIN{} ブロックのなかで set_fixed_time() などを実行するとよいと思います！
+
+あと、普通やらないと思いますがset_fixed_time()とset_absolute_time()を同じコードで使うのは避けたほうがよさそうです(上の例ではやっちゃっていますが)。
+
+ちなみに違うレイヤーの同様のアプローチとして、MySQLで UNIX_TIMESTAMP()などを使っている場合にはテストの時だけSET TIMESTAMPを発行するという手もありますね。
+
+明日は、実はもう書き上がっているという予感のするbayashiさんです。たぶん。
