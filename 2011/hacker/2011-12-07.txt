@@ -8,7 +8,8 @@ meta-tags: perl, Time::Piece
 
 皆さん [http://search.cpan.org/~msergeant/Time-Piece-1.20/Piece.pm:title=Time::Piece] ってモジュールご存知ですか? 軽いとの評判もあり、[http://search.cpan.org/~drolsky/DateTime-0.70/lib/DateTime.pm:title=DateTime] に代わって使われるようになってきている時間系のモジュールであります。
 
-ボクは時間周りの処理をよくするので、よく使うんですけれども。 Time::Piece は、24時以降の時間(例えば、25時は翌日の1時であるとか)を扱えないので、深夜帯に生きるボクには活かせづらいときがままありました。 だので、そこら辺をよしなにしたいなといった趣向のモジュールになります。
+ボクは時間周りの処理をよくするので、よく使うんですけれども。[http://search.cpan.org/~msergeant/Time-Piece-1.20/Piece.pm:title=Time::Piece]は、24時以降の時間(例えば、25時は翌日の1時であるとか)を扱えないので、深夜帯に生きるボクには活かせづらいときがままありました。
+だので、そこら辺をよしなにしたいなといった趣向のモジュールになります。
 
 ** 使い方
 
@@ -27,7 +28,6 @@ my $t2 = localtime->from_over24_datetime("2011-12-01 25:00:00");
 print $t2->datetime;
 #2011-12-02T01:00:00
 
-1;
 ||<
 
 時間だけを入れると、当日からの時間を返して、日付までいれるとその日付の通りのTime::Pieceオブジェクトを返してくれます。
@@ -48,7 +48,6 @@ $t3->over24_offset("03:00:00");
 print $t3->over24_datetime;
 #2011-12-31T25:00:00
 
-1;
 ||<
 
 こんな感じで、27時までは前日ですよという様なイメージですね。
@@ -74,7 +73,6 @@ $t4->over24_offset("03:00:00");
 print $t4->over24_datetime;
 #03:00:00 同じ!!
 
-1;
 ||<
 
 *** 時の狭間
@@ -113,9 +111,11 @@ print localtime->is_during($t5,$t6);
 という感じで簡単ですよね。
 わざわざTime::Pieceに入れ込むなとか言わないであげてください…。
 
+ちなみにTest::MockTimeはTime::Pieceをuseする前にいれてあげてください。
+
 ** まとめ
 
 Time::Piece好き&&深夜帯大好きが高じてこんなモジュールを作ってみました。
 仕様、実装とも不安なところもあるのですが、是非触ってもらえたらと思います。
 
-最後に、Time::Piece、Time::Piece::MySQL、Test::MockTimeは日頃大変利用させてもらっています。ありがとうございます。
+最後に、[http://search.cpan.org/~msergeant/Time-Piece-1.20/Piece.pm:title=Time::Piece]、[http://search.cpan.org/~kasei/Time-Piece-MySQL-0.06/lib/Time/Piece/MySQL.pm:title=Time::Piece::MySQL]、[http://search.cpan.org/~ddick/Test-MockTime-0.12/lib/Test/MockTime.pod:title=Test::MockTime]は日頃大変利用させてもらっています。ありがとうございます。
