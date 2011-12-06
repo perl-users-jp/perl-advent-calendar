@@ -1,0 +1,70 @@
+Acme::Text::Glitchでテキストをぐちゃぐちゃにしよう
+meta-author: neko_gata_s(shinpei) <info@nekogata.com>
+meta-tags: perl, acme
+
+*Acme::Text::Glitchでテキストをぐちゃぐちゃにしよう
+
+初日に続き、新潟Perl人のneko_gata_s(shinpei)です。猫型さんとかしんぺいさんとかぺーちゃんとかいろんな呼ばれ方をしてるので好きに呼んでください。今日は拙作のAcme::Text::Glitchというモジュールの紹介をさせていただきます。CPANにはあがっておらず、GitHubに置いてあるのでインストールは
+
+>||
+$ cpanm https://github.com/Shinpeim/p5-Acme-Text-Glitch/tarball/master
+||<
+
+からどうぞ。
+
+** 何をするモジュールなのか/どう使うのか
+
+その名のとおり、テキストをグリッチします。つまり、たとえば"Glitch"という文字列をAcme::Text::Glitchに掛けると、̦̩̲ͩ́͘G̬̤̱̈́͜l̠̺͑͟ỉ͓͚̹̓͊͟͞t̛͇̙̩̟̐ͪͣchとなります。
+
+なんだがぐちゃぐちゃになりましたね。使い方は以下のような感じです。
+
+>|perl|
+use strict;
+use warnings;
+use Acme::Text::Glitch;
+use Encode;
+
+my $tg = Acme::Text::Glitch->new;
+my $glitched_string = $tg->glitch('glitch me');
+print encode('utf8',$glitched_string);
+||<
+
+newでAcme::Text::Glitchのインスタンスを得て、glitchメソッドを呼ぶだけです。簡単ですね。コンストラクタにglitch_levelというパラメータを渡すと、グリッチ度合いを指定することができます。
+
+ >|perl|
+Acme::Text::Glitch->new(glitch_level => 4);
+||<
+
+glitch_levelは、インスタンス化したあとにも設定できます。
+
+ >|perl|
+my $tg = Acme::Text::Glitch->new;
+my $glitched_string = $tg->glitch_level(4);
+||<
+
+
+** 仕組み
+
+さて、それでは、このようなぐちゃぐちゃの文字列が出来上がる仕組みを見てみましょう。
+
+Unicodeでは、0300 - 036Fに「ダイアクリティカルマーク」と呼ばれる記号が定義されています。これらは、そもそもはラテン文字等に発音を明示するために付ける「発音記号」で、普通の文字に「合成」し、「文字を修飾」することを主目的として定義されています。つまり、これらのダイアクリティカルマークをランダムに適宜挿入すると、プレーンな文字列をぐちゃぐちゃに装飾することができるわけです。
+
+そもそもは発音記号なので、グリッチに使うのは間違えた使い方と言えるのですが、そこはAcmeなのでまあ、勘弁してください。
+
+** Unicode合成文字について
+
+実は、Unicodeにおいて合成できる文字はダイアクリティカルマークだけではありません。たとえば日本語の濁点。Unicodeでは、おなじ「が」を表現するのに、「が」(304C)と、「か」(304B)+「濁点」(3099)を利用できます。
+
+>||
+$ perl -e 'warn "\x{304c}"'
+が at -e line 1.
+||<
+
+>||
+$ perl -e 'warn "\x{304b}\x{3099}"'
+が at -e line 1.
+||<
+
+このようなことがUnicodeで可能な以上、「見え方は一緒でも、バイト表現は別」というおそろしい話が生まれてきます。このあたりのややこしい話は、「Unicode 正規化」などでググると良質な記事がたくさん見つかると思いますので、Text::Acme::Glitchに興味を持っていただけたら、ついでにUnicodeのやっかいなお話についても興味を持っていただき、そのあたりを調べ始めるきっかけになってくれたらなあ、と思います。
+
+明日は誰かな？ Ș̩̜ͭê̘͕e ̞̈́̿Y̒ő̕u͂̕!
