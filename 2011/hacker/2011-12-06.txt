@@ -13,7 +13,7 @@ meta-tag: perl, locale
 
 perlのコンストラクタは perl.c の perl_construct() です。この perl_construct() から locale.c の Perl_init_i18nl10n() を呼び出し、locale 関係の初期化を行なっています。
 
-まず、シェルの環境変数 $LANG がセットされている場合は $LANG の値を locale として設定を試みます。設定が失敗した場合は、環境変数 $LC_CTYPE、$LC_COLLATE、$$LC_NUMERIC、$LC_ALL について対応する locale のカテゴリへの設定を試みます。
+まず、シェルの環境変数 $LANG がセットされている場合は $LANG の値を locale として設定を試みます。設定が失敗した場合は、環境変数 $LC_CTYPE、$LC_COLLATE、$LC_NUMERIC、$LC_ALL について対応する locale のカテゴリへの設定を試みます。
 (なお、上記は perl-5.14.2 の時点の挙動です)
 
 perl インタプリタが環境変数に基づいて locale 設定を行うのはインタプリタの初期化時のみであるため、perl コードで %ENV を変更しても反映されません。
@@ -44,7 +44,7 @@ $ENV{"LANG"} = "ja_JP.UTF8"; # locale 設定が "ja_JP.UTF8" に変更
 my $time;
 {
     local $ENV{"LANG"} = "C";# locale 設定が "C" に変更
-	$time = localtime;
+    $time = localtime;
 }
 # スコープが変わり、$ENV{"LANG"} の値が "ja_JP.UTF8" に戻り、locale 設定も"ja_JP.UTF8" に
   
@@ -62,12 +62,12 @@ autolocale の挙動を実現するために利用しているのは %^H と、t
 
 >|perl|
 sub import {
-	$^H{"autolocale"} = 1;
-	cast $ENV{"LANG"}, $wiz;
+    $^H{"autolocale"} = 1;
+    cast $ENV{"LANG"}, $wiz;
 }
 
 sub unimport {
-	$^H{"autolocale"} = 0;
+    $^H{"autolocale"} = 0;
 }
 ||<
 
