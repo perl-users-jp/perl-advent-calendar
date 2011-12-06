@@ -1,0 +1,91 @@
+目標達成カウントダウンを華々しく
+
+今日は AnySan を利用したプロダクトをどう使うかの実例を紹介するよ！
+
+このトラックに参加したい人は http://atnd.org/events/22890 からどしどし頼むぜ！
+
+皆さんは Web サービスを開発する上で様々な数値目標と向き合うと思います。
+そんな中でも会員数の目標数値はなかなか比重が重いんじゃないでしょうか?
+
+後少しで、会員数が目標達成するからと言って関係者全員がそわそわと最新の数値を見るページを F5 連打してたら捗らない上に self-dos になってしまう危険性もあります。
+
+そういった wktk 感を感じつつ皆が捗る為に、あとどのくらいで目標に達するかをプロジェクトの IRC チャンネルに流す仕組みを作ったら捗りそうな気がしたので、試しに作った物を晒します。
+
+ikachan を導入している人で、じわじわカウントダウンして興奮したい方はご自由にお使いください。
+
+>||
+use strict;
+use warnings;
+use utf8;
+
+use DBI;
+use LWP::UserAgent;
+use String::IRC;
+
+my $dbh = DBI->connect(...);
+my $to = 1_000_000;
+my $ikachan = 'http://ikachan.example.com/privmsg';
+my $channel = '#ninjyatoriai';
+
+my $last_count = sub {
+    my $rows = $dbh->selectall_arrayref(q{
+        SELECT last FROM countdown_1000k
+    }, { Slice => [] });
+    return 0 unless $rows && @{ $rows };
+    $rows->[0][0];
+}->();
+
+my $current_count = sub {
+    my $rows = $dbh->selectall_arrayref(q{
+        SELECT COUNT(*) FROM current_user
+    }, { Slice => [] });
+    return 0 unless $rows && @{ $rows };
+    $dbh->do(q{
+        UPDATE countdown_1000k SET last=?
+    }, {}, $rows->[0][0] >= $to ? -1 : $rows->[0][0]);
+    $rows->[0][0];
+}->();
+
+if ($last_count && $last_count < 0) {
+    exit;
+}
+
+sub ikachan ($){
+    my $msg = shift;
+    LWP::UserAgent->new()->post($ikachan, {
+        channel => $channel,
+        message => $msg,
+    });
+    exit;
+}
+
+if ($current_count >= $to) {
+    ikachan(String::IRC->new('100万人突破ｷﾀ━━━(´∀`)´･ω･`);ﾟДﾟ)･∀･)￣ー￣)´_ゝ`)ﾟ皿ﾟ)∵)TΔT)ΦдΦ)#-_-)~ハ~)ﾟзﾟ)ё)≧｡≦)°.Å)ﾞ･Ω･)^σ^)=ﾟωﾟ)ﾉ━━━!!')->red);
+}
+
+for my $i (reverse qw/
+     100000 90000 80000 50000 40000 30000 25000 20000 15000 12500
+     10000 9000 8000 7000 6000 5000 4500 4000 3500 3000 2500 2000 1500
+     1000 900 800 700 600 500 400 300 200 150
+     100 90 80 70 60 50 40 30 20 15 12 11 10 9 8 7 6 5 4 3 2
+/) {
+    if ($to - $last_count > $i && $to - $current_count <= $i) {
+        my $last = $to - $current_count;
+        if ($i > 500) {
+            ikachan "あと${last}人で100万人ですね";
+        } elsif ($i > 100) {
+            ikachan(String::IRC->new("あと${last}人で100万人だ！")->red);
+        } else {
+            ikachan(String::IRC->new("100万人とっぱまであと${last}人だぞー")->red . '♡');
+        }
+    }
+}
+
+__END__
+CREATE TABLE countdown_100k (
+    last int
+);
+||<
+
+**まとめ
+今日は、会員100万人達成の演出を ikachan を使うと捗る話をしました
