@@ -40,7 +40,6 @@ say time;
 
 >||
 $ perl test.pl
-$ perl test.pl
 1323183883
 # set_absolute_time(0);
 0
@@ -54,8 +53,10 @@ $ perl test.pl
 ||<
 
 こんな感じです。
-- set_fixed_time() を使うとtime()はどれだけ時間が経過しても常に同じ時刻を返します。
-- set_absolute_time() を使うとtime()は引数に$timeを与えた直後は$timeを返しますが、時間の経過に従って2秒後には$time+2を返します。
+
+time()の振る舞いが↓のようになります。
+- set_absolute_time() を使うとは直後は$timeを返しますが、時間の経過に従って2秒後には$time+2を返します。
+- set_fixed_time() を使うとどれだけ時間が経過しても常に同じ時刻を返します。
 
 注意点としては time() などの関数の書き換えはコンパイルフェーズに行われるので、使う順番を間違えると正しく動かずはまることになります(xaicron++)。
 
