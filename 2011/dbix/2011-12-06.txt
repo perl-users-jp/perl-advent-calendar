@@ -1,0 +1,128 @@
+それCallbacksで - DBIxを作りだす前に
+meta-author: kazeburo
+meta-tags: perl, dbix
+
+
+どうもkazeburoです。DBIx Trackなのに、DBIxを作らない話。
+
+myfinderさんがDBIxを作る第一歩としてDBIのサブクラスの作り方を紹介しましたが、実際にDBIxを作り出す前に、その機能がDBIの標準機能でできないか調べるのがオススメです。
+
+** Callbacksの基本
+
+CallbacksはDBIに標準で用意されているHook機能です。
+
+>||
+my $dbh = DBI->connect('dbi:SQLite:dbname=test.db','','', {
+    RaiseError => 1,
+    PrintError => 0,
+    Callbacks => {
+        connected => sub {
+            ...
+        }
+    }
+});
+||<
+
+接続時のAttributesにCallbacksを追加します。上では接続が完了(connected)したらcoderefが呼び出されます。
+
+接続時にテーブルを作成するなら
+
+>||
+connected => sub {
+    my $dbh = shift;
+    $dbh->do(<<EOF);
+CREATE TABLE IF NOT EXISTS tbl (
+    id           INTEGER      NOT NULL PRIMARY KEY,
+    name         VARCHAR(255) NOT NULL,
+    meta         TEXT NOT NULL DEFAULT '',
+    created_at   DATETIME     NOT NULL
+)
+EOF
+    return;
+},
+||<
+
+などと書けます。DBIのcallbackでは最後にundefを返します。
+
+connect時のattribute以外でも Database Handler(dbh) に対してCallbackを追加することが可能です
+ 
+>||
+$dbh->{Callbacks} = {
+   'do' => sub {
+        ...
+    },
+};
+||<
+
+connected や do の他にも prepare、select(all|row|col)_(array|arrayref|hashref) などの Database Handler(dbh) のメソッドもこの方法でcallbackが登録できます。
+
+** Statement Handler への Callback 登録
+
+Statement Handler(sth) に対するHookは、ChildCallbacks を使うと簡単に登録が可能です。ChildCallbacksを使わない場合、sthに対して毎回 Callbacksを設定する必要があります。
+
+>||
+my $dbh = DBI->connect('dbi:SQLite:dbname=test.db','','', {
+    RaiseError => 1,
+    PrintError => 0,
+    Callbacks => {
+        ChildCallbacks => {
+            'execute' => sub {
+                ...
+            }
+        },
+    },
+}
+||<
+
+これで、prepare => execute 時でも登録したcoderefを起動できます。
+
+** サンプル
+
+以下は、Hookを利用してbind parameterにundefind valueが入っていたらエラーとするサンプル。NULLが意図しない形で入る事で全行舐めることが起きることを防げます。
+
+>||
+my $callback = sub {
+    my ($obj,$query,$attr,@binds) = @_;
+    my $i=0;
+    map { ! defined $_ && die("undefined bind value found at \#$i, in query \x27$query\x27"); $i++ } @binds;
+    return;
+};
+  
+my %callbacks;
+$callbacks{$_} = $callback for qw/do selectrow_array selectrow_arrayref
+                                  selectrow_hashref selectall_arrayref
+                                  selectall_hashref selectcol_arrayref/;
+
+my $dbh = DBI->connect('dbi:SQLite:dbname=test.db','','', {
+    RaiseError => 1,
+    Callbacks => {
+        %callbacks,
+        ChildCallbacks => {
+            'execute' => sub {
+                my ($obj,@binds)=@_;
+                $callback->($obj, $obj->{Statement}, undef, @binds);
+                return;
+            },
+        },
+    },
+});
+
+eval { 
+    my $sth = $dbh->prepare("SELECT * FROM hoge WHERE foo=?");
+    $sth->execute($foo);
+};
+like( $@, qr/undefined bind value found/);
+
+eval {
+    $dbh->selectrow_arrayref("SELECT * FROM hoge WHERE foo=?",undef,$foo);
+};
+like( $@, qr/undefined bind value found/);
+||<
+
+** まとめ
+
+Callbacksを使うと、DBIxを作らなくてもDBIの拡張ができます。が、Attributesの階層が深くなったりCallbackの管理がうまくできないので、やりたい事が溜まったら、サブクラスに挑戦してみるのも良いんじゃないかなぁと思ってます。
+
+
+
+
