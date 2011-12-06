@@ -1,4 +1,4 @@
-Time::Piece::Over24 - 24時以降の時間をTime::Pieceで扱えるようにしたい
+Time::Piece::Over24 - 24時以降の時間をTime::Pieceで扱う
 meta-author: i47_rozary
 meta-tags: perl, Time::Piece 
 
@@ -63,17 +63,41 @@ use strict;
 use warnings;
 use Time::Piece::Over24;
 
-my $t3 = localtime->strptime("2011-01-01 01:00:00","%Y-%m-%d %T");
-$t3->over24_offset("03:00:00");
-print $t3->over24_offset;
-#03:00:00
-
 my $t4 = localtime->strptime("2011-01-01 01:00:00","%Y-%m-%d %T");
 $t4->over24_offset("03:00:00");
-print $t4->over24_datetime;
+print $t4->over24_offset;
+#03:00:00
+
+my $t5 = localtime->strptime("2011-01-01 01:00:00","%Y-%m-%d %T");
+print $t5->over24_offset;
 #03:00:00 同じ!!
 
 ||<
+
+だので、切り替わりの時間を別々にしたいときは…。
+
+>|perl|
+use strict;
+use warnings;
+use Time::Piece::Over24;
+
+my $t4 = localtime->strptime("2011-01-01 01:00:00","%Y-%m-%d %T");
+$t4->over24_offset("03:00:00");
+print $t4->over24_offset;
+#03:00:00
+
+my $t5 = localtime->strptime("2011-01-01 01:00:00","%Y-%m-%d %T");
+print $t5->over24_offset("00:00:00");
+print $t5->over24_offset;
+#00:00:00
+
+$t4->over24_offset("03:00:00"); #もう一度
+print $t4->over24_offset;
+#03:00:00
+
+||<
+
+面倒なのですが、このようにして貰えば出来ます。
 
 *** 時の狭間
 
@@ -89,20 +113,21 @@ use Time::Piece::Over24;
 #今が21時だとして
 set_absolute_time("2011-12-06T12:00:00Z");
 
-print localtime->is_during("21:00","25:00");
+my $t6 = localtime;
+print $6->is_during("21:00","25:00");
 #1
 
-print localtime->is_during("21:10","25:00");
+print $6->is_during("21:10","25:00");
 #undef
 
 #datetimeも使えます
-print localtime->is_during("2011-12-06 21:00:00","2011-12-06 25:00");
+print $6->is_during("2011-12-06 21:00:00","2011-12-06 25:00");
 #1
 
 #Time::Pieceもそのまま使えます
-my $t5 = $t->strptime("2011-12-06 21:00:00","%Y-%m-%d %T");
-my $t6 = $t->strptime("2011-12-07 01:00:00","%Y-%m-%d %T");
-print localtime->is_during($t5,$t6);
+my $t7 = $6->strptime("2011-12-06 21:00:00","%Y-%m-%d %T");
+my $t8 = $6->strptime("2011-12-07 01:00:00","%Y-%m-%d %T");
+print $6->is_during($t7,$t8);
 #1
 
 1;
