@@ -1,0 +1,99 @@
+PerlとOracleDatabaseでの性能試験（データ増幅）
+meta-author: dukkiedukkie <dukkiedukkie@yahoo.co.jp>
+meta-tags: perl, oracle, test
+
+* はじめに
+
+初めまして！ dukkiedukkie と申します。
+myfinderさんにこちらを教えて頂きまして登録させていただきましたが、
+予備知識なく&&不慣れでご迷惑おかけすると思いますがよろしくお願いいたします!!
+
+IT業界を16年ほどさまよっており現在はPerlで色々書いてます。
+が、ゴリゴリのプログラマというわけでもなく
+前職は某ポータルサイトにて広告システム全般のシステム基盤設計とシステム運用、
+前々職は某金融システムにてDBA（Oracle中心）、その前は某ブログシステムのDBA（Oracle中心）、
+さらにその前は、某IT情報配信サイトのエンジニアとして、働いてきた90年代CGIプログラミングを原点とする”オッサンPerler”です。
+ですが、どんどん新しいことを学びたいので、なかよくしてくださいね!!
+
+* データベースの性能試験
+
+さて、ほとんど準備もしておりませんため（次回はがんばります！）
+今日はOracleデータベースの性能管理のためにここ数年行う機会が多かった
+DB性能試験について書きます。
+
+まあ、大規模システムともなりますと、DBの性能がシステム全体のボトルネックとなって足を引っ張るケースが
+極めて多く、それ専用のチューニングエンジニアさんが大勢いて、
+「Oracleはすごい。だが他は何も知らない…」みたいな人もちらほら見受けられるし、
+Oracleの性能試験に特化した高額なテストツールなどもあるみたいですが、
+自分の経験では銀行でも大手サイトでも
+DB性能試験については、ほとんどPerlで事足りてきました（というか、無理やりそうしてきた感もありますw）。
+
+さて、DB性能試験といえば、まずはデータ増幅。データ空っぽ状態でTPSを求めても意味無いので。
+最低1年後までのデータ量の成長率を計算して、そのダミーデータをDB登録しておく必要があります。
+TSVで出力されたファイルをSQL Loaderなどで並列でDBに突っ込むのですが、
+このTSVファイル作成にPerlをよく活用しています。
+
+* カーディナリティを考慮したデータ増幅
+
+例えば、RDBMSのテーブルとして音楽CDを例にとると、関数従属性の関係が
+artist->cd->tracks
+で、artistデータが80万件に増幅する可能性があり（そんなにいないだろうけど）
+artist一件にたいしてcdデータは10件、
+cd一件にたいしてtracksデータは12件、
+平均で伸長する場合、ロジックの骨組み的には（重ねて準備不足をお詫びします。。。）
+>|perl|
+use IO::File;
+#- 増幅用主キーの開始と終了数値
+my ( $artist_pk_start ) = 100001;
+my ( $artist_pk_end ) = 900000;
+my ( $cd_pk_start ) = 100001;
+my ( $tracks_pk_start ) = 100001;
+
+#- 表同士のカーディナリティ 
+my ( $artist2cd ) = 10; #- artist:cdは1:10
+my ( $cd2tracks ) = 12;
+
+#- ファイルハンドルを一気に開く
+my $fh_artist = IO::File->new("artist.dat", 'w');
+my $fh_cd = IO::File->new("cd.dat", 'w');
+my $fh_tracks = IO::File->new("tracks.dat", 'w');
+#- データ増幅ループ
+for ( my $i = $artist_pk_start; $i <= $artist_pk_end; $i++ ) {
+	#- artist entity
+	my $artist_name = 'Amy Cooper';	#- uniqならrandをかませる
+	print $fh_artist("$i\t$artist_name\n");
+	#- cd entity loop
+	my $cd_end = $cd_pk_start + $artist2cd - 1;
+	for ( my $j = $cd_pk_start ; $j <= $cd_end; $j++ ) {
+		my $cd_title = 'Mirrors';
+		print $fh_cd("$j\t$cd_title\t$i\n");
+		$cd_pk_start++;
+		#- tracks entity loop
+		my $tracks_end = $tracks_pk_start + $cd2tracks - 1;
+		for ( my $k = $tracks_pk_start; $k <= $tracks_end; $k++ ) {
+			my $track_title = 'Tonight We Fly';
+			print $fh_tracks("$k\t$track_title\t$i\t$j\n");
+			$tracks_pk_start++;
+		}
+	}
+}
+close $fh_tracks;
+close $fh_cd;
+close $fh_artist;
+||<
+みたいなのを書いてました。
+
+しかし、増幅はエンティティの上位にあるテーブルで数十億件、下位エンティティともなると
+数千億件…の増幅が必要、みたいなケースに結構人生で遭遇していて、
+その場合、上記ヘボスクリプトでは不十分で、
+・書き込みプロセスをforkする
+・ファイルをSQL Loaderが効率良い件数（例：1千万件など）に分ける
+などの工夫が必要となるわけです。
+
+また、増加係数を平均で行う場合「データの偏り」が現実とかけ離れた状況になってしまうため、
+現状の標準偏差や偏りを忠実に模写して将来も予測した増幅ロジックなどが必要になって、
+この点は来週、きっちり準備した上で書かせてください。
+
+データ増幅から始めて、テーマ的にはDBのOLTP試験モジュールまで至ろうと精進しますので、今後ともよろしくお願いいたします！！
+※nekoyaさん、myfinderさん、みなさん、ご心配ご迷惑おかけしました。。。。
+
