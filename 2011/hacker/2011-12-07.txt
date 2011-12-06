@@ -4,7 +4,7 @@ meta-tags: perl, Time::Piece
 
 ** 前置き
 
-こんにちは。はじめまして i47_rozary と申します。みなさん、意識は高まっていますか？ 僕は上々でいたーいです。今回は拙作の Time::Piece::Over24 というモジュールを紹介いたします。
+こんにちは。はじめまして i47_rozary と申します。みなさん、意識は高まっていますか？ 僕は上々でいたーいです。今回は拙作の[https://github.com/rozary/Time-Piece-Over24:title=Time::Piece::Over24]というモジュールを紹介いたします。
 
 皆さん [http://search.cpan.org/~msergeant/Time-Piece-1.20/Piece.pm:title=Time::Piece] ってモジュールご存知ですか? 軽いとの評判もあり、[http://search.cpan.org/~drolsky/DateTime-0.70/lib/DateTime.pm:title=DateTime] に代わって使われるようになってきている時間系のモジュールであります。
 
@@ -78,7 +78,7 @@ print $t4->over24_datetime;
 *** 時の狭間
 
 Aの時間とBの時間の間であるかチェックする機能もつけてみました。
-SQLでBETWEENなんですけれど、is_duringとかいうメソッド名にしてしまいました。
+SQLではBETWEENなんですけれど、今回はis_duringとかいうメソッド名にしてしまいました。
 
 >|perl|
 use strict;
