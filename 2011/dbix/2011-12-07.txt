@@ -1,0 +1,76 @@
+ベンチどうしますか？
+meta-author: nekokak
+meta-tags: perl, dbix
+
+
+どうもnekokakです。
+
+みなさんDBIを使っているコードのベンチマークってどうしてますか？
+SQLのチューニングであればいいのですが、ロジックのベンチマークを取りたい時に
+実際にdatabaseにクエリなげてしまうと、ネットワーク通信等が発生し、細かいロジックのチューニングの邪魔になることがあります。
+
+
+たとえば私はTengのチューニングをするときに、バックエンドのdatabase性能なんてどうでもよくて、
+プログラムの性能をみたいわけです。
+そんなときに便利なのがTest::Mock::Guardです。（え
+
+Testというnamespaceにありますが、やっていることはコードをさしかえることなので
+これをつかって実際にデータベースにクエリなげるところとかをフガフガします。
+
+例えばTengのベンチマークを取る時に試したコードは以下のようなものです。
+
+>||
+#! /usr/bin/perl
+use strict;
+use warnings;
+use Benchmark qw(:all :hireswallclock);
+use Test::Mock::Guard qw/mock_guard/;
+
+{
+    package Bench;
+    use parent 'Teng';
+    __PACKAGE__->load_plugin('Lookup');
+    __PACKAGE__->load_plugin('SingleBySql');
+
+    package Bench::Schema;
+    use Teng::Schema::Declare;
+    table {
+        name 'user';
+        pk   'id';
+        columns qw/id name age/;
+    };
+}
+my $gurad = mock_guard('DBI::st' => +{fetchrow_hashref => +{id => 1, name => 'nekokak', age => 33}});
+
+my $db = Bench->new({connect_info => ['dbi:SQLite::memory:','','']});
+
+$db->do( q{DROP TABLE IF EXISTS user} );
+$db->do(q{
+    CREATE TABLE user (
+        id   INT PRIMARY KEY,
+        name TEXT,
+        age  INT
+    );
+});
+
+cmpthese(10000 => +{
+    single        => sub {$db->single('user', +{id => 1})},
+    single_by_sql => sub {$db->single_by_sql('SELECT id,name,age FROM user WHERE id = ?', [1], 'user')},
+    lookup        => sub {$db->lookup('user', +{id => 1})},
+}, 'all');
+||<
+
+ザックリ説明するとDBI::stのfetchrow_hashrefをmockしてhashrefをかえすだけです。
+こうすることで実際にdatabaseにアクセスすることなく、それらしい雰囲気のデータをかえすことができ
+実際のロジックの性能評価を行うことができます。
+
+
+なお、DBD::Mockみたいなのがあるので、それをつかってもいいんですが、
+ちょっと大仰でドキュメント読むのがめんどくさかったのでこんな感じでロジックをさしかえました。
+
+ちなむとこのウルテクはDBIだけにかぎらずいろいろな場所で使えるのでオススメです。
+
+Test::Mock::Guard++ですね！
+
+あしたはtomi-ru@tomitaさんの出番ですよ
+
