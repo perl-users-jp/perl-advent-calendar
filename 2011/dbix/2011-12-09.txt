@@ -1,0 +1,120 @@
+DBIx::QueryLog で DBI で実行された SQL を丸見えにする！
+meta-author: xaicron
+meta-tags: perl, dbix
+
+こんにちは、最近 PSP1000 の電池が一瞬で切れてしまってまともにゲームができない xaicron です。
+
+さて、みなさんは DBI から吐かれた SQL をみたいなーと思うこともあるでしょう。
+そんな時は、$ENV{DBI_TRACE} = 2 とかしてみると、ドバーッといっぱいデバッグログが出てきて、
+その中に実際に発行された SQL がちょろっと出てたりするのでこいつを頑張ってパースすればいい感じですね！
+
+っていうのはだいぶ面倒だったりしますね。あたりまえですね。
+
+そこで、use するだけでとりあえず全部の発行された SQL を STDERR にはいてくれるモジュールを書きました。
+その名も DBIx::QueryLog です。そのままですね。
+
+** つかいかた
+
+使い方は至極簡単で、どっかで適当に use するだけです。ほかには何もいりません。
+そうすると、以下のような感じで STDERR に SQL が出力されます。
+
+>|perl|
+use DBIx::QueryLog;
+
+my $row = $dbh->selectrow_hashref('SELECT * FROM dis_comments WHERE name = ?', undef, 'nekokak');
+||<
+
+>||
+[2011-12-07T23:51:30] [main] [0.000164] SELECT * FROM dis_comments WHERE name = 'nekokak' at neko.pl line 10
+||<
+
+みたいな感じです。超簡単ですね。ちゃんとバインド済みの値になっているのがミソです。
+
+** 出力先を変えたい
+
+デフォは STDERR なんですが、当然ファイルに出したい欲求とかあると思いますので、変えられます。
+Log::Minimal みたいな感じで、$DBIx::QueryLog::OUTPUT を書き換えます。
+
+>|perl|
+use DBIx::QueryLog;
+
+open my $fh, '>>', 'query.log' or die $!;
+$DBIx::QueryLog::OUTPUT = $fh;
+||<
+
+のようにファイルハンドルを指定するか、または
+
+>|perl|
+use DBIx::QueryLog;
+
+$DBIx::QueryLog::OUTPUT = sub {
+    my %args = @_;
+    printf 'sql: %s', $args{sql};
+};
+||<
+
+みたいに coderef も受け取れるので何でもやり放題ですね。
+
+** 全部じゃなくてさぁ、一部だけ適用したいんだけど？
+
+そんな時は、
+
+>|perl|
+reuqire DBIx::QueryLog; # or use DBIx::QueryLog ();
+DBIx::QueryLog->enable;
+# 適用したい範囲
+DBIx::QueryLog->disable;
+||<
+
+とかすれば OK です。Guard オブジェクトを返すインターフェースとかあってもいいかもしれませんね。
+ぱっちぃずうぇるかむです。
+
+** SQL 改行されちゃうんだけど？
+
+DBIx::QueryLog->compress(1) とするか、$ENV{DBIX_QUERYLOG_COMPACT} = 1 とかすると、改行とか消えます
+
+** SQL にターミナルで見れない文字が出てる！死ぬ！
+
+DBIx::QueryLog->useqq(1) とするか、$ENV{DBIX_QUERYLOG_USEQQ} = 1 とかすると、$Data::Dumper::Useqq = 1 とおなじでダブルクォートで展開できる感じに出来ます。
+
+とりあえず、compress + useqq しとけばホゲることはないはず
+
+** 色付けたい
+
+DBIx::QueryLog->color('red') とするか、$ENV{DBIX_QUERYLOG_COLOR} = 'red' とかすると色がつきます。
+ファイルに出力する場合も制御文字が入ったまんまになるから注意が必要だぜ！
+
+** bind されたくない
+
+DBIx::QueryLog->skip_bind(1) で OKです。なんで環境変数で指定できないんでしょうか？気が向いたら追加します。
+
+** 一定時間以上かかった SQL を出したい
+
+DBIx::QueryLog->threshold(0.1) とかで出来ます。なんで環境変数で指定できないんでしょうか？気が向いたら追加します。
+
+** 100回に1回ぐらいの確率でログに出したい
+
+DBIx::QueryLog->probability(100) とかするとそんな感じになります。なんで環境変数で指定できないんでしょうか？気が向いたら追加します。
+
+** まとめ
+
+などなど、とっても簡単に実行されている SQL をログに出せますね！
+
+もちろん、同じようなことは kazeburo さんが[http://perl-users.jp/articles/advent-calendar/2011/dbix/6 6日目]にかいた Callbacks などでも実現できますが、
+DBIx::QueryLog のメリットとしては
+
+ - コードの書き換えが必要ない ((use するだけ))
+ - DBD::* によって、いろいろある BK を吸収
+ - ORM とかつかってても最終的には DBI を叩いてるので無問題
+
+といったところです。とにかく簡単に使えるので便利かもねってところですね。
+
+ちなみに、このモジュールは Devel::KYTProf にインスパイアされて作られました。onishi さんにはこの場を借りて御礼申し上げます。
+
+現状、SQLite と mysql でしか動作確認してませんが、ポスクレないじゃあ〜んとか思ったら追加してくれてもいいのよ！
+
+あと、当然ですが、DBI のメソッドをフックしてゴニョゴニョしているので、そのぶんのオーバーヘッドはあります。
+開発中に、このへんの SQL ってどうなってたかにゃ〜んって思ったときに使うのがよいと思います。
+本番環境とかはあれですね、tpcdump がよいかと思います。MySQL とかはせっかくのテキストプロトコルですし！！
+
+というわけで明日は、生DBI界のドン、zigorou さんです！！
