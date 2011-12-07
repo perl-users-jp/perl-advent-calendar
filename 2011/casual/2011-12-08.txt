@@ -2,6 +2,12 @@ Plack::Middlewareの使い所
 meta-author: Songmu
 meta-format: markdown
 
+### 2011-12-08 00:40追記
+
+@karupaneruraさんに指摘されて、s/Plack::Middleware::Conditionals/Plack::Builder::Conditionals/ しました。ありがとうございます。@kazeburoさんすみませんでした。
+
+---
+
 こんにちは。[Songmu](http://twitter.com/songmu)です。鎌倉の面白法人でPerlでソーシャルゲームの開発をおこなっています。
 「[ぼくらの甲子園熱闘編](http://www.kayac.com/service/socialgame/baseball-nettou/index.html)」や「[ぼくらのワールドリーグ](http://www.kayac.com/service/socialgame/690)」の開発に携わっております。
 
