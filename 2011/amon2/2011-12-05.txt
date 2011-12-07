@@ -1,0 +1,15 @@
+Amon2 と DotCloud
+meta-author: tokuhirom
+meta-tags: perl, js
+
+Amon2 は DotCloud ですぐに使えるのがひとつのうりになっていて、DotCloud がでたときに DotCloud にあわせて若干のディレクトリ構成の変更をおこなっているほどです。たとえば app.psgi をデフォルトの psgi file の名前にするとかね。
+
+こんな風にすれば一発でうごきますよ、と。。
+
+    % curl -L http://cpanmin.us/ | perl - Amon2
+    % amon2-setup.pl --flavor=DotCloud MyApp
+    % cd MyApp
+    % dotcloud create myapp
+    % dotcloud push myapp ./
+
+しかし Large flavor が現在対応しなくてアレなので今後の課題とさせていただきます。
