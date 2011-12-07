@@ -1,0 +1,53 @@
+#08 search
+
+今日はsearchメソッドを紹介します。
+
+まず、searchメソッドはsingleのようにPRIMARY KEYで１行取得するわけではないが、
+そんなに複雑じゃない場合に利用するといいと思います。
+
+>||
+my $itr = $teng->search('user', +{name => 'nekokak'}, +{order_by => 'id'});
+# SELECT * FROM user WHERE name = 'nekokak' ORDER BY id;
+||<
+
+のように利用します。
+
+こうすることでnameがnekokakな人をまとめて取得しイテレータ経由でレコードにアクセス出来るようになります。
+また、第三引数にオプションを指定でき、ORDER BYなどを指定すことが可能です。
+
+LIMIT / OFFSETを指定したい場合は
+
+>||
+my $itr = $teng->search('user', +{name => 'nekokak'}, +{limit => 1, offset => 1,});
+# SELECT * FROM user WHERE name = 'nekokak' LIMIT 1 OFFSET 1;
+||<
+
+といったように指定することができます。
+
+TengのsearchメソッドはSQL::Makerのselectメソッドのラッパーになっていますので
+詳細はそちらを参照していただくほうがよいでしょう。
+
+
+searchメソッドやsearch_by_sqlメソッドなどTeng::Iteratorが取得されるメソッドは
+コンテキストによってイテレータ以外の値を取得することも可能です。
+
+たとえば
+
+>||
+my $itr = $teng->search('user', +{name => 'nekokak'}, +{order_by => 'id'});
+||<
+
+このようにsearchメソッドの受け取りがscalarの場合はTeng::Iteratorが返されますが、
+
+>||
+my @rows = $teng->search('user', +{name => 'nekokak'}, +{order_by => 'id'});
+||<
+
+このようにarrayで結果を受け取ろうとすると、内部で$itr->allが実行された結果が返されることになります。
+
+イテレータが不要でarrayで結果を受け取りたい場合はarray contextでsearc系メソッドを実行するとよいでしょう。
+
+
+明日はupdate / deleteメソッドを紹介します。
+
+
