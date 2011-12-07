@@ -5,7 +5,7 @@ meta-tags: perl, cpan
 use strict;
 use warnings;
 
-print << "PERL_ADVENT_CALENDAR_JAPAN_2011_DAY_7";
+print << 'PERL_ADVENT_CALENDAR_JAPAN_2011_DAY_7';
 こんばんわ！こんばんわ！id:karupaneruraです！
 Perl Advent Calendar Japan 2011の7日目を書かせて頂きます！お手柔らかに！
 
