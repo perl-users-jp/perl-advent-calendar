@@ -1,0 +1,45 @@
+App::pfswatch - ファイルの変更を検知して、指定したコマンドを実行する
+meta-author: aloelight
+meta-tag: perl, file
+
+** 前置き
+
+こんにちは、[http://twitter.com/aloelight:title=aloelight]と申します。みなさん、意識は高まっていますか？ 私は上々です。
+今日は、拙作の[https://metacpan.org/module/pfswatch:title=pfswatch]を紹介します。
+
+ファイルが変更されたら特定のコマンドを叩きたいなーと思ったことはありませんか？pfswatchを使うと簡単に実現できます。
+
+** 使い方
+
+インストール方法は cpanm App::pfswatch を叩くだけです。適当なbin/に pfswatchコマンド がインストールされます。インストール後は、pfswatchコマンドに監視したいディレクトリやファイルと実行したいコマンドを-eオプションのに続けて渡してあげます。
+
+>|bash|
+$ pfswatch /path/to/watch -e perl -E 'say "wassyoi"'
+||<
+
+私は以下のようなコマンドで、モジュールを更新したらテストを自動で実行するために使っています。別窓で立ち上げておくと、横目で互換性が壊れてないか確認できるので、互換性を壊すようなコミットをする割合が減りました。
+
+>|bash|
+$ pfswatch lib/ -e prove -lr t/
+||<
+
+上記コマンドではどのファイルが変更されたのかわかりませんが、変更があったファイル名を実行コマンドの標準入力に渡す機能もあります。xargs等で受け取ると便利かもしれません。
+
+>|bash|
+$ pfswatch /tmp/hoge/ --pipe -e perl -nE 'say "$_ changed"'
+||<
+
+その他の使い方としては、某高校生Perl HackerがosascriptでApple Scriptを実行させていたこともあるようです。
+
+注意点として頻繁なファイル更新は取りこぼす点があります。ゆるふわな監視以外に使う場合は注意が必要です。もし、いい感じの修正案があれば教えてください。
+
+** 仕組み
+
+内部は[https://metacpan.org/module/Filesys::Notify::Simple:title=Filesys::Notify::Simple]に監視は丸投げしています。Plack::Loader::Restarterで利用されいるので知らない間にお世話になった人もいるんじゃないでしょうか。
+
+Filesys::Notify::Simpleはプラットフォームに応じて[https://metacpan.org/module/Linux::Inotify2:title=Linux::Inotify2], [https://metacpan.org/module/Mac::FSEvents:title=Mac::FSEvents], [https://metacpan.org/module/Filesys::Notify::KQueue:title=Filesys::Notify::KQueue]を使い分けてくれます。どれも利用できない場合はFile::Findで２秒毎に監視ディレクトリやファイルをフルスキャンする漢らしい挙動になります。
+
+** まとめ
+
+App::pfswatchはゆるふわなファイル変更の検知コマンドです。本格的なものが必要な場合は、Filesys::Notify::Simpleの内部で利用されているモジュールの中からプラットフォームにあったものを選んで利用するとよいと思います。
+
