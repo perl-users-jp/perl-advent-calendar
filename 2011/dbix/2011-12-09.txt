@@ -86,15 +86,15 @@ DBIx::QueryLog->color('red') とするか、$ENV{DBIX_QUERYLOG_COLOR} = 'red' �
 
 ** bind されたくない
 
-DBIx::QueryLog->skip_bind(1) で OKです。なんで環境変数で指定できないんでしょうか？気が向いたら追加します。
+DBIx::QueryLog->skip_bind(1) とするか、$ENV{DBIX_QUERYLOG_SKIP_BIND} = 1 とかすれば OK です。
 
 ** 一定時間以上かかった SQL を出したい
 
-DBIx::QueryLog->threshold(0.1) とかで出来ます。なんで環境変数で指定できないんでしょうか？気が向いたら追加します。
+DBIx::QueryLog->threshold(0.1) とするか、$ENV{DBIX_QUERYLOG_THRESHOLD} = 0.1 とかすると 0.1 秒以上かかった SQL だけロギングします。
 
 ** 100回に1回ぐらいの確率でログに出したい
 
-DBIx::QueryLog->probability(100) とかするとそんな感じになります。なんで環境変数で指定できないんでしょうか？気が向いたら追加します。
+DBIx::QueryLog->probability(100) とするか、$ENV{DBIX_QUERYLOG_PROBABILITY} = 10 とかするとそんな感じになります。
 
 ** まとめ
 
@@ -104,6 +104,7 @@ DBIx::QueryLog->probability(100) とかするとそんな感じになります�
 DBIx::QueryLog のメリットとしては
 
 - コードの書き換えが必要ない ((use するだけ))
+- ほとんどの機能が環境変数で制御できる
 - DBD::* によって、いろいろある BK を吸収
 - ORM とかつかってても最終的には DBI を叩いてるので無問題
 
