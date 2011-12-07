@@ -35,9 +35,9 @@ $ pfswatch /tmp/hoge/ --pipe -e perl -nE 'say "$_ changed"'
 
 ** 仕組み
 
-内部は[https://metacpan.org/module/Filesys::Notify::Simple:title=Filesys::Notify::Simple]に監視は丸投げしています。Plack::Loader::Restarterで利用されいるので知らない間にお世話になった人もいるんじゃないでしょうか。
+内部は [https://metacpan.org/module/Filesys::Notify::Simple:title=Filesys::Notify::Simple] を使って変更を監視しています。Plack::Loader::Restarterで利用されいるので、知らない間にお世話になった人もいるんじゃないでしょうか。
 
-Filesys::Notify::Simpleはプラットフォームに応じて[https://metacpan.org/module/Linux::Inotify2:title=Linux::Inotify2], [https://metacpan.org/module/Mac::FSEvents:title=Mac::FSEvents], [https://metacpan.org/module/Filesys::Notify::KQueue:title=Filesys::Notify::KQueue]を使い分けてくれます。どれも利用できない場合はFile::Findで２秒毎に監視ディレクトリやファイルをフルスキャンする漢らしい挙動になります。
+Filesys::Notify::Simpleはプラットフォームに応じて [https://metacpan.org/module/Linux::Inotify2:title=Linux::Inotify2]、[https://metacpan.org/module/Mac::FSEvents:title=Mac::FSEvents]、[https://metacpan.org/module/Filesys::Notify::KQueue:title=Filesys::Notify::KQueue] を使い分けてくれます。どれも利用できない場合はFile::Findで２秒毎に監視ディレクトリやファイルをフルスキャンする漢らしい挙動になります。
 
 ** まとめ
 
