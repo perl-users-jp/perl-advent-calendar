@@ -12,7 +12,7 @@ meta-format: markdown
 「[ぼくらの甲子園熱闘編](http://www.kayac.com/service/socialgame/baseball-nettou/index.html)」や「[ぼくらのワールドリーグ](http://www.kayac.com/service/socialgame/690)」の開発に携わっております。
 
 アプリはArk + DBIx::Class + Text::MicroTemplate::Extendedという構成で作ることが多いのですが、
-今回はソーシャルゲーム開発で活用しているPlack::Middlewareを2つ紹介させていただきます。
+今回はソーシャルゲーム開発で活用しているPlack関連モジュールを2つ紹介させていただきます。
 
 ちなみに[Arkのadvent calendar](http://tech.kayac.com/ark-advent-calendar-2011/)もやっておりますので、併せて読んでもらえると嬉しいです。
 
