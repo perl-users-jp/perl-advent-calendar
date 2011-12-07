@@ -1,0 +1,60 @@
+#07 Teng::Iterator
+
+今日はデータ取得時に利用することになるTeng::Iteratorを紹介します。
+
+single以外のsearch系のメソッドを利用すると基本的にはTeng::Iteratorのオブジェクトが返されます。
+
+TengのIteratorオブジェクトnext / all / suppress_object_creationというメソッドのみ提供されます。
+
+* next
+
+nextメソッドをつかうことで取得したrow情報をイテレーションしながら取得することができます。
+
+>||
+while (my $row = $itr->next) {
+    $row->id;
+}
+||<
+
+* all
+
+allメソッドを使うとrow情報をまとめて取得することができます
+
+>||
+my @rows = $itr->all;
+||<
+
+* suppress_object_creation
+
+TengではRowオブジェクトを必要としない場合、もしくはRowオブジェクトの生成コストをカットして、
+単なるhasrefを取得したい場合にsuppress_object_creationメソッドに真の値をセットすることで
+Rowオブジェクトの生成をストップすることができます。
+
+>||
+$itr->suppress_object_creation(1);
+while (my $row = $itr->next) {
+    $row->{id}; # ただのhashrefでありRowオブジェクトのメソッドはcallできない
+}
+||<
+
+大量のデータを取り扱うbatch処理などでRowオブジェクトの生成を必要としない場合などに利用すると
+効率的に処理することができるようになるでしょう。
+
+またsuppress_object_creationはこのようにIterator単位で設定することも可能ですが、
+Tengにも同じメソッドがあり、そちらで設定するとデフォルトでRowオブジェクトを生成しないモードに
+変えることも出来ます。
+
+>||
+my $teng = Teng->new(suppress_object_creation => 1, ....);
+# もしくは
+$teng->suppress_object_creation(1);
+my $itr = $teng->search_by_sql('SELECT * FROM user');
+while (my $row = $itr->next) {
+    $row->{id}; # ただのhashrefでありRowオブジェクトのメソッドはcallできない
+}
+||<
+
+
+明日はsearchメソッドの使い方を紹介しようと思います。
+
+
