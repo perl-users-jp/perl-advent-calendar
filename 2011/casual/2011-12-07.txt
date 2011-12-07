@@ -1,0 +1,248 @@
+かゆいところに手が届くマイナーCPANモジュールランキング
+meta-author: karupanerura
+meta-tags: perl, cpan
+
+use strict;
+use warnings;
+
+print << "PERL_ADVENT_CALENDAR_JAPAN_2011_DAY_7";
+こんばんわ！こんばんわ！id:karupaneruraです！
+Perl Advent Calendar Japan 2011の7日目を書かせて頂きます！お手柔らかに！
+
+
+さてさて、みなさんCPANモジュール使ってますか？使ってますよね？僕は大好きです！
+そんな、みんな大好きCPANモジュールの中から僕が独断と偏見で選ぶ、
+『かゆいところに手が届くマイナーCPANモジュールランキング』を作ってみました！
+
+
+* かゆいところに手が届くマイナーCPANモジュールランキング
+
+** 5位. Perl::MinimumVersion
+:マイナー度:***
+:使える度:****
+:面白い度:****
+:何番煎じ度:***
+:かっこいい度:****
+
+
+これはPerlスクリプト、あるいはモジュールがどのバージョン以上で動作するかなどを調べるためのモジュールです。
+これをインストールするとperlverというコマンドもインストールされるので、それを使って簡単に試す事が出来ます。
+
+以下のような結果が得られます。
+>|sh|
+$ perlver lib
+   -----------------------------------------------------------  
+ | file                         | explicit | syntax | external |
+ | ----------------------------------------------------------- |
+ | lib/Class/VirtualAccessor.pm | v5.6_0   | v5.6.0 | n/a      |
+ | ----------------------------------------------------------- |
+ | Minimum explicit version : v5.6_0                           |
+ | Minimum syntax version   : v5.6.0                           |
+ | Minimum version of perl  : v5.6_0                           |
+   -----------------------------------------------------------  
+||<
+explicitがコードの中で、use 5.060_000;などと指定しているバージョン、
+syntaxがこのコードの構文がどのバージョン移行でサポートされているものなのかを示しています。
+こんなかんじにとってもカジュアルにモジュールなどがどのversionのPerlで動くのか調べる事が出来て便利ですね！
+
+
+** 4位. Data::Dumper::Names
+:マイナー度:**
+:使える度:****
+:面白い度:****
+:何番煎じ度:***
+:かっこいい度:***
+
+
+皆さんご存知Data::Dumperの出力を変数名を自動取得した上で吐いてくれるモジュールです。
+
+>|perl|
+use strict;
+use warnings;
+
+use Data::Dumper::Names;
+
+my %hoge = (
+   foo => 1,
+   bar => 2,
+);
+my $hogeref = \%hoge;
+
+print Dumper \%hoge;
+print Dumper $hogeref;
+||<
+
+とかやると
+
+>|perl|
+%hoge = (
+          'bar' => 2,
+          'foo' => 1
+        );
+$hogeref = {
+             'bar' => 2,
+             'foo' => 1
+           };
+||<
+
+って感じで吐いてくれます。
+色々なところにData::Dumperを仕込んだときにどこで吐かれたDumpなのか一目瞭然ですね！
+
+
+やっている事がシンプルな為か2008年から更新されていませんが、CPAN Testersでも殆どPASSしてますし、
+デバッグ用途であれば心配は殆ど不要だと思います。
+
+
+** 3位. Benchmark::ProgressBar
+:マイナー度:**
+:使える度:***
+:面白い度:****
+:何番煎じ度:***
+:かっこいい度:*****
+
+
+これはベンチマークの実行時にプログレスバーを表示してくれるモジュールです。
+ベンチマークがなかなか終わらないときのストレスを軽減してくれます。
+プログレスバーを更新するコストは全てのテストに対しほぼ平等にかかるハズなので、
+ベンチマークへ与える影響は無視出来る程度でしょう。
+使い方は至って簡単で、
+>|perl|
+use strict;
+use warnings;
+
+use Benchmark qw/cmpthese timethese/;
+||<
+などとしていたところを
+>|perl|
+use strict;
+use warnings;
+
+use Benchmark::ProgressBar qw/cmpthese timethese/;
+||<
+に置き換えるだけです。
+簡単ですね！
+
+
+** 2位. Plack::Middleware::Compile
+:マイナー度:****
+:使える度:***
+:面白い度:***
+:何番煎じ度:**
+:かっこいい度:*
+
+これはcoffee scriptやSCSSなどサーバーサイドで変換が必要なスクリプトをコンパイルして配信するためのPlack::Middlewareです。
+これは以下のように使います。
+以下は^/css/.+?\.css$にアクセスしてきたリクエストに対し、コンパイル済のファイルがあればそれを、
+そうでなければ/raw_css/以下にある同じファイルをCSS Tidyで処理したものを返す例です。
+
+>|perl|
+use strict;
+use warnings;
+
+use MyApp;
+use File::Spec;
+use File::Basename;
+use Plack::Builder;
+
+builder {
+    enable 'Compile' => (# CSS Compile
+        pattern => qr{^/css/.+?\.css$}i,
+        lib     => File::Spec->catdir(dirname(__FILE__), 'htdocs', 'static'),
+        map     => sub {
+            my $filename = $_[0];
+            $_[0] =~ s{^/css/}{/raw_css/};
+            return $filename;
+        },
+        compile => sub{
+            my ($in, $out) = @_;
+            $in  =~ s{//}{/}g;
+            $out =~ s{//}{/}g;
+
+            # csstidy
+            my $code = system(
+                '/usr/local/bin/csstidy', $in,
+                '--allow_html_in_templates=false',
+                '--compless_colors=true',
+                '--compress_font-weight=true',
+                '--remove_bslash=true',
+                '--remove_last_;=true',
+                '--silent=true',
+                '--merge_selectors=2',
+                '--optimise_shorthands=2',
+                $out
+            );
+
+            die "return: ${code}. compile command faild." if $code;
+        }
+    );
+
+    MyApp->to_app;
+};
+||<
+
+/css/内へのアクセス（コンパイル済のファイルへのアクセス）に対してhookさせようとした場合、
+このようにmap内が少し気持ち悪くなってしまったり、$inなどのパスで/が重複してしまうケースがあるのがイケてないですが、
+Plack::Middleware::File::Sassのような専用のMiddlewareが無くても自動でコンパイルして配信する仕組みが簡単に作れるのは便利ですね！
+
+
+ここまできてあれなのですが、2010年にリリースされて以来、
+Changesも用意されて無く、ずっとメンテナンスされてる様子も無いので、
+積極的に使うのはおすすめしません！（ｷﾘｯ
+
+
+** 1位 Class::Data::Inheritable::Translucent
+:マイナー度:*****
+:使える度:****
+:面白い度:****
+:何番煎じ度:*
+:かっこいい度:***
+
+
+これはClassメソッドで初期値を定義出来るアクセサを作る事が出来るモジュールです。
+これを使うと例えば通常はutf-8でencodeしたコンテンツを返すが、
+携帯端末からのアクセスからはshift-jisでencodeしたコンテンツ返す。といった処理が簡単に実装出来ます。
+
+親Classを以下のようにしておけば
+>|perl|
+package MyApp::Web;
+use strict;
+use warnings;
+
+use parent qw/MyWAF Class::Data::Inheritable::Translucent/;
+
+__PACKAGE__->mk_translucent('encoding');
+__PACKAGE__->encoding('utf-8'); # default
+
+1;
+||<
+
+例えば以下のようにするだけで $c->req->is_mobile がtureのときだけ一時的にencodingを変更する事が出来ます。
+>|perl|
+package MyApp::Web::C::Root;
+use strict;
+use warnings;
+
+sub index {
+    my($class, $c) = @_;
+
+    $c->encoding('shift-jis') if $c->req->is_mobile;
+
+    # ...
+}
+||<
+
+もちろん、Class::Data::Inheritableと同様にClass間で値の継承もやってくれるので、
+継承されるクラス変数として利用する事も出来ます。
+メンテナンスもこまめに行われているようなのでおすすめです！
+
+
+* まとめ
+如何でしたでしょうか？知っているモジュールはいくつありましたか？
+かゆいところに手が届くモジュールはいざという時知っていると非常に便利なケースがあります。
+この機会にみなさんもCPANを適当に回ってみる旅をしてみては如何でしょうか？
+
+以上、かゆいところに手が届くマイナーCPANモジュールランキングでした！
+明日はSongmuさんです！
+
+PERL_ADVENT_CALENDAR_JAPAN_2011_DAY_7
+print sub{"good bye!"}->("see you next year!");
