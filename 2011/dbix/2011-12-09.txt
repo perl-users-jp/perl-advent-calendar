@@ -103,9 +103,9 @@ DBIx::QueryLog->probability(100) とかするとそんな感じになります�
 もちろん、同じようなことは kazeburo さんが[http://perl-users.jp/articles/advent-calendar/2011/dbix/6 6日目]にかいた Callbacks などでも実現できますが、
 DBIx::QueryLog のメリットとしては
 
- - コードの書き換えが必要ない ((use するだけ))
- - DBD::* によって、いろいろある BK を吸収
- - ORM とかつかってても最終的には DBI を叩いてるので無問題
+- コードの書き換えが必要ない ((use するだけ))
+- DBD::* によって、いろいろある BK を吸収
+- ORM とかつかってても最終的には DBI を叩いてるので無問題
 
 といったところです。とにかく簡単に使えるので便利かもねってところですね。
 
