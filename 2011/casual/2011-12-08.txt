@@ -58,13 +58,13 @@ psgiファイルをPlack::Builderを使って以下のように書くことが�
 /pingはDBのレコードを一行引き、問題なかったら200を返すようなURLです。それにより一気通貫のアプリケーションの死活監視を行うことができます。
 
 
-## Plack::Middleware::Conditionals
+## Plack::Builder::Conditionals
 
 さて、問題は解決しましたが、`$_[0]->{PATH_INFO}`みたいな生に近い情報を書くのは綺麗じゃないと思うかもしれません。
 
-その場合は、kazeburoさん作の[Plack::Middleware::Conditionals](http://search.cpan.org/dist/Plack-Builder-Conditionals/)を使うと綺麗に書くことができます。
+その場合は、kazeburoさん作の[Plack::Builder::Conditionals](http://search.cpan.org/dist/Plack-Builder-Conditionals/)を使うと綺麗に書くことができます。
 
-    use Plack::Middleware::Conditionals;
+    use Plack::Builder::Conditionals;
     
     builder {
         enable match_if path('!', qr!^/ping(?:$|/)!),
@@ -89,6 +89,6 @@ psgiファイルをPlack::Builderを使って以下のように書くことが�
 特に、アプリケーションの本質とは関係ない処理をガリガリ実装してしまっている時に視点を広げてみると幸せになれることがあります。
 
 また、便利だからといって、Plack::Middlewareをたくさん読み込ませると逆にpsgiファイルの見通しが悪くなってしまうことがあります。
-そういう時は、Plack::Middleware::Conditionalsを使うと良いでしょう。
+そういう時は、Plack::Builder::Conditionalsを使うと良いでしょう。
 
 さて、明日はhisaichi5518さんです。おや、会社の後輩ですね。お楽しみに。
