@@ -1,0 +1,154 @@
+Jenkinsで継続的メトリクス監視のすすめ
+meta-author: dann
+meta-tags: perl, test, jenkins
+
+** はじめに
+こんばんは、家で凍死しそうなので、そろそろセラムヒートでも買おうと思っているdannです
+
+Test Track 11日目です！ ikasam_a さんから「Jenkinsの話を書いて！」と言われたので、Advent Calendar Driven Developmentという手法で作ったツールの話をしようかと思っています。
+
+** メトリクスを測定すると捗るぞ
+例えば大きなチームで開発する時に、数百行の謎メソッドができたりとかあったりしますよね（涙）
+
+僕は、Working Effectively With Legacy CodeやClean Codeを読んでいること前提にチームの人がコードを書いていると思っていたら、あれ？という場面があったりします。こういうときは、例えば問題に対する指標が測定できるようにすると、数値レベルで具体的にした共通認識ができレビューが捗ります。
+
+** 測定したメトリクス
+メトリクスを測定するなんていうと、用語の定義が間違ってる喝！とSoftware Engineeringの専門家に怒られちゃうわけですが、そこは気にせずメトリクスを測定していっちゃうといいますよ。
+
+今回測定したのは、以下の二つのメトリクスです。
+- メソッドの行数
+- Cyclomatic Complexity
+
+メソッドの行数は、そのまんまですね。Cyclomatic Complexityは10を超えていると複雑すぎなので、分割を検討した方が良いというのが一つ一般的な指標になってます。
+
+これらのメトリクスは、Perl::Metrics::Simpleというモジュールで簡単に取得できます。ではこれをJenkinsに統合しましょう。
+
+** Jenkinsでのメトリクス監視の方法
+これらのメトリクスの測定結果をどのようにJenkinsに統合するかが問題ですよね。
+今まで、自分の日記のエントリを読んでもらっている人は、勘のいい方は気づいてるんじゃないかと思うんですが、Javaのツールにマッピングすればいいんですね。
+
+この分野はJavaは周辺ツールがとても充実しているので、その一つであるCheckStyleの出力結果のXMLに測定結果をマッピングすれば、チェック結果のViewをそのまま流用できるわけですね。
+
+作ってみたマッピングするツールは以下の通り。
+
+>|perl|
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Perl::Metrics::Simple;
+use Text::MicroTemplate::DataSection;
+use Text::Xslate;
+
+#====================================================
+# Config
+#====================================================
+our $MAX_CYCLOMATIC_COMPLEXITY = 10;
+our $MAX_SUB_LENGTH            = 50;
+
+#====================================================
+# Logic
+#====================================================
+main();
+exit;
+
+sub main {
+    my $check_result = check_style( ¥@ARGV );
+    make_report($check_result);
+}
+
+sub check_style {
+    my $paths    = shift;
+    my $analzyer = Perl::Metrics::Simple->new;
+    my $analysis = $analzyer->analyze_files(@ARGV);
+}
+
+sub make_report {
+    my $check_result   = shift;
+    my $checkstyle_xml = make_check_style_report($check_result);
+    write_file($checkstyle_xml);
+}
+
+sub make_check_style_report {
+    my $check_result = shift;
+
+    my $tx = Text::Xslate->new(
+        path => [ Data::Section::Simple->new()->get_data_section(), ], );
+
+    my $sub_stats = convert_substats_to_file_unit($check_result);
+    my %vars = (
+        sub_stats         => $sub_stats,
+        metric_threshold => {
+            max_sub_length=> $MAX_SUB_LENGTH,
+            max_cyclomatic_complexity => $MAX_CYCLOMATIC_COMPLEXITY,
+        }
+    );
+    my $report = $tx->render( 'checkstyle-result.tx', ¥%vars );
+    return $report;
+}
+
+sub convert_substats_to_file_unit {
+    my $check_result = shift;
+    my $sub_stats = {};
+    foreach my $sub (@{ $check_result->subs}) {
+        $sub_stats->{$sub->{path}} ||= [];
+        push @{$sub_stats->{$sub->{path}}}, $sub ;
+    } 
+    return $sub_stats;
+}
+
+sub write_file {
+    my $report = shift;
+    my $io = IO::File->new( 'checkstyle-result.xml', 'w' );
+    $io->print($report);
+    $io->close;
+}
+
+__DATA__
+
+@@ checkstyle-result.tx
+<checkstyle version="5.1">
+: for $sub_stats.keys() -> $file_path {
+  <file name="<: $file_path :>">
+  : for $sub_stats[$file_path] -> $sub_stat {
+    : next if !$sub_stat
+    : if $sub_stat.lines >= $metric_threshold.max_sub_length {
+      <error line="1" column="1" severity="error" message="'<: $sub_stat.name :>' method length is <: $sub_stat.lines :> lines." source="com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck"/>
+    : } elsif $sub_stat.mccabe_complexity >= $metric_threshold.max_cyclomatic_complexity {
+      <error line="1" column="1" severity="error" message="'<: $sub_stat.name :>' cyclomatic complexity is <: $sub_stat.mccabe_complexity :>." source="com.puppycrawl.tools.checkstyle.checks.metrics.CyclomaticComplexityCheck"/>
+    : }
+  : }
+  </file>
+: }
+</checkstyle>
+||<
+
+** 使い方
+上記のスクリプトのconfigurationの設定を最初にします。
+CCが10、sub lengthが50行という設定だと、以下のように書きます。
+
+>|perl|
+our $MAX_CYCLOMATIC_COMPLEXITY = 10;
+our $MAX_SUB_LENGTH            = 50;
+||<
+
+以下のようにスクリプトの引数にlibディレクトリを指定します。そうすると、workspaceにcheckstyle-result.xmlが生成されます。
+>|sh|
+checkstyle.pl lib
+||<
+
+後は、Jenkinsにcheckstyle pluginをいれておけば、ビルド時に自動でcheckstyleのViewにメトリクスでの測定結果が表示されます。
+
+** メトリクス測定の効果
+メトリクスの測定をCIに組み込むことの効果には以下のようなものがあります。
+
+- 継続的にメトリクスをチェックすることができ、問題を早期に発見できる
+- Jenkinsおじさんが自動でチェックしてくれるので、レビューの工数が削減できる
+- 指摘をJenkinsおじさんがしてくれるのでレビュー時に人間関係が悪化しない
+- Jenkinsおじさんに指摘されないように気をつけるため、全員のコードが綺麗になる
+
+** まとめ
+- 感じるんじゃない、測定するんだ、ルーク！
+- メトリクスの測定で、レビュー対象を早期に摘出するとコード品質があがって捗るぞ！
+
+次回は、... さんです！
