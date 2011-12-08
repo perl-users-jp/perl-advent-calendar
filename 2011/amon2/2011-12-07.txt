@@ -1,0 +1,28 @@
+caym.js の dispatcher について
+meta-author: tokuhirom
+meta-tags: perl, js
+
+こんにちは！tokuhirom です！
+
+caym.js というものを amon2 に標準添付しようとおもっていて、それの紹介です。
+
+https://github.com/tokuhirom/caym-js このへんにあるよ。
+
+http://tech.kayac.com/archive/javascript-url-dispatcher.html という ago さんの記事をよんでからわりとこれつかってたんですが、ただの静的な URL の場合にも regexp でパターンを指定するのが煩雑だなあとおもっていて、なんかいいかんじにできるといいなとおもったんで、なんかそういうのかいたというはなし。
+
+なんかこういうかんじでつかえる。
+
+    var dispatcher = new Caym.Dispatcher();
+    dispatcher.register('/my/', function () {
+        // your code here
+    });
+    dispatcher.register('/user/:id', function (id) {
+        // your code here
+    });
+    dispatcher.dispatch(location.pathname);
+
+簡単ですね。
+
+わりとめんどくさいし影響範囲をせまくしたいからといって script タグの中にもりもり JS をかいたりしがちなんですが、どうしても HTML ファイルがでっかくなるし editor のサポートがうけづらくなるし、圧縮しづらいし、jslint とかかけづらいし、といったところがあって、やっぱり dispatcher 的なのをつかった方が管理しやすいかなあ、とおもいます。
+
+
