@@ -1,26 +1,26 @@
-DBIx::Simple �դ�����
+DBIx::Simple ふたたび
 meta-author: tomi-ru
 meta-tags: perl, dbi, dbix
 
-�����������Хˡ��Ρ����Ƥ��٤줬���������ȥߡ���Ǥ���
+タイガー＆バニーの、原稿が遅れがちな方、トミールです！
 
-������ DBI �ؤΥ��奬�����󥿥å������ɲä����åѡ���DBIx::Simple �ξҲ�Ǥ���
+今日は DBI へのシュガーシンタックスを追加するラッパー、DBIx::Simple の紹介です。
 
 ** DBIx::Simple
 
-�¤� DBI ���Τ�Τä������ⵡǽ�Ǥ��롪���Ȥ����ΤϤ��Υ��ɥ٥�ȥ��������Ǥ⤤�������Ҳ𤵤��Ȼפ��ޤ�����������Կ��ڤʥ᥽�åɤΰ����δ����򸫤ơ��������� DBI �Υ�åѡ�������Ƥ����ꤷ�ޤ�������ʤʤ� DBIx::Simple ����Ϥ��ɤ��Ȼפ��ΤϤ狼��䤹������ץ�� API ���󶡤��롢�Ȥ������ǰ�������������Ƥ���Ȼפ����Ǥ���
+実は DBI そのものって相当高機能である！、というのはこのアドベントカレンダーでもいろいろ紹介されると思います。が、やや不親切なメソッドの引数の感じを見て、ゴロゴロ DBI のラッパーが作られていたりします。そんななか DBIx::Simple がやはり良いと思うのはわかりやすくシンプルな API を提供する、という点で一定の成功を収めていると思う点です。
 
-�� �������狼��䤹�� API �Υȥ졼�ɥ��դȤ��ơ���̤Υ��ơ��ȥ��ȥϥ�ɥ�� bless ���륿���פǤ����⤷ bless����ʷ�̥��֥������Ȥ��������˥����Ȥ�����ˤʤ�褦�ʥϡ��ɥ����ʴĶ��ǳ�ȯ����Ƥ����������̤� DBI ���ǤǻȤ��Ф褤�Ȼפ��ޤ���
+※ ただしわかりやすい API のトレードオフとして、結果のステートメントハンドルを bless するタイプです。もし blessする（結果オブジェクトを作成する）コストが問題になるようなハードコアな環境で開発されている方は普通に DBI を素で使えばよいと思います。
 
-DBIx::Simple �λȤ����ϡ�POD ���Τ�<a href="http://search.cpan.org/perldoc?DBIx::Simple">�᥽�åɰ���</a>�˲ä�<a href="http://search.cpan.org/perldoc?DBIx::Simple::Examples">������Ū����</a>���񤫤�Ƥ���Τ������פ�ʤ����餤����ʤ����Ȥ��⤤�ޤ���
+DBIx::Simple の使い方は、POD 自体が<a href="http://search.cpan.org/perldoc?DBIx::Simple">メソッド一覧</a>に加え<a href="http://search.cpan.org/perldoc?DBIx::Simple::Examples">より具体的な例</a>が書かれているので説明要らないくらいじゃないかとおもいます。
 
-�ϥå����ե���󥹤Ǽ������ <code>hash()</code>��ʣ���ξ��ϥå����ե���󥹤Υꥹ�ȤȤ��Ƽ������ <code>hashes()</code>����̤�1����ͤ����ξ��ʤɤ˻Ȥ� <code>flat()</code> �� <code>into()</code> ���ɤ��Ȥ���᥽�åɤ��Ȼפ��ޤ���
+ハッシュリファレンスで受け取る <code>hash()</code>、複数の場合ハッシュリファレンスのリストとして受け取る <code>hashes()</code>、結果が1件の値だけの場合などに使う <code>flat()</code> や <code>into()</code> が良く使われるメソッドだと思います。
 
-���Τؤ�<a href="http://e8y.net/mag/009-dbix-simple/">�����֤����ˡ����ܸ������</a>�񤤤��ΤǤ����������Ϥ���ʳ�������Ҳ𤷤Ƥߤ褦�Ȼפ��ޤ���
+そのへん<a href="http://e8y.net/mag/009-dbix-simple/">ずいぶん前に、日本語の説明</a>書いたのですが、今日はそれ以外の点を紹介してみようと思います。
 
-** DBI �Υ��֥��饹�Ȥ��ƻȤ�
+** DBI のサブクラスとして使う
 
-DBIx::Simple �ؤ��������Ȥ��ơ����줬 DBI �Υ�åѡ��Ǥ��ꡢ���Ȥ��� DBIx::Connect �Τ褦���̤� DBI �Υ�åѡ��ȹ�碌�ƻȤ��ˤ������Ȥ�����������ޤ����������� DBI �Υ��֥��饹�Ȥ���ư�� DBIx::Simple��<a href="http://search.cpan.org/perldoc?DBIx::Simple::Inject">DBIx::Simple::Inject</a> ����ޤ�����
+DBIx::Simple への不満点として、それが DBI のラッパーであり、たとえば DBIx::Connect のような別の DBI のラッパーと合わせて使いにくい、という点がありました。そこで DBI のサブクラスとして動く DBIx::Simple、<a href="http://search.cpan.org/perldoc?DBIx::Simple::Inject">DBIx::Simple::Inject</a> を作りました。
 
 >|perl|
     my $conn = DBIx::Connector->new(
@@ -33,22 +33,22 @@ DBIx::Simple �ؤ��������Ȥ��ơ����줬 DBI �Υ�åѡ��Ǥ��ꡢ���Ȥ��� DBIx::Conne
     );
 ||<
 
-���Τ褦�ˡ�DBI �� RootClass �ǻ��ꤷ�ƻȤ����Ȥ����ꤷ����ΤǤ���
+このように、DBI の RootClass で指定して使うことを想定したものです。
 
 >|perl|
     $conn->txn(sub {
-        # �ǡ����١����ϥ�ɥ�ǡ�
+        # データベースハンドラで、
         my $dbh = shift;
         
-        # DBI::db ���󶡤���᥽�åɤ˲ä���
+        # DBI::db の提供するメソッドに加え、
         $dbh->do($sql);
         
-        # DBIx::Simple �Υ᥽�åɤ�Ȥ���
+        # DBIx::Simple のメソッドも使える
         my $res = $dbh->query($sql, @params);
     });
 ||<
 
-DBI ������ǽ�˲ä���<code>query()</code>��<code>select()</code>�ʤ� DBIx::Simple �Υ᥽�åɤ� DBI �ˡ������ɤ���Ƥޤ���
+DBI の全機能に加え、<code>query()</code>や<code>select()</code>など DBIx::Simple のメソッドも DBI に“注入”されてます。
 
 ** Set your favorite abstract module
 
@@ -57,17 +57,17 @@ DBI ������ǽ�˲ä���<code>query()</code>��<code>select()</code>�ʤ� DBIx::Simple
     my $user = $dbis->select(users => ['*'], { id => 123 })->hash;
 ||<
 
-<code>select(), insert(), update(), delete()</code> �᥽�åɤ��Ȥ���櫓�Ǥ�����SQL ʸ�����������ʬ�ˤĤ��ơ��ǥե���ȤǤ� SQL::Abstract �⥸�塼�뤬�Ȥ��ޤ�����������SQL::Abstract �� Limit ��λ��꤬�Ǥ��ʤ��ä���Ȥ����­�ʵ������ޤ���
+<code>select(), insert(), update(), delete()</code> メソッドが使えるわけですが、SQL 文を作成する部分について、デフォルトでは SQL::Abstract モジュールが使われます。ただし、SQL::Abstract は Limit 句の指定ができなかったりとやや不足な気がします。
 
-�Ȥ� SQL ʸ���ۥ⥸�塼��� <code>abstract()</code> �ץ��ѥƥ����ѹ��Ǥ��ޤ���
+使う SQL 文構築モジュールは <code>abstract()</code> プロパティで変更できます。
 
 >|perl|
     use SQL::Maker;
     
-    # lvalue �᥽�åɤʤΤǰʲ��Τ褦�ˤ�����������
+    # lvalue メソッドなので以下のようにして代入する
     $dbis->abstract = SQL::Maker->new($dbis->dbh->{Driver}{Name});
     
-    # SQL::Maker �� select() ��Ĥ��ä� SQLʸ�ȥХ���ɥѥ�᡼�������������
+    # SQL::Maker の select() をつかって SQL文とバインドパラメータが作成される
     my $user = $dbis->select(users => {
         foo      => ['bar', 'baz'],
     }, {
@@ -76,7 +76,7 @@ DBI ������ǽ�˲ä���<code>query()</code>��<code>select()</code>�ʤ� DBIx::Simple
     })->hash;
 ||<
 
-<a href="http://search.cpan.org/perldoc?SQL::Maker">SQL::Maker</a>��Ȥ����Ͼ�Τ褦�˻��ꤷ�ޤ���<code>select(), insert(), update(), delete()</code>��4�᥽�åɤ�������Ƥ��륪�֥������ȤǤ���в��Ǥ����Ѳ�ǽ�Ǥ���
+<a href="http://search.cpan.org/perldoc?SQL::Maker">SQL::Maker</a>を使う場合は上のように指定します。<code>select(), insert(), update(), delete()</code>の4メソッドを実装しているオブジェクトであれば何でも利用可能です。
 
 >|perl|
     my $conn = DBIx::Connector->new(
@@ -92,29 +92,29 @@ DBI ������ǽ�˲ä���<code>query()</code>��<code>select()</code>�ʤ� DBIx::Simple
     );
 ||<
 
-DBIx::Simple::Inject ��Ȥ���硢<code>private_dbixsimple</code>�Ȥ����ȼ����ȥ�ӥ塼�Ȥ�<code>abstract</code>�˥��饹̾���Ϥ����Ȥ�����Ǥ��ޤ���
+DBIx::Simple::Inject を使う場合、<code>private_dbixsimple</code>という独自アトリビュートで<code>abstract</code>にクラス名を渡すことで設定できます。
 
-** ���֥������ȤȤ��Ƽ������
+** オブジェクトとして受け取る
 
-������OR�ޥåѡ��Τ褦�ʡ��᥽�åɤ����䤷���ǡ������ꤿ����硢 <code>object()</code>�Ȥ����Τ������Ǥ���
+一部でORマッパーのような、メソッドを生やしたデータを作りたい場合、 <code>object()</code>というのが便利です。
 
 >|perl|
     my $user = $dbis->select(users => [qw/id name/], { id => 123 })->object('MyApp::User');
 ||<
 
-`object()`�ϡ���̤Υϥå������ꤷ�����饹�� `new()` ���Ϥ�����̥��֥������Ȥ��֤��᥽�åɤǤ�����ξ�硢
+`object()`は、結果のハッシュを指定したクラスの `new()` に渡した結果オブジェクトを返すメソッドです。上の場合、
 
 >|perl|
     use MyApp::User;
     my $user = MyApp::User->new( id => 123, name => 'foobar' );
 ||<
 
-�Τ褦�ˤ�����Τ��֤�ޤ���
+のようにしたものが返ります。
 
-�⤷ñ��� <code>new()</code> �򤹤�ΤǤϤʤ��������֥������Ⱥ������ˤ����ߤ������ϡ����Υ��饹�� <code>new_from_dbix_simple()</code> �᥽�åɤ�Ź���Ǥ���� <code>new()</code> ������ˤ��줬�ƤФ�ޤ���<code>new_from_dbix_simple()</code> �ξ���̤Υǡ�����������ʤ� DBIx::Simple::Result ���Ϥ����Τǡ�Ǥ�դη����η�̤��饪�֥������Ȥ�����Ǥ��ޤ���
+もし単純に <code>new()</code> をするのではなく何かオブジェクト作成時にしこみたい場合は、そのクラスが <code>new_from_dbix_simple()</code> メソッドを仕込んでいれば <code>new()</code> の代わりにそれが呼ばれます。<code>new_from_dbix_simple()</code> の場合結果のデータだけじゃなく DBIx::Simple::Result が渡されるので、任意の形式の結果からオブジェクトを作成できます。
 
-�ʾ�Ǥ�
+以上です
 
 <i>"Simple" is not always simple, but also Life is not always simple.</i>
 
-�� �����Х����ʡ�
+↑ タイバニ風な！
