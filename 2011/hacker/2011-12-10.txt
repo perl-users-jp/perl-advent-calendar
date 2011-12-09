@@ -4,7 +4,9 @@ meta-tags: perl, farming, rdbms, oracle, mysql, hashing
 
 ** はじめに
 
-はじめまして！ dukkiedukkie と申します。
+はじめまして！ 
+dukkiedukkie と申します。みなさん、意識は高まっていますか？私は当麻紗綾のように「高まるぅ〜」です。
+
 先日test Tracksに初めて投稿させていただきましたが、こちらのTrackはレベルの高い皆さんばかりで本当にお恥ずかしい次第ですが、最近作成し今なおより良いものに改良していこうと考えております拙作のモジュール、[FarmBalance|https://github.com/dukkie/FarmBalance/blob/master/lib/FarmBalance.pm]について今日はお話させてくださいまし。
 
 ** 大量トラフィックに抗しうるWebファーム
