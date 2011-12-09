@@ -5,7 +5,7 @@ meta-tags: perl, test, jenkins
 ** はじめに
 こんばんは、家で凍死しそうなので、そろそろセラムヒートでも買おうと思っているdannです
 
-Test Track 11日目です！ ikasam_a さんから「Jenkinsの話を書いて！」と言われたので、Advent Calendar Driven Developmentという手法で作ったツールの話をしようかと思っています。
+Test Track 11日目です！ ikasam_a さんから「Jenkinsの話を書いて！」と言われたので、Advent Calendar Driven Developmentという手法で作ったメトリクス測定ツールとJenkinsでの使い方の話をします。
 
 ** メトリクスを測定すると捗るぞ
 例えば大きなチームで開発する時に、数百行の謎メソッドができたりとかあったりしますよね（涙）
@@ -151,4 +151,5 @@ checkstyle.pl lib
 - 感じるんじゃない、測定するんだ、ルーク！
 - メトリクスの測定で、レビュー対象を早期に摘出するとコード品質があがって捗るぞ！
 
-次回は、... さんです！
+次回は、 tsucchiさんです！
+
