@@ -1,0 +1,107 @@
+業務終了後、git logとDist::Makerでさっさと帰る話。
+meta-author: hisaichi5518
+meta-tags: perl, git
+
+こにゃにゃちはー。<a href="http://twitter.com/hisaichi5518">@hisaichi5518</a>です。
+
+今、バイトしてる会社では日報を送らなければなりません。
+本日の業務とか本日の雑感とかを送るアイツです。こういうのって結構めんどいですね。
+というわけで、日報を軽く自動化しましょう！
+
+なんかしらコードを書いたらコミットすると思います。コミットのログ=行った業務のログですね！！！！！！！
+つまりgit logで全部解決するわけです。会社でsvnを使ってる場合でも、git-svn使えば解決です。
+
+>|sh|
+$ git log --since=yesterday --author=hisaichi5518 --pretty=format:"- %s"
+||<
+こんなの毎回打つのだるいので、.bashrcにaliasを書きます。
+
+>||
+alias nippou_='git log --since=yesterday --author=hisada --pretty=format:"- %s"'
+||<
+
+.git/があるところでnippou_を行うと良い感じに表示されるようになりました。
+>|sh|
+$ nippou_
+- hogehogeメソッドを追加 refs #11111
+- piyopiyoメソッドを追加 refs #9999
+...
+||<
+これをコピペするようにすればいいですね。
+
+今いる会社の場合、日報を送るにはメールを使います。件名とか宛先とか日付とか色々指定しなければならなくてだるいです。
+そこで全部コピペで済ませるようにします。ミスが怖いのでメール送信まではやりません。
+まず日報のひな形を作成します。タイトル通りDist::Makerを使います！cpanmしといてください。
+# 実際のものは多少違います。
+
+>|perl|
+package Dist::Maker::Template::Nippou;
+use Mouse;
+use MouseX::StrictConstructor;
+use utf8;
+
+extends 'Dist::Maker::Base';
+with    'Dist::Maker::Template';
+
+sub distribution {
+    return <<'DIST';
+<: my $t = localtime() :>
+@@ <: $t.strftime("%Y-%m-%d") :>.txt
+TO:
+hoge@example.com
+
+CC:
+fuga@example.com,piyo@example.com,hisaichi5518@example.com
+
+件名:
+【日報】hisaichi5518_<: $t.year :>/<: $t.mon :>/<: $t.mday :>
+
+お疲れさまです。hisaichi5518です。
+<: $t.year :>年<: $t.mon :>月<: $t.mday :>日の業務内容を報告いたします。
+=======================================
+[本日行った業務]
+
+=======================================
+[次回の業務スケジュール]
+
+=======================================
+[本日の雑感]
+
+=======================================
+以上です。よろしくお願いします。
+
+@@ EXTRA_FILES
+: # hook spaces to add files
+: block extra_files -> { }
+DIST
+}
+
+no Mouse;
+__PACKAGE__->meta->make_immutable();
+__END__
+||<
+
+簡単ですね！これも毎回dimなんとかって打つのだるいので、nippouコマンドを作ります。
+.bashrcに書きます。
+>|sh|
+function nippou() {
+    cd $HOME/nippou
+    TIME=`date +%Y-%m-%d`
+    dim new $TIME.txt Nippou
+}
+||<
+
+nippou/ディレクトリを作って実行します！
+>|sh|
+mkdir $HOME/nippou
+$ nippou
+>> Command::new: running with 2011-12-09.txt Nippou in nippou
+>> Command::new: create 2011-12-09.txt from 2011-12-09.txt
+>> Command::new: finished.
+$ ls
+2011-12-09.txt
+||<
+ほい！Nippouテンプレートからファイルが作成されました。作業ディレクトリでnippou_を実行して表示されたものをコピー、nippouを実行して、必要な部分を追記して、メールで送ればおｋ！便利！
+ついでにnippou_を使うようになると、コミットメッセージを綺麗に書こうと思えるので、結構幸せになれると思います。oopsとか無くなりますね。ハッピー！
+
+次は、hirobanexさんです！！！！！！！！！！！！！！！！
