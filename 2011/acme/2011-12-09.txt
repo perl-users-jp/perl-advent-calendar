@@ -1,0 +1,42 @@
+Acme::State で Kensiro！
+meta-author: techno-cat
+meta-tags: perl, acme
+
+<a href="http://hokkaido.pm.org/">Hokkaido.pm #6</a>の懇親会で koji_magi さんを突つきました、 techno-cat デス。
+
+* どんな風に突ついたかというと？
+
+>|perl|
+use warnings;
+use strict;
+use 5.12.0;
+
+use Acme::State;
+
+our $ata;
+$ata = ( defined $ata ) ? ($ata . 'た') : 'あ';
+say $ata;
+
+__END__
+||<
+
+実行するたびに、
+>||
+あ
+あた
+あたた
+あたたた
+（以下、省略）
+||<
+
+* Acme::State とは？
+
+Storableでシリアライズしてくれて、次回実行時に、復元した状態でスクリプトが実行されるみたいです。
+が、やっぱりAcme。
+そもそもシリアライズ先はホームディレクトリなので、スクリプトのパスは関係なさげデス。<br />あと、インストール時のテストでシリアライズされた残骸（ファイル）も残りっぱなし。。。
+
+* まとめ
+
+なんかファイル作られちゃうけど気にしない方にオススメのモジュールです！
+
+今のところ進捗もAcmeですが、完走したいですね！！

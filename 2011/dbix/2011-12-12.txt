@@ -1,0 +1,97 @@
+オレオレDBIxでMySQLやOracleの実行計画を一瞬にして採る（採りたい）！
+meta-author: dukkiedukkie <dukkiedukkie@yahoo.co.jp>
+meta-tags: perl, dbi, dbix, rdbms, oracle, mysql, explain, plan, utlxpls
+
+dukkiedukkieです。寒いですね〜皆さん暖かくしてますか？
+自分は年齢とIT業界歴だけ無駄に多いため(^^ゞ、DBIさんとはもうかれこれ10年はお付き合いさせていただいていると思うのですが、いやあ〜このDBIx Tracksに書かれている内容は本当に楽しいですね！4-5年ほど前、Javaの開発現場でJPAやアノテーションの導入をOracleDBAの視点で検証していた時期があったのですが、そういった試みが今、Perlでの開発現場で大いに盛り上がっていることに、心底感銘を抱いているのです。
+色んな角度からのORMの使いかたの工夫、DBIのサブクラス定義などなどなど……マンネリ化した手法でしかDBIを使って来なかった自分のここ数年が非常に恥ずかしくなります。本当にみなさん素晴らしいですね。そこで、今日はRDBMS周辺に関わる機会が多かった者として「実行計画をカンタンに取得する方法」を考えてみました。
+
+** 実行計画を採らなければ。。。。
+「OracleDatabaseのスケールアップのために新規筐体にリプレースしたところ、データの物理配置が変わってしまい、それまでオプティマイザが索引を使っていたのに、いきなり全表検索になってしまった。。。いきなり遅くなってしまったため、ユーザからのクレームが殺到している」
+「RDBMSのリプレースによってアプリケーションが発行しているSQLが劣化していないか虱潰しに影響調査を行いたいが、そのためにはSQLの記されたログからSQL文を発掘してリスト化してそれぞれのEXPLAIN
+PLAN や EXPLAINを発行しなければならない。。。」
+
+まあ、こんな話は（自分としては）システム開発現場で三本指に入る"あるある話"だろうなあ〜と思います。
+しかししかし、実行計画をよくするためのチューニングのアイデアがひらめくまでの時間、その検証や証明資料作成の時間などなど、かなりの集中力と研ぎ澄まされた神経（と時間！）が必要なため、担当者感の人間関係がギスギスしたり、作業自体に疲労感を感じたり。。。。なあんて傾向に走りがちになったりするものです、SQLチューニングは。自分はこの時間が実は一番開発現場で好きなんですけどね(^^)。
+
+しかし、「調査のためにログから実行計画を取得する」って間接的な業務は効率化したいわけで、なんとか手っ取り早く、実行計画を分析することを日常化する手法を確立したいと思うわけです。
+
+** DBIサブクラスを使って
+そんなとき[http://perl-users.jp/articles/advent-calendar/2011/dbix/2]を読んで思いついたのが、「ふだんsthでprepareしているSQLをDBIをnewする箇所を書き換えるだけで一瞬にして実行計画取得プログラムに変えてしまう仕組みを用意しておけばええんやないかな？」ってことでした。もうすでに実はあったりしたらすみませんが、それを今日は試してみます。
+オレオレDBIx（＝OnlyExplainDBI.pm）は↓な感じ。
+>|perl|
+package OnlyExplainDBI;
+
+use strict;
+use DBI;
+use vars qw(@ISA);
+@ISA = qw(DBI);
+
+package OnlyExplainDBI::db;
+use vars qw(@ISA);
+@ISA = qw(DBI::db);
+
+sub prepare {
+	my ( $dbh, @args ) = @_;
+	my $query = join ('', @args);
+	#- if mysql: MySQLを使う場合。
+	$query = 'EXPLAIN ' . $query;	#-強制的にEXPLAIN文に変える
+	my $sth = $dbh->SUPER::prepare($query);
+	#- if oracle: Oracleを使う場合
+	# $query = 'EXPLAIN PLAN FOR ' . $query;
+	#my $sth = $dbh->SUPER::prepare($query); #- 空実行　
+	#$sth->SUPER::execute();
+	#$sth->SUPER::prepare("@?/rdbms/admin/utlxpls.sql"); #-PATHは適切に
+	return $sth;
+}
+
+package OnlyExplainDBI::st;
+use vars qw(@ISA);
+@ISA = qw(DBI::st);
+||<
+みたいなのを置いておいて、普段使われてるアプリケーションのDBIをnewしている部分をオレオレDBIに置き換える。
+>|perl|
+use strict;
+use warnings;
+
+##use DBI; #- 普段のAPLはこっち
+use OnlyExplainDBI;
+
+##my $dbh = DBI->connect('dbi:mysql:test','foo','bar');
+my $dbh = OnlyExplainDBI->connect('dbi:mysql:test','foo','bar');
+my $sth = $dbh->prepare("SELECT a.name, c.title, c.year FROM artist a, cd c
+WHERE a.artistid = c.artist;");
+$sth->execute;
+my $rows = $sth->fetchall_arrayref(+{});
+#- if mysql
+my ( @cols ) = qw (id select_type table type possible_keys key key_len ref
+rows Extra);
+my ( $format ) = "%-4s%-13s%-8s%-7s%-20s%-8s%-8s%-16s%-8s%-8s\n";
+#-フォーマット適当(^^ゞもっと綺麗に！
+#- if oracle
+#my ( @cols ) = ('Id', 'Operation', 'Name', 'Rows', 'Bytes', 'Cost (%CPU)',
+'Time');
+#my ( $format ) = "%-4s%-20s%-8s%-8s%-10s%-10s%-10s\n";  #-適当
+print sprintf($format, @cols);	#-ココらへん書き加えることになるのか
+foreach my $row ( @{$rows} ) {
+	my @vals = map { if ( !defined $row->{$_} ) { '(NULL)' } 
+	else { $row->{$_} } } @cols;
+	print sprintf($format, @vals);
+}
+exit;
+||<
+これで、Oracleなんかだとexplain plan for SQL文; のあと、
+>|sql|
+----------------------------------------------------------------------------
+| Id  | Operation	  | Name   | Rows  | Bytes | Cost (%CPU)| Time	   |
+----------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |	   |   176 |  3520 |	 3   (0)| 00:00:01 |
+|   1 |  TABLE ACCESS FULL| PERSON |   176 |  3520 |	 3   (0)| 00:00:01 |
+----------------------------------------------------------------------------
+||<
+↑のようにutlxplsで取得した実行計画が一挙に取り出せるかなあと。expalin plan forだと実際にブロックを舐めたりしないため、調査作業も高速化できる。
+
+** 一瞬？
+ほんとこれではjust ideaレベルでダメダメ、ちょっとエスパー伊藤の言う「一瞬」的なレベルのことしか書けませんでしたが、
+データストアにおける実行計画のコントロールは、「問題が起きてから膨大なSQLの履歴を元に調査開始」と後追いで行う風習がありがちなので、開発段階でもちょっとオレオレDBIxに切り替えるだけで実行計画を採ることを日常化していけば、開発しているソフトウェアの品質向上につながるのではないかと、考えます。
+これからも日々考えていきます！

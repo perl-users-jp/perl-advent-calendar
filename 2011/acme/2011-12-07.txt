@@ -1,0 +1,86 @@
+Acme::KamenriderOOO - 仮面ライダーオーズに変身してみよう
+meta-author: toritori0318
+meta-tags: perl, acme
+
+
+
+こんばんは。
+最近さらに親バカがひどくなってきたtoritori0318と申します。
+Acme Drugということでゆるい感じで書きたいと思います。
+
+
+さて、９月から仮面ライダーも新作が始まってしまいましたが
+前作の仮面ライダーオーズもまだまだ熱いですよね！((というか息子の中では現役))
+あ、仮面ライダーオーズについてあまりご存じない方は[http://ja.wikipedia.org/wiki/%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%82%AA%E3%83%BC%E3%82%BA/OOO:title=こちら]を御覧ください。
+
+
+** 仮面ライダーオーズの変身について
+仮面ライダーといえば変身シーンですね。
+もちろん仮面ライダーオーズにも変身シーンがあります。
+オーズは以下のような流れで変身を行います。
+
++ オーズドライバー（ベルト）にオーメダルを３枚セットします
++ オースキャナーを使い、セットしたメダルをスキャンします
++ スキャンされたメダルの組み合わせで仮面ライダーオーズに変身します
+
+スキャンするメダルは頭5種類×腕5種類×脚5種類の組み合わせによって形態が変化します。
+つまり１００種類以上の形態が存在するわけです。
+
+さらにメダルには属性があり、３枚のメダルが同じ属性であれば
+「コンボチェンジ」となり、普段より強力な力を持ったオーズに変身できます。
+メダルの属性は色で判断できるので一目瞭然ですね。
+
+
+
+** Perlでも変身したい
+さて、ここまでの説明で「perlを使って変身してみたい」と思いましたか！思いますよね！
+そこでオーズに変身できるモジュール [https://github.com/toritori0318/p5-Acme-KamenriderOOO:title=Acme::KamenriderOOO] を書いてみました。((Acme::Momoirocloverを参考にさせて頂きました))
+早速変身してみましょう。
+>|perl|
+  use Acme::KamenriderOOO;
+
+  my $ooo = Acme::KamenriderOOO->new;
+
+  # オーズドライバーにメダルをセット
+  $ooo->ooo_driver( 'タカ','クジャク','コンドル' );
+
+  # キュインキュインキュインキュイン...
+
+  # 変身!
+  $ooo->henshin;
+||<
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/acme/2011-12-07/image01.png" />
+見事に変身できましたね！
+
+
+[http://www35.atwiki.jp/sentai-hero/pages/437.html:title=亜種]もすべて対応済みです。
+
+
+また不正な組み合わせで変身しようとすると怒られるので気をつけましょう。
+>|perl|
+  # オーズドライバーにメダルをセット！
+  $ooo->ooo_driver( 'ライオン','タカ','ウナギ' );
+
+  # 変身!
+  $ooo->henshin;   # 組み合わせが不正だよ
+||<
+
+
+** メダル情報／コンボ情報
+メダル情報やコンボ情報を引くことも可能です。
+勉強して友達に差をつけよう！
+>|perl|
+  # コンボ一覧
+  my @combo = $ooo->select('combo');
+  my @combo = $ooo->select('combo', {name=>'タジャドル'});
+
+  # メダル一覧
+  my @medal = $ooo->select('medal');
+  my @medal = $ooo->select('medal', {name=>'タカ'});
+||<
+
+
+** Acme::KamenriderFourze
+今のところ書く予定は全くないのですが、もしかしたらAcme Trackに再登場するかもしれませんね！
+
