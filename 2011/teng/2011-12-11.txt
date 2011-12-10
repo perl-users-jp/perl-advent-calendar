@@ -1,0 +1,156 @@
+#11 inflate / deflate
+
+今日はinflate / deflateというものについて説明します。
+
+まず、inflate / deflateというのはとっかかりが悪く、
+概念としてわかりにくい用語だってよく言われますし、
+昔自分も理解するまでわかりにくかったので、さっくり解りやすいように説明します。
+
+* inflate
+
+inflateで辞書を引くと
+http://ejje.weblio.jp/content/inflate
+とあるように、あるものをふくらませる、膨張させるという意味があります。
+経済で言うインフレですね。
+
+ですのでTengなどのORMでinflateというと、
+columnの単純なデータをオブジェクトという構造体にふくらませる
+というイメージを持つと良いかと思います。
+
+
+* deflate
+
+deflateを辞書で引くと
+http://ejje.weblio.jp/content/deflate
+とあるように、ふくらんだものをすぼませるといった意味があります。
+これも経済でいうデフレでインフレとは逆の意味でつかわれますね。
+
+なのでdeflateはオブジェクトという構造体を単純な文字列のようなものに変換することを言います。
+
+* Tengでのinflate / deflate
+
+Tengではinflate / deflateの定義をschemaに書きます。
+
+今回のinflate / deflateの例を持ち出すのにいまのschemaではものたりないのでuserテーブルにcreated_atとupdated_atというカラムを追加したいと思います。
+追加した後のtable定義、schema定義はまずこうなります。
+
+>||
+package Proj::DB::Schema;
+use strict;
+use warnings;
+use Teng::Schema::Declare;
+
+table {
+    name 'user';
+    pk   'id';
+    columns qw/id name created_on updated_on/;
+};
+
+1;
+__END__
+create table user (
+    id integer,
+    name text,
+    created_at text,
+    updated_at text,
+    primary key ( id )
+);
+||<
+
+これでTeng経由でcreated_on / updated_onというカラムの操作ができるようになりました。
+
+>||
+$teng->insert('user',
+    +{
+        id         => 1,
+        name       => 'nekokak',
+        created_at => '2011-12-11 12:34:56',
+        updated_at => '2011-12-11 12:34:56',
+    }
+);
+||<
+
+このようにinsertします。
+
+しかしプログラム中で日付データを扱うときはDateTimeだったりTime::Pieceだったりをつうことがおおいのではないでしょうか？
+またdbに日付データを格納する際もiso形式だったりunixtimestampだったりと形式も様々でしょう。
+
+そんなときにinflate / deflateの設定をschemaにもたせることで、
+データの変換を簡単におこなってくれるようになります。
+
+今回はDateTimeを一例として使います。
+
+inflate / deflateはschemaに定義を行います
+
+>||
+package Proj::DB::Schema;
+use strict;
+use warnings;
+use Teng::Schema::Declare;
+use DateTime;
+
+table {
+    name 'user';
+    pk   'id';
+    columns qw/id name created_on updated_on/;
+    # inflate / deflateの定義は正規表現でcolumnを指定できるので
+    # .+_atにマッチするカラムに以下のinflate / deflateが適用される
+    # dbから取得したunixtimeをDateTimeオブジェクトにinflateする
+    inflate qr/.+_at/ => sub {
+        my ($col_value) = @_;
+        DateTime->from_epoch($col_value);
+    };
+    # プログラムから渡されたDateTimeオブジェクトをunixtimeにdeflateする
+    deflate qr/.+_at/ => sub {
+        my ($col_value) = @_;
+        $col_value->epoch;
+    };
+};
+
+1;
+||<
+
+このように定義を行うと
+
+>||
+use DateTime;
+my $dt = DateTime->now();
+$teng->insert('user',
+     +{
+        id         => 1,
+        name       => 'nekokak',
+        created_at => $dt,
+        updated_at => $dt,
+    }
+);
+||<
+
+このように書くことができ、また、
+
+>||
+my $row = $teng->single('user');
+$row->created_at; # DateTime オブジェクト
+$row->updated_at; # DateTime オブジェクト
+||<
+
+このようにRowオブジェクト経由でカラムに対応するメソッドを呼び出すとinflateが実行され
+DateTimeのオブジェクトが取得できます。
+またDateTimeのオブジェクトではなく、カラムのデータそのものを取得したい場合は
+
+>||
+$row->get_column('created_at');
+||<
+
+とするとdbから取得したunixtimeがそのまま取得できます。
+
+プログラム中では日付データってDateTimeとかのオブジェクトで扱うともろもろ便利だったりしますよね。
+もちろんTime::Pieceでもいいんですけど。
+
+さらに日付データではなく、jsonなデータとかでももちろんOK
+
+このようにデータを プログラム層 <-> RDBMS の間で良い感じにデータ変換してくれるのが
+
+inflate / deflateでした。
+
+明日はschema loaderについて説明します
+
