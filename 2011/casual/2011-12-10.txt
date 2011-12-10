@@ -1,0 +1,96 @@
+Object::Container ‐ Containerを使って開発スピードをあげる
+meta-author: hirobanex
+meta-tags: perl, container
+
+こんにちは！[http://twitter.com/hirobanex:title=hirobanex]です！PerlのWAFのKamuiを使って以来、Containerというのが大好きなんですが、どうもContainerというものがWeb上で見かけることが少ないのでカジュアルに紹介しますね！
+
+** Containerとは
+より一般的に言えば、newされたインスタンスやリファレンスをキャッシュしておくクラスで、いろんなクラスからそのクラス経由でキャッシュしたオブジェクトを利用するような形態のクラス、あるいは、そのクラスを生成をサポートするモジュール群、を指すといえると思います。
+
+ここで紹介するのは、typesterさん作の[http://search.cpan.org/~typester/Object-Container-0.14/:title=Object::Container]で、Containerクラスの生成をサポートするモジュールです。[http://www.slideshare.net/zigorou/inside-mobage-platform:title=Inside mobage platform]をみると、しっかりしたところでも使われいるんだなーということが垣間見えます。
+
+** Containerのメリット
+私がContainerを使っていて一番嬉しいなーと思うのが、「開発スピードの向上」です。早速コードを書いてみましょう。
+
+>|perl|
+#まず、Containerのサブクラスを用意して、使いたいモジュールのコンストラクションコードを書きをしまくる
+package MyContainer;
+use Object::Container '-base';
+use WWW::Mechaniz;
+use Furl;
+use LWP::UserAgent;
+use HTTP::Cookies;
+
+register lwp => sub { 
+    $ENV{'HTTP_PROXY'} = 'http://hogehoge.proxy.com:80';
+    my $cookie_jar = HTTP::Cookies->new(file => $params->{cookie}, autosave => 1);
+
+    LWP::UserAgent->new(
+        agent      => 'mogemoge_crawler_lwp',
+        timeout    => 300,
+        max_size   => 1000000,
+        cookie_jar => $cookie_jar,
+        env_proxy  => 1,
+    );
+};
+
+register mech => sub { 
+    WWW::Mechanize->new(
+        agent      => 'mogemoge_crawler_mech',
+   );
+
+register furl => sub { 
+    Furl->new(
+        agent   => 'mogemoge_crawler_mech',
+        timeout => 10,
+    );
+};
+1;
+||<
+
+>|perl|
+#メインコード。useするのは、MyContainerだけ、すっきり♪
+use MyContainer 'con';#conはキャッシュしたオブジェクトを呼び出す関数、任意の文字列をいれられる
+
+con('mech')->get('http://example.com');#newしなくていい
+con('furl')->get('http://example.com');#newしなくていい
+con('lwp')->get('http://example.com');#newしなくていい
+||<
+
+いかがでしょうか？上記のコードでわかるとおり開発スピード、メンテナンス上の以下のメリットがあります。
+
+- メインコードでuseしなくていい
+- メインコードでnewしなくていい
+- 使いまわせるオブジェクトをMyContainerクラスで一覧管理できる
+- メインコードではそこのコードのロジックに集中できる
+
+すばらしいですね！みんなにすばらしさを伝えたくなりますね！
+
+** Containerのデメリット、あるいは、危険性
+Containerを使うととてもすっきりするのですが、残念ながら以下のような点に注意が必要です。
+*** どこからでもアクセスできるグーバル変数化によるスコープ無限拡大
+基本的には、どこで使われてもいいようにContainerにいれてしまうんですが、「このインスタンスはそのケースで使用することを想定せずにnewのオプション渡しているよ」みたいな、Cotainerにインスタンス化のコード書いた人と別の人がなんとなくContainerにはいっているインスタンスを使い始めて、実は予期しないバグを生む可能性があるので注意です。
+
+また、[http://perl-users.jp/articles/advent-calendar/2010/hacker/3:title=『Scope::Container でリソース管理を行う』]でkazeburoさんが指摘されているように、データベースのコネクション管理上問題が出てくるケースもあるようです。
+
+*** インスタンスの中身が変化するタイプのインスタンスには使用できない
+基本的にはContainerにキャッシュしたインスタンスは何回も使いまわす設定になっているので、DateTimeや、[http://perl-users.jp/articles/advent-calendar/2011/casual/3:title=第三回にytnobodyさんが紹介されたCrypt::SaltedHash]のように使っていくうちに、インスタンスの中身がかわったりするモジュールのインスタンスをキャッシュするのには向きません。
+
+
+**デメリットの克服
+下記のContainerをなんらかのかたちで利用すると、上述のデメリットは克服することができます。
+
+- [http://search.cpan.org/~nekokak/Object-Container-Exporter-0.03/:title=Object::Container::Exporter]
+- [http://search.cpan.org/~dmaki/Pickles-0.08/lib/Pickles/Container.pm:title=Pickes::Container]
+- [http://search.cpan.org/~kazeburo/Scope-Container-0.04/:title=Scope::Container]
+
+このあたりを突っ込みだすとカジュアルじゃなくなるので、とりあえず、デメリットを意識してどんどん使ってみるといいと思います。それで、デメリットを克服したいなーとか、興味湧いてきたら、上記のモジュールを見たり、下記を参考にしてみてください。
+
+- [http://search.cpan.org/~typester/Object-Container-0.14/lib/Object/Container/ja.pod:title=Object::Container::ja]
+- Pickles::Container [http://doc.7kai.org/Note/2.%E9%96%8B%E7%99%BA/Perl/Pickles/1.Tutorial/2.%E3%82%B3%E3%83%B3%E3%83%86%E3%83%8A%E3%81%AE%E5%88%A9%E7%94%A8:title=コンテナの利用 | The Document of Aska]
+- [http://hirobanex.net/article/2011/12/1323507801:title=Containerという名のPerlモジュール群]
+
+** まとめ
+注意しながら、Containerを利用すると開発スピードが大変上がりますね！とてもすばらしいですね！是非、使ってみてブログとかに書くと認知度が上がってさらに++ですね！そして、Containerが一般的になるとうれしいですね！
+
+さて、次はmemememomoさんです。See you again!
