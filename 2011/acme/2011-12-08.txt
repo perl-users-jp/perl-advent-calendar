@@ -9,7 +9,7 @@ meta-tags: perl, acme
 
 という天の声が聞こえた気がしたので時間を戻せるAcmeを20分で準備しました。パズ○に負けてますね。
 
-<a href="https://koji--@github.com/koji--/p5-acme-time-reverse.git">Acme::Time::Reverse</a>
+<a href="https://github.com/koji--/p5-acme-time-reverse">Acme::Time::Reverse</a>
 
 こんな感じで使いませう。
 
