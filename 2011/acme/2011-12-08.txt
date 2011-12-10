@@ -7,7 +7,7 @@ meta-tags: perl, acme
 
 ** 「それ、Acmeで出来るよ」
 
-という天の声が聞こえた気がしたので時間を戻せるAcmeを20分準備しました。パズ○に負けてますね。
+という天の声が聞こえた気がしたので時間を戻せるAcmeを20分で準備しました。パズ○に負けてますね。
 
 <a href="https://koji--@github.com/koji--/p5-acme-time-reverse.git">Acme::Time::Reverse</a>
 
@@ -16,7 +16,7 @@ meta-tags: perl, acme
 >|perl|
 use strict;
 use warnings;
-use Acme::Time::Piece qw(time_reverse);
+use Acme::Time::Reverse qw(time_reverse);
 
 print time_reverse("%F %T"); # 20:11:00 01-21-1102
 ||<
