@@ -1,0 +1,38 @@
+#09 update / delete
+
+Teng::Rowの説明でupdate / deleteの説明はしたのですが、update / deleteメソッドはTeng::Rowからだけでなく、
+Teng自体からも実行可能なので軽く説明します。
+
+>||
+$teng->update('user', +{name => 'inukaku'}, +{id => 1});
+# UPDATE user SET name = 'inukaku' WHERE id = 1;
+||<
+
+このようにRowオブジェクト以外からもupdate文を実行することが可能です。
+Rowオブジェクト経由だと、Rowオブジェクトが持っているPRIMARY KEYを使ったupdateしかできませんでしたが、
+Tengオブジェクト経由だとupdateする条件を自分で指定することが可能です。
+
+例えば以下のように条件を指定しなければ
+>||
+my $update_count = $teng->updte('user', +{name => 'inukaku'});
+# UPDATE user SET name = 'inukaku';
+||<
+
+となり全レコードのnameがinukakuにupdateされます。
+
+
+deleteも同様でRowオブジェクト経由でdeleteを実行すると、Rowオブジェクトが持っているPRIMARY KEYを使ったdeleteしかできませんが、
+Tengオブジェクト経由でdeleteを実行することで、条件を好きに指定することができます。
+
+>||
+my $delete_count = $teng->delete('user', +{name => 'inukaku'});
+||<
+
+
+なお、update / deleteの返却値は
+updateの場合は、実際に更新したレコード数が返され、
+deleteの場合は、実際に削除したレコード数が返されます。
+
+
+明日はRowクラスの拡張方法を紹介します。
+

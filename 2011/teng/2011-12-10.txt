@@ -1,0 +1,61 @@
+#10 Rowクラスの拡張方法
+
+Tengでdatabaseからデータを取得すると、基本的には各レコードはTeng::Rowのオブジェクトになって返されます。
+
+>||
+my $row = $teng->single('user', +{id => 1});
+||<
+
+この時点の$rowはProj::DB::Row::Userというクラスでインスタンス化されています。
+しかし今までの説明でProj::DB::Row::Userを定義したことはありませんでした。
+Tengではtableに対応するRowクラスを自動的に生成し、利用します。
+
+例えばこのProj::DB::Row::Userというクラスにメソッドを追加したいとします。
+その場合は単純に自分でそのクラスを定義するだけです。
+
+>||
+package Proj::DB::Row::User;
+use strict;
+use warnings;
+use parent 'Teng::Row';
+
+sub special_method { q{I'm special!} }
+
+1;
+||<
+
+それだけで
+
+>||
+my $row = $teng->single('user', +{id => 1});
+print $row->special_method; # I'm special!
+||<
+
+と、独自に定義したメソッドを利用することが可能になります。
+Teng::Rowを継承していることにご注意ください。
+
+
+もし、Proj::DB::Row::Userというnamespaceのクラスでインスタンス化されることが気に入らないとか
+ごにょごにょした理由で別のnamespaceにあるクラスを利用したい場合は、
+schemaの定義で、row_classを定義することができるので、そうしましょう。
+
+>||
+package Proj::DB::Schema;
+use strict;
+use warnings;
+use Teng::Schema::Declare;
+
+table {
+    name 'user';
+    pk   'id';
+    columns qw/id name/;
+    row_class 'Proj::Api::User'; # ココにRowクラスを指定する
+};
+
+1;
+||<
+
+こうすることでTengの基本規則から抜けだしたnamespaceでRowクラスを定義し利用することが可能です。
+
+明日は inflate と deflateについて説明します
+
