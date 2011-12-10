@@ -1,0 +1,34 @@
+Acme::Time::Reverse - 時間を戻したい貴方のために
+meta-author: koji**(koji_magi) <kojiel@gmail.com>
+meta-tags: perl, acme
+
+こんにちは。過去の栄光より未来の笑顔、koji_magiです。
+<a href="http://hokkaido.pm.org/">Hokkaido.pm #6</a>の懇親会で「AcmeDrugは１週回ってkoji_magiさんの番になるんじゃない？」と突っ込まれるまで気づけなかったので木曜日まで時間を戻したい気分です。
+
+** 「それ、Acmeで出来るよ」
+
+という天の声が聞こえた気がしたので時間を戻せるAcmeを20分準備しました。パズ○に負けてますね。
+
+<a href="https://koji--@github.com/koji--/p5-acme-time-reverse.git">Acme::Time::Reverse</a>
+
+こんな感じで使いませう。
+
+>|perl|
+use strict;
+use warnings;
+use Acme::Time::Piece qw(time_reverse);
+
+print time_reverse("%F %T"); # 20:11:00 01-21-1102
+||<
+
+はい！時間が逆になりました！きっと明日は一日前のはず。Advent Calendarをうっかり書きそびれても、これで安心ですね！
+
+ちなみにワンライナーで書くとこんな感じですね。
+
+>|perl|
+$ perl -MTime::Piece -e 'print reverse(localtime->strftime("%F %T"))';
+||<
+
+こんなに簡単に時間を戻せるなんて、perlの黒魔術は素晴らしいですね！ちなみに戻したい日が水曜日じゃないのはBleach効果です。空気読んでください。
+
+さて、次に書くのは誰でしょうか？
