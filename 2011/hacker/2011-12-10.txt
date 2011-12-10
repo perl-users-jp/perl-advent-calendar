@@ -1,4 +1,4 @@
-FramBalance: Webファームシステムにおけるデータ件数やトランザクション量等の均等分散
+FarmBalance: Webファームシステムにおけるデータ件数やトランザクション量等の均等分散
 meta-author: dukkiedukkie <dukkiedukkie@yahoo.co.jp>
 meta-tags: perl, farming, rdbms, oracle, mysql, hashing
 
@@ -7,7 +7,7 @@ meta-tags: perl, farming, rdbms, oracle, mysql, hashing
 はじめまして！ 
 dukkiedukkie と申します。みなさん、意識は高まっていますか？私は当麻紗綾のように「高まるぅ〜」です。
 
-先日test Tracksに初めて投稿させていただきましたが、こちらのTrackはレベルの高い皆さんばかりで本当にお恥ずかしい次第ですが、最近作成し今なおより良いものに改良していこうと考えております拙作のモジュール、[FarmBalance|https://github.com/dukkie/FarmBalance/blob/master/lib/FarmBalance.pm]について今日はお話させてくださいまし。
+先日test Tracksに初めて投稿させていただきましたが、こちらのTrackはレベルの高い皆さんばかりで本当にお恥ずかしい次第ですが、最近作成し今なおより良いものに改良していこうと考えております拙作のモジュール、FarmBalance[https://github.com/dukkie/FarmBalance/blob/master/lib/FarmBalance.pm]について今日はお話させてくださいまし。
 
 ** 大量トラフィックに抗しうるWebファーム
 インターネット業界でのお仕事をされているかたですと、利用者からの過密リクエストやトランザクションに対して、「いかにシステムを分散構成するか？」を悩まれたご経験があることと思われます。3〜4台のアプリケーションサーバやDBサーバ構成を設計したり、場合によっては100台超、あるいは1000台に及ぶほどのクラスタ構成を設計・開発したり、運用している方もいらっしゃるでしょう。数万〜数千億のデータをそのファームのデータストア（KVSやRDBM）に分散配置して、膨大なデータと過密トランザクションを許容できるシステムを構築する。
