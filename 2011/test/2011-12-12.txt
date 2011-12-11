@@ -4,7 +4,7 @@ meta-tags: perl, test
 
 ** はじめに
 
-こんにちは、tsucchi と申します。(はてなでは id:tsucchi1022 で活動してます。)
+こんにちは、<a href="http://twitter.com/tsucchi">tsucchi</a> と申します。(はてなでは <a href="http://d.hatena.ne.jp/tsucchi1022/">id:tsucchi1022</a> で活動してます。)
 
 今年の YAPC::Asia で、<a href="http://d.hatena.ne.jp/tsucchi1022/20111015/1318695972">テストについてあれこれ話させていただいた</a>ので、正直ネタがかなり尽きているのですが、最近やってみた、ちょっとヘンなテストの仕方について書いてみます。
 
