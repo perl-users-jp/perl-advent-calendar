@@ -54,8 +54,6 @@ use vars qw(@ISA);
 use strict;
 use warnings;
 
-use local::lib "$ENV{FOUT_HOME}extlib";
-
 ##use DBI; #- 普段のAPLはこっち
 use OnlyExplainDBI;
 
