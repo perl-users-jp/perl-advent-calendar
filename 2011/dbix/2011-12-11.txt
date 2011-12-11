@@ -1,0 +1,159 @@
+DBI のお供になりそうなモジュールたち
+meta-author: zigorou
+meta-tags: perl, dbi
+
+
+師走にも関わらず風邪を引いてしましました。こんばんは、zigorou です。
+今日は DBI のお供になりそうな拙作モジュールたちをご紹介します。
+
+** Data::RuledFactory
+
+[https://github.com/zigorou/p5-data-ruledfactory:title=p5-data-ruledfactory] で開発中のモジュールです。
+主要機能は大体出来てるんですが、後はテストを充実させて pod をきちんと書いたらリリースしようかなとか思ってる所です。
+とはいえ現時点でもやりたいなと思っている事は既に出来ます。
+
+論より証拠と言う事で、examples フォルダにある [https://github.com/zigorou/p5-data-ruledfactory/blob/master/examples/001_define_rules.pl:title=001_define_rules.pl] についてちょっと解説。
+
+>|perl|
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use DateTime;
+use Data::RuledFactory;
+
+my $rf = Data::RuledFactory->new;
+
+$rf->add_rule( id => [ Sequence => { min => 1, max => 100, step => 1 } ] );
+$rf->add_rule( name => [ ListRandom => { data => [qw/foo bar baz/] } ] );
+$rf->add_rule(
+    published_on => [
+        RangeRandom => {
+            min => DateTime->new( year => 2011, month => 12, day => 1 )->epoch,
+            max => DateTime->new( year => 2011, month => 12, day => 24 )->epoch,
+            incremental => 1,
+            integer     => 1,
+        }
+    ]
+);
+
+$rf->rows(10);
+
+while ($rf->has_next) {
+    my $d = $rf->next;
+    printf(
+        "id: %d, name: %s, published_on: %s\n",
+        $d->{id},
+        $d->{name},
+        $d->{published_on},
+    );
+}
+||<
+
+このスクリプトのやらんとしているところは、id, name, published_on と言うカラムを持つテーブルのレコードを生成する為のルール定義を行い、
+そのルールに基づいて10件のレコードを生成するって事です。
+
+このモジュールの良い所は DBI に特に依存していないと言う事です。なので何にでも使えます。
+この例では next() 時にハッシュリファレンスとして受けてますが、事前にカラム定義を columns() メソッドでやっておけば、
+csv の各行の用にレコードを配列リファレンスとして受け取る事も出来ます。
+
+色んなレシピがあるんですが、詳しい解説はまた別の機会にやるとします。
+
+** Iterator::GroupedRange
+
+- SQL::Maker::Plugin::InsertMulti
+- Iterator::GroupedRange
+- Data::RuledFactory
+
+の組み合わせによって、大量のデータをランダムに生成して bulk insert を用いて一気に突っ込んだり出来ます。
+
+コードにするとこんな感じになります。
+
+>|perl|
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Data::Dump qw(dump);
+use Data::RuledFactory;
+use DateTime;
+use DBI;
+use Getopt::Long;
+use Iterator::GroupedRange;
+use SQL::Maker;
+
+my $opts = {};
+GetOptions(
+    $opts,
+    'dsn|d=s', 'user|u=s', 
+    'password|p=s', 'rows|r=s',
+);
+
+%$opts = (
+    rows => 100,
+    %$opts,
+);
+
+SQL::Maker->load_plugin(qw/InsertMulti/);
+
+my $dbh = DBI->connect($opts->{dsn}, $opts->{user}, $opts->{password}, { AutoCommit => 0, RaiseError => 1, });
+my $sql = SQL::Maker->new(
+    driver => $dbh->{Driver},
+    new_line => " ",
+    quote_char => "",
+);
+
+my $rf = Data::RuledFactory->new(
+    columns => [qw/id app_id user_id title published_on/],
+    rules => [
+        id           => [ Sequence => { min => 1, max => 10000, step => 1 } ],
+        app_id       => [ ListRandom => { data => [ 1000 .. 1100 ] } ],
+        user_id      => [ RangeRandom => { min => 100, max => 1000, integer => 1 } ],
+        title        => [ 
+            StringRandom => { data => q#[A-Za-z0-9]{10,16}# } 
+        ],
+        published_on => [
+            RangeRandom => {
+                min => DateTime->new( year => 2011, month => 12, day => 1 )->epoch,
+                max => DateTime->new( year => 2011, month => 12, day => 25 )->epoch,
+                incremental => 1,
+                integer     => 1,
+            }
+        ]
+    ],
+    rows => $opts->{rows},
+);
+
+my $iter = Iterator::GroupedRange->new(
+    sub {
+        if ($rf->has_next) {
+            return [ $rf->next(1) ];
+        }
+        else {
+            return;
+        }
+    }, 10
+);
+
+while ($iter->has_next) {
+    my $values = $iter->next;
+    my ($stmt, @bind) = $sql->insert_multi(
+        'activity',
+        $rf->columns,
+        $values,
+    );
+
+    dump($stmt, \@bind);
+
+    $dbh->do($stmt, undef, @bind);
+    $dbh->commit;
+}
+||<
+
+** まとめ
+
+DBIx 以下にあるべきか否かは考えて作るとよりポータブルになるんじゃないかなって思ったりしましたよ！
+
