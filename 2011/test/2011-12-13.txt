@@ -2,7 +2,7 @@ perl ♡ tests
 meta-author: tomi-ru
 meta-tags: perl, test
 
-こんにちはとみたトミールです。先日会社の勉強会で枠をもらいまして、「あまりperlによる開発をしていない人へのperl紹介」的な話としてperlのカルチャーとしてのテスト、という紹介をしました。わりと評判がよかったのでほかのトラックと内容かぶるところありますが気にせず書き起こし的に書いてみます。
+こんにちはとみたトミールです。先日<a href="http://voyagegroup.com/design-and-tech/growing/knowledge/">会社の勉強会</a>で枠をもらいまして、「あまりperlによる開発をしていない人へのperl紹介」的な話としてperlのカルチャーとしてのテスト、という紹介をしました。わりと評判がよかったのでほかのトラックと内容かぶるところありますが気にせず書き起こし的に書いてみます。
 
 ** dev w/perl
 
@@ -84,7 +84,7 @@ exports alot util functions for test
 - like();
 - isa_ok();
 
-Test::Moreはuse Test::More;するとテスト用関数をどばっとエクスポートするテストスクリプトのためのモジュールです。例えばこんな関数がエクスポートされる。
+<a href="http://search.cpan.org/perldoc?Test::More">Test::More</a>はuse Test::More;するとテスト用関数をどばっとエクスポートするテストスクリプトのためのモジュールです。例えばこんな関数がエクスポートされる。
 
 さっきのtest.plをTest::Moreを使ってTAPで出力するように変更するのは簡単で
 
@@ -196,7 +196,7 @@ subtest 'CRUD' => sub {
 
 ** prove <file>
 
-proveというコマンドがperlに付属してきて（実際はperlに付属してるTest::Harnessというモジュールに付属している）。
+<a href="http://search.cpan.org/perldoc?prove">prove</a>というコマンドがperlに付属してきて（実際はperlに付属してるTest::Harnessというモジュールに付属している）。
 
 >||
 > prove t/04-queue.t
