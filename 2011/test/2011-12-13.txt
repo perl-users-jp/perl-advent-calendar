@@ -1,4 +1,4 @@
-perl <3 tests
+perl ♡ tests
 meta-author: tomi-ru
 meta-tags: perl, test
 
