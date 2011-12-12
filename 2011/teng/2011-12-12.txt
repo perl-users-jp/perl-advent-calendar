@@ -1,0 +1,67 @@
+#12 schema loader
+
+Tengではschemaクラスを定義することで
+insert / update / delete / single(etc..) などを簡単に取り合え使えるようになっています。
+
+しかしテーブル数が多かったり、既にあるサービスのschema情報をクラスに落としこむ際、
+手で書き起こすのはかなりしんどい作業になるでしょう。
+
+そこでTengでは他のORMにもあるようにschemaを動的にloadしたりschemaクラス形式のデータをdumpしたりする
+仕組みを提供しています。
+
+今日はそのなかのloaderと呼ばれる動的schemaクラス読み込みについてを説明します。
+
+* Teng::Schema::Loader
+
+動的にschema情報をdatabaseから読み出すのにTeng::Schema::Loaderを利用します。
+
+今まではProj::DB::Schemaガある前提でしたがLoaderを使えば、
+Proj::DB::Schemaクラスを作らなくてもよいです。
+またProj::DBクラス自体も特別必要ではありません。
+
+teng_loader.plというファイルに以下のようなコードを書くだけで
+今までと同じような操作を行うことが可能です。
+
+>||
+#! perl
+use strict;
+use warnings;
+use Teng::Schema::Loader;
+
+my $teng = Teng::Schema::Loader->load(
+    connect_info => ['dbi:SQLite:./sample.db','',''],
+    namespace    => 'Proj::DB'
+);
+$teng->delete('user');
+$teng->insert('user', +{id => 1, name => 'nekokak'});
+my $row = $teng->single('user' => +{id => 1});
+warn $row->name;
+||<
+
+またTeng::Schema::LoaderはDBHを受け取ることも可能なので以下のように書くことも可能です。
+
+>||
+#! perl
+use strict;
+use warnings;
+use Teng::Schema::Loader;
+
+my $teng = Teng::Schema::Loader->load(
+    dbh       => $dbh,
+    namespace => 'Proj::DB'
+);
+$teng->delete('user');
+$teng->insert('user', +{id => 1, name => 'nekokak'});
+my $row = $teng->single('user' => +{id => 1});
+warn $row->name;
+||<
+
+Loaderはインスタンス作成時に動的にdatabaseにアクセスし、databaseからschema情報を読み出す為、
+初動がどうしても遅くなります。
+
+しかし普段Tengを使っていプロジェクトでもちょっとしたスクリプトをサクっとTengで書く場合なんかに
+特別クラス定義をすること無く利用することができるので便利です。
+
+明日はshcmea meta data apiについて紹介します
+
+
