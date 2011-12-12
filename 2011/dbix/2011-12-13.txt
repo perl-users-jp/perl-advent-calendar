@@ -1,0 +1,239 @@
+DBI::Profileでお手軽プロファイリング
+meta-author: aloelight
+meta-tags: perl, dbi, profile
+
+[http://twitter.com/aloelight:title=aloelight]です。
+みなさん、DBIx書いてますか？私は5年以上はPerlを使っていますが、DBIxを書いたことがありません。CPANの既存ライブラリとDBIの基本機能で間に合ってしますからです。今日はDBI付属の機能の中からDBI::Profileを紹介したいと思います。
+
+** どんな時に使うの？
+開発時には何気なく実行してたけど、なんかこの機能が遅いような気がする。そんなことありませんか？
+MySQLではEXPLAINを使ってクエリの実行計画を確認することで、そのクエリがなぜ遅いかを判断することができますが、その前にどのクエリが遅いかを判断しなければいけません。お手軽さを求めるなら、DBI::Profileを使うのがいいんじゃないでしょうか。
+
+** 使い方
+DBI::Profileの使い方はいくつかありますが、今回は$ENV{DBI_PROFILE}にセットする方法を使います。他には$dbh->{Profile}にセットする方法もあります。
+設定できる値は以下の通りで、必要な情報を組み合わせることになります。詳しくはperldoc DBI::Profileを参照してください。
+
+ - DBI,          0x01
+ - !Statement,   0x02
+ - !MethodName,  0x04
+ - !MethodClass, 0x08
+ - !Caller
+ - !Caller2,     0x10
+ - !File
+ - !File2
+ - !Time
+ - !Time~N
+
+文字列と数値表記の2種類ありますので、好きな方を使ってください。私は環境変数からセットすることが多いので数値表記の方が好みです。実際には以下のように使っています。
+>|bash|
+$ DBI_PROFILE=2 perl myscript.pl
+||<
+
+この記事では以下のスクリプトをプロファイリングの対象として使います。例外処理は省略してあります。
+
+>|perl|
+use strict;
+use warnings;
+use DBI;
+
+my $dbh = DBI->connect(
+    'dbi:SQLite:',
+    '', '',
+    {   RaiseError     => 1,
+        AutoCommit     => 1,
+        sqlite_unicode => 1,
+    }
+);
+
+$dbh->do($_)
+    for
+    q{CREATE TABLE t1 ( id integer primary key autoincrement, body text )},
+    q{INSERT INTO t1 (id, body) VALUES (1, 'foo')},
+    q{INSERT INTO t1 (id, body) VALUES (2, 'bar')};
+
+$dbh->selectall_arrayref( q{SELECT * FROM t1 WHERE id < ?},
+    { Slice => {} }, 10 );
+
+$dbh->selectall_arrayref( q{SELECT * FROM t1 WHERE body = ?},
+    { Slice => {} }, 'foo' );
+
+$dbh->disconnect;
+||<
+
+** 何はともあれProfileを取ってみる
+
+>|bash|
+$ DBI_PROFILE=2 perl myscript.pl
+||<
+
+上記コマンドを実行すると以下のような結果が得られます。
+>||
+DBI::Profile: 0.001440s (16 calls) myscript.pl @ 2011-12-13 01:25:36
+'' =>
+    0.000342s / 10 = 0.000034s avg (first 0.000263s, min 0.000000s, max 0.000263s)
+'CREATE TABLE t1 ( id integer primary key autoincrement, body text )' =>
+    0.000693s
+'INSERT INTO t1 (id, body) VALUES (1, 'foo')' =>
+    0.000100s
+'INSERT INTO t1 (id, body) VALUES (2, 'bar')' =>
+    0.000078s
+'SELECT * FROM t1 WHERE body = ?' =>
+    0.000081s / 2 = 0.000040s avg (first 0.000080s, min 0.000001s, max 0.000080s)
+'SELECT * FROM t1 WHERE id < ?' =>
+    0.000146s
+||<
+
+この結果を見ると全体で0.001440s、その中でもCREATE TABLEが0.000693sかかっているのがわかります。
+各クエリの実行時間と回数が記録されているので、どのクエリがボトルネックになっているかすぐわかりますね。
+
+ちなみに『全部盛り』的な感じにすると以下のようになります。
+>||
+$ DBI_PROFILE=31 perl myscript.pl
+
+DBI::Profile: 0.001600s (16 calls) myscript.pl @ 2011-12-13 01:30:31
+'DBI' =>
+    '' =>
+        'STORE' =>
+            'DBD::SQLite::db::STORE' =>
+                'DBI.pm line 717' =>
+                    0.000005s / 3 = 0.000002s avg (first 0.000005s, min 0.000000s, max 0.000005s)
+                'DBI.pm line 720 via myscript.pl line 11' =>
+                    0.000002s / 2 = 0.000001s avg (first 0.000002s, min 0.000000s, max 0.000002s)
+                'DBI.pm line 736 via myscript.pl line 11' =>
+                    0.000002s
+        'connect' =>
+            'DBD::SQLite::dr::connect' =>
+                'DBI.pm line 665' =>
+                    0.000374s
+        'connected' =>
+            'DBD::_::db::connected' =>
+                'DBI.pm line 727' =>
+                    0.000003s
+        'disconnect' =>
+            'DBD::SQLite::db::disconnect' =>
+                'myscript.pl line 32' =>
+                    0.000076s
+        'disconnect_all' =>
+            'DBD::SQLite::dr::disconnect_all' =>
+                'DBI.pm line 744 via myscript.pl line 0' =>
+                    0.000001s
+    'CREATE TABLE t1 ( id integer primary key autoincrement, body text )' =>
+        'do' =>
+            'DBD::SQLite::db::do' =>
+                'myscript.pl line 21' =>
+                    0.000704s
+    'INSERT INTO t1 (id, body) VALUES (1, 'foo')' =>
+        'do' =>
+            'DBD::SQLite::db::do' =>
+                'myscript.pl line 21' =>
+                    0.000110s
+    'INSERT INTO t1 (id, body) VALUES (2, 'bar')' =>
+        'do' =>
+            'DBD::SQLite::db::do' =>
+                'myscript.pl line 21' =>
+                    0.000078s
+    'SELECT * FROM t1 WHERE body = ?' =>
+        'DESTROY' =>
+            'DBD::SQLite::db::DESTROY' =>
+                '' =>
+                    0.000001s
+        'selectall_arrayref' =>
+            'DBD::SQLite::db::selectall_arrayref' =>
+                'myscript.pl line 29' =>
+                    0.000098s
+    'SELECT * FROM t1 WHERE id < ?' =>
+        'selectall_arrayref' =>
+            'DBD::SQLite::db::selectall_arrayref' =>
+                'myscript.pl line 26' =>
+                    0.000146s
+||<
+表示される情報が多すぎるような気がしますが、クエリの実行箇所も出ています。クエリが実行されているファイル名と行数がわかると対処が楽になります。
+ちなみに実行箇所とクエリだけなら DBI_PROFILE='!Statement:!File' のような指定でも十分です。
+
+** 独自のProfileクラスの設定
+今まではDBI::Profileを使ってきましたが、自分で独自のProfileクラスを設定することができます。しかし、私は独自クラスを作ったことがないので、DBIに標準でついてくるDBI::ProfileDumperを紹介します。
+
+DBI::Profile以外のクラスを設定するのも簡単で、以下のように出力する情報の種類の後に"/"を付け、指定します。
+
+>|bash|
+$ DBI_PROFILE='!Statement:!File/DBI::ProfileDumper' perl myscript.pl
+||<
+
+実際に上記コマンドを実行しても、何も表示されないかと思いますが安心してください。DBI::ProfileDumperはSTDERRのかわりに、カレントディレクトリのdbi.profに情報を出力します。
+
+実際に出力した結果が以下になります。
+>||
+DBI::ProfileDumper 2.013956
+Path = [ !Statement, !File ]
+Program = myscript.pl
+
++ 1
++ 2 DBI.pm
+= 9 0.000326871871948242 0.000310897827148438 0 0.000310897827148438 1323707874.05873 1323707874.0605
++ 2 myscript.pl
+= 1 7.29560852050781e-05 7.29560852050781e-05 7.29560852050781e-05 7.29560852050781e-05 1323707874.06035 1323707874.06035
++ 1 INSERT INTO t1 (id, body) VALUES (2, 'bar')
++ 2 myscript.pl
+= 1 8.60691070556641e-05 8.60691070556641e-05 8.60691070556641e-05 8.60691070556641e-05 1323707874.05999 1323707874.05999
++ 1 SELECT * FROM t1 WHERE id < ?
++ 2 myscript.pl
+= 1 0.000162839889526367 0.000162839889526367 0.000162839889526367 0.000162839889526367 1323707874.06009 1323707874.06009
++ 1 CREATE TABLE t1 ( id integer primary key autoincrement, body text )
++ 2 myscript.pl
+= 1 0.000735044479370117 0.000735044479370117 0.000735044479370117 0.000735044479370117 1323707874.05913 1323707874.05913
++ 1 SELECT * FROM t1 WHERE body = ?
++ 2
+= 1 9.5367431640625e-07 9.5367431640625e-07 9.5367431640625e-07 9.5367431640625e-07 1323707874.06043 1323707874.06043
++ 2 myscript.pl
+= 1 8.79764556884766e-05 8.79764556884766e-05 8.79764556884766e-05 8.79764556884766e-05 1323707874.06026 1323707874.06026
++ 1 INSERT INTO t1 (id, body) VALUES (1, 'foo')
++ 2 myscript.pl
+= 1 0.000111103057861328 0.000111103057861328 0.000111103057861328 0.000111103057861328 1323707874.05987 1323707874.05987
+||<
+
+見ての通り、何がなんだかわかりません。dbi.profファイルは直接閲覧するのではなく、付属のdbiprofコマンドの引数に渡すことで人間用の表示になります。出力結果が長いので一部省略しますが、以下のような感じになります。
+
+>||
+$ dbiprof dbi.prof
+
+DBI Profile Data (DBI::ProfileDumper 2.013956)
+
+  Program       : myscript.pl
+  Path          : [ !Statement, !File ]
+  Total Records : 8 (showing 8, sorted by total)
+  Total Count   : 16
+  Total Runtime : 0.001584 seconds
+
+#####[ 1 ]###########################################################
+  Count         : 1
+  Time          : 0.000735 seconds
+  Key 1         : CREATE TABLE t1 ( id integer primary key autoincrement, body text )
+  Key 2         : myscript.pl
+
+#####[ 2 ]###########################################################
+  Count         : 9
+  Total Time    : 0.000327 seconds
+  Longest Time  : 0.000311 seconds
+  Shortest Time : 0.000000 seconds
+  Average Time  : 0.000036 seconds
+  Key 1         :
+  Key 2         : DBI.pm
+
+#####[ 3 ]###########################################################
+  Count         : 1
+  Time          : 0.000163 seconds
+  Key 1         : SELECT * FROM t1 WHERE id < ?
+  Key 2         : myscript.pl
+
+#####[ 4 ]###########################################################
+  Count         : 1
+  Time          : 0.000111 seconds
+  Key 1         : INSERT INTO t1 (id, body) VALUES (1, 'foo')
+  Key 2         : myscript.pl
+
+||<
+
+これでずいぶん見やすくなったのではないでしょうか。これを素に実行計画を確認すると色々と捗るのではないかと思います。
+
+** まとめ
+DBI::Profileを使ったプロファイリングのメリットは、そのお手軽さにあります。DBI::ProfileはDBIのディストリに含まれているので、追加でライブラリをインストールしなくても使えるはずです。しかし、計測対象が多くなるとノイズ増えるというデメリットがあります。そのような場合はDBIx Trackでも既出の[http://perl-users.jp/articles/advent-calendar/2011/dbix/9:title=DBIx::QueryLog]や[http://search.cpan.org/perldoc?DBIx%3A%3AProfileManager:title=DBIx::ProfileManager]を使うといいではないでしょうか。
