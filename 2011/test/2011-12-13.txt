@@ -1,0 +1,317 @@
+perl <3 tests
+meta-author: tomi-ru
+meta-tags: perl, test
+
+こんにちはとみたトミールです。先日会社の勉強会で枠をもらいまして、「あまりperlによる開発をしていない人へのperl紹介」的な話としてperlのカルチャーとしてのテスト、という紹介をしました。わりと評判がよかったのでほかのトラックと内容かぶるところありますが気にせず書き起こし的に書いてみます。
+
+** dev w/perl
+
++ select modules
++ write tests
++ ...
+
+perlを使った開発の特徴として、モジュールが充実してる話はわりと有名とおもいますが、実際のコード書き始める前にまず使うモジュールを選ぶ作業があったりします。そのへんはそのうち話すとして。
+
+ほかに、テストを大事にするというかテストを書いてから実際のコードを書くという文化があるのが誇れる点だとおもっていて、
+
+** perl <3 test
+
+今回はperlでテストするあたりのお話をします。
+
+- t/*.t
+- Test::More
+- prove
+
+この辺を紹介します。
+
+
+** perl's test code
+
+- = just simple perl script
+
+perlのテストコードは、単純なperlスクリプトです。
+
+>||
+use MyApp::Queue;
+||<
+
+たとえば、MyApp::Queue っていうジョブキューを扱うクラスみたいなのを書くとするじゃないですか。その場合、
+
+>||
+use MyApp::Queue;
+
+my $queue = MyApp::Queue->new(...);
+
+my $job = $queue->add_job({
+    action       => 'send_sms',
+    phone_number => '+818030101971',
+    token        => 'test',
+    user_id      => 'aaa',
+});
+
+use Data::Dump qw/dump/; dump $job;
+||<
+
+こんな感じのテストスクリプトを test.pl に書いて、$jobがちゃんと返ってくるかな、とか確認するのはわりと普通に思いついたりやると思います。perlで実行して、
+
+>||
+> perl test.pl
+
+bless({
+  MD5OfMessageBody => "8314669dc97238376839c03dc65df8e7",
+  MessageId => "c71ce8e1-8239-453f-85e7-e20d56acafe6",
+}, "Amazon::SQS::Simple::SendResponse") at test.pl line 17.
+||<
+
+こんな。これはAmazon::SQSベースの場合ですけど、ああちゃんと返ってきてるなあ、オッケーみたいな。ただし、こういう「目視で確認」というのはやってられないわけです。
+
+- Output format
+-- TAP (test anything protocol)
+- util functions for TAP output
+-- Test::More
+
+そこで、TAPというテスト結果の出力方法が決めてあって、それがつかわれています。
+
+そのTAP形式での出力をするためのユーティリティモジュールとして、Test::Moreっていうモジュールがあります。
+
+
+** use Test::More
+
+exports alot util functions for test
+
+- is();
+- ok();
+- like();
+- isa_ok();
+
+Test::Moreはuse Test::More;するとテスト用関数をどばっとエクスポートするテストスクリプトのためのモジュールです。例えばこんな関数がエクスポートされる。
+
+さっきのtest.plをTest::Moreを使ってTAPで出力するように変更するのは簡単で
+
+>||
+use Test::More;
+use MyApp::Queue;
+
+my $queue = MyApp::Queue->new(...);
+isa_ok($queue, 'MyApp::Queue');
+
+my $job = $queue->add_job({
+    action       => 'send_sms',
+    phone_number => '+818030101971',
+    token        => 'test',
+    user_id      => 'aaa',
+});
+
+ok($job, 'add_job()');
+
+done_testing();
+||<
+
+さいしょにuse Test::Moreして、最後にdone_testing();ではさむ。あと、スクリプトの要所要所でTest::Moreの関数をつかって、インスタンスができてるかの確認をしたり、結果を確認したり（ここでは単に$jobがtrueであるかどうかを確認してますが、ほかのテスト関数をつかってもっと細かくテストもできます）。
+
+このようなtestは「こう動いてほしい」というものを簡単に書ける、たいへん敷居が低いものなので、まずテストを設計図のように書いて、そのあと実際の実装を書く、というのがperlでは一般的です。
+
+（質問で、ちゃんとテスト先に書いてるんですかって質問が来たのが意外でした。テストファーストじゃない部分は現実にはけっこうあるらしいですね。実装をガシガシ書いてると、ほかの部分をこわしてしまうことままあるんで、その点テストあると安心して進められますよね。）
+
+
+** TAP output
+
+で、こう変更したtest.plを実行するとこのように出ます。
+
+>||
+> perl test.pl
+ok 1 - The object is a MyApp::Queue
+ok 2 - add_job()
+1..2
+||<
+
+TAPの出力というのはこういう、okかngか、をテキストで出す簡単なものです。
+
+Test::Moreはperl用のTAP出力支援モジュールですが、TAPというフォーマット自体はperl専用というわけではなく、ほかの言語でも使えるような仕様として公開されてます。
+
+ほかの言語から貪欲にいろいろ吸収している印象があるperlですが、TAPはほかへ輸出しているめずらしいものかも。
+
+
+** t/*.t
+
+テストは、test.plとかじゃなく、プロジェクトのルートディレクトリに t/ っていうフォルダを作って、その中に .t っていう拡張子で保存していくことになってます。なんで、
+
+>||
+> tree
+|-- t
+|   |-- 00-app.t
+|   |-- 01-web-controller.t
+|   |-- 01-web.t
+|   |-- 02-jsonrpc.t
+|   |-- 03-cache.t
+|   |-- 03-model.t
+|   |-- 04-queue.t
+|   |-- 05-image.t
+|   |-- 06-notify-apns.t
+|   |-- 07-phone.t
+|   |-- 08-utils.t
+|   |-- 09-validator-phone.t
+|   |-- 10-digest.t
+|   |-- a-activation.t
+||<
+
+プロジェクトが大きくなると t/ 以下がどんどん増えていきます（この中にディレクトリを作って分けてもいい）。
+
+CPANにあるモジュールもこうなってます。ドキュメントより、.t ファイルを読むほうがそのモジュールの具体的な使い方をさくっと把握できることもあります。もしCPANモジュールを使う場合は、t/以下をぜひ見てみてください。テストがヘボいとあまり使われなかったりdisられたりします。
+
+
+** .t ++
+
+プロダクションでCPANモジュールを使うというのは、車輪を再実装しなくていいから良いとか便利だという意味じゃなく、その部分についてはすでにテスト済みである、となるのが大きいと思っています。
+
+そのほか、人のモジュールにケチをつける場合とかも、「○○な風にしてほしい」って口で言うんじゃなく、.t を渡して「こう動くようにしてほしい」と言うこととか普通です。文章で要望言ってくる人には、何言ってるかわかんねーよ、patch か t をクレって言ったりとか。
+
+
+** テストの分け方
+
+「だーっと書くとわかりにくいんじゃないか」という質問に対して）テストは、ファイル単位でわけるだけじゃなくsubtestというもので一つのテストスクリプト内で区切りをつけることもできます。これはスコープも区切られるから見た目にも変数の管理がしやすい。
+
+>||
+subtest 'CRUD' => sub {
+
+    subtest 'create()' => sub {
+        my $user = MyApp::Model::User->create({
+            user_id  => 'xxx',
+            nickname => 'foobar',
+        });
+        isa_ok($user, 'MyApp::Model::User');
+        is($user->{user_id}, 'xxx');
+        is($user->{nickname}, 'foobar');
+    };
+
+    subtest 'lookup()' => sub {
+        my $user = MyApp::Model::User->lookup({ user_id => 'xxx' });
+        isa_ok($user, 'MyApp::Model::User');
+        is($user->{user_id}, 'xxx');
+||<
+
+ほか、xUnit式で書けるテストモジュールもあります。どれも最終的には実行するとTAPで出ます。
+
+テスト、増えていくわけですが
+
+** prove <file>
+
+proveというコマンドがperlに付属してきて（実際はperlに付属してるTest::Harnessというモジュールに付属している）。
+
+>||
+> prove t/04-queue.t
+t/04-queue.t .. ok
+All tests successful.
+Files=1, Tests=4,  3 wallclock secs ( 0.02 usr  0.01 sys +  0.33 cusr  0.02 csys =  0.38 CPU)
+Result: PASS
+||<
+
+これはTAPの出力をまとめるラッパースクリプトで、テストスクリプトについてその中のテストが全部okならこのテストスクリプトはokでした、と返してくれます
+
+** prove <dir>
+
+proveはディレクトリを渡すとまとめてじっこうしてくれるので、たいていは t をまとめて実行させます。
+
+>||
+> prove t
+t/04-queue.t ............ ok
+t/05-image.t ............ skipped: thumb yametayo
+t/06-notify-apns.t ...... ok
+t/07-phone.t ............ ok
+t/08-utils.t ............ ok
+t/09-validator-phone.t .. ok
+
+Test Summary Report
+-------------------
+||<
+
+　-v を指定すると、まとめないで出力してくれたり
+
+>||
+> prove -v t/04-queue.t
+t/04-queue.t ..
+ok 1 - The object isa MyApp::Queue
+ok 2 - add_job()
+ok 3
+ok 4 - delete()
+1..
+||<
+
+proveはいろいろ便利です。perlのテスト道はproveを使いこなす道と言えます。
+
+** other test stuff
+
+とにかくperlな人はテストしてない部分があると気になる習慣があるので、ほかにも、テストしにくいようなものもテストしやすくする便利機構がいろいろあります。
+
+*** Test::TCP
+
+テストしにくそうな分野としては、サーバーを使うものとかも
+
+>||
+use Test::More;
+use Test::TCP;
+use Cache::Memcached::Fast;
+
+my $server = Test::TCP->new(
+    code => sub {
+        my $port = shift;
+        exec('/usr/bin/memcached', -p => $port, -m => 64);
+        die "server execute failed $!";
+    }
+);
+
+my $cache = Cache::Memcached::Fast->new({
+    servers   => [ '127.0.0.1:' . $server->port ],
+    namespace => 'test',
+});
+
+ok($cache->set('foo' => 'bar'));
+is($cache->get('foo'), 'bar');
+
+done_testing();
+||<
+
+これはMemcachedクライアントライブラリみたいなのを書いたばあいのような、クライアント＝サーバーのテスト用のしくみ。
+
+*** Test::Base
+
+>||
+use Test::Base;
+use Acme::Samurai;
+plan tests => 1 * blocks;
+
+run { ... };
+
+__DATA__
+=== 一般名詞, 固有名詞
+--- input:    今日も東京は快晴。
+--- expected: 今日もお江戸は日本晴れ。
+
+=== 代名詞, 形容詞
+--- input:    わたしが何か悪いことを。
+--- expected: それがしが何か良からぬことを。
+
+=== 接続詞, 連体詞
+--- input:    だけど、なんで？ 本当か、そんなはずは！
+--- expected: けれど、何ゆえ？ まことか、左様なはずは！
+
+=== 副詞
+--- input:    なぜパパとコギャルが警察に？
+--- expected: 何ゆえ父上と小娘が奉行所に？
+||<
+
+○○を入れたら○○が返る、みたいなテストを書きやすくするものもあります。
+
+いまやってるアプリでも、APIのテストはクライアントがこう叩いたばあいサーバーがこう返す、みたいなのなのでこのTest::Baseベースでかいてます。
+
+（サンプルはアレなんで割愛）
+
+
+** Points
+
+まとめ
+
+- perlの開発はテストファーストな文化があります。
+- perlでテスト書くのは簡単
+- perl書かない人も、もしCPANモジュール使うことあったらドキュメントとあわせて t/ 以下を見てみるといいよ
+
