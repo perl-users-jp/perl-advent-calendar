@@ -1,6 +1,7 @@
 Time::Piece::Plus - Time::Pieceに便利メソッドを
 meta-author: Nishibayashi Takuji <takuji@senchan.jp>
 meta-tags: perl, time
+
 ** はじめに
 こんばんは、takuji31と申します。
 
