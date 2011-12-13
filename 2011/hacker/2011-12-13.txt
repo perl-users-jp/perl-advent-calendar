@@ -1,0 +1,161 @@
+Skype::AnyでSkype botを作る
+meta-author: akiym
+meta-tags: perl, skype
+
+どうもこんにちは。[http://twitter.com/#!/akiym:title=akiym]です。今日は[http://github.com/akiym/Skype-Any:title=Skype::Any]というモジュールを紹介します。
+みなさん、Skypeは使っていますよね。IRC？いやいや、Skypeですよね。IRC botを作ってみたという話はよく聞きますが、Skype botを作ってみたという話はあまり聞きませんね。ということで、Skype::AnyでSkype botを作ってみましょう。
+**はじめに
+まずはじめに、Skype APIについて少し知っておく必要があります。
+[https://developer.skype.com/public-api-reference:title]
+***Skype objectの種類
+- USER
+- PROFILE
+- CALL
+- CHAT
+- CHATMEMBER
+- CHATMESSAGE
+- VOICEMAIL
+- SMS
+- APPLICATION
+- GROUP
+- FILETRANSFER
+例えば、相手から送られてきたメッセージはCHATMESSAGEに分類されます。相手自身はUSERに分類されます。
+Skype::Anyでは、相手からCHATMESSAGEに分類されたものはSkype::Any::ChatMessageのオブジェクトになります。Skype::Any::ChatMessageオブジェクトからは送ってきた人の名前やメッセージの内容、タイムスタンプを取得することができます。
+注意: Skype for Macに対応していません。
+**使い方
+***メッセージを送る
+>|perl|
+use Skype::Any;
+use Skype::Any::User;
+
+my $skype = Skype::Any->new;
+
+# echo123にメッセージを送る
+my $user = Skype::Any::User->new('echo123');
+$user->send_message('どうもー');
+||<
+***自動返信
+>|perl|
+use Skype::Any;
+
+my $skype = Skype::Any->new;
+
+# メッセージが送られてきたら
+$skype->message_received(sub {
+    my $self = shift;
+    $self->chat->send_message('おはよう');
+});
+
+$skype->run;
+||<
+$skype->run というものが出てきました。これはイベントループ開始の合図です。
+また、誰がメッセージを送ったのが知りたいですね。メッセージの内容も知りたいです。そんなときには、$self->from_handleや$self->bodyで取得することができます。ちなみに、message_receivedの場合、$selfはSkype::Any::ChatMessageオブジェクトです。
+
+先ほどの例では、ただ返信することしかできなかったはずです。しかし、Skypeには1対1でチャットをしたり、グループチャットをするときがあります。それぞれ区別して返信したいですね。
+>|perl|
+use Skype::Any;
+
+my $skype = Skype::Any->new;
+
+$skype->received_message(sub {
+    my $self = shift;
+    my $chat_type = $self->chat->type;
+    if ($chat_type eq 'DIALOG') {
+        # チャット
+    } elsif ($chat_type eq 'MULTICHAT') {
+        # グループチャット
+    }
+});
+
+$skype->run;
+||<
+グループチャットから個人宛にメッセージを送りたいときもありますね。
+>|perl|
+use Skype::Any;
+use Skype::Any::User;
+
+my $skype = Skype::Any->new;
+
+$skype->received_message(sub {
+    my $self = shift;
+    my $user = Skype::Any::User->new($self->from_handle);
+    $user->send_message('個人にメッセージを送ります');
+});
+
+$skype->run;
+||<
+
+ここで、ちょっとした例を書いてみます。URLを貼り付けるとタイトルを教えてくれるbotです。とても簡単に書けますね。
+>|perl|
+use Skype::Any;
+use LWP::UserAgent;
+use URI::Find;
+
+my $ua = LWP::UserAgent->new;
+my $finder = URI::Find->new(sub {
+    my $url = shift;
+
+    my $res = $ua->get($url);
+    return $res->code unless $res->is_success;
+
+    my ($title) = $res->decoded_content =~ m!<title>(.*)</title>!i;
+    return $title;
+});
+
+my $skype = Skype::Any->new;
+$skype->message_received(sub {
+    my $self = shift;
+    my $body = $self->body;
+    # URLがあったらタイトルに置き換える
+    if ($finder->find(\$body)) {
+        $self->chat->send_message($body);
+    }
+});
+
+$skype->run;
+||<
+基本的なことはSkype::Anyで簡単にできますが、凝ったことをしたいときにはSkype APIを叩いてあげる必要があります。
+>|perl|
+use Skype::Any;
+
+my $skype = Skype::Any->new;
+
+# 通話を録音する
+$skype->call(status => sub {
+    my ($self, $status) = @_;
+    if ($status eq 'INPROGRESS') {
+        $self->send_command(qq(ALTER CALL $self->{id} SET_CAPTURE_MIC FILE="/tmp/call.wav"));
+    }
+});
+||<
+Skype APIを叩きたいときには、このようなものを書くと便利です。対話形式でSkype APIを叩くことが出来るようになります。
+>|perl|
+use Skype::Any;
+use Term::ReadLine;
+
+my $skype = Skype::Any->new;
+
+my $term = Term::ReadLine->new;
+while (defined(my $cmd = $term->readline('Skype> '))) {
+    print $skype->send_command($cmd), "\n";
+}
+||<
+**まとめ
+あなたも今日からSkype::AnyでSkype botハッキング！
+Macに対応していないのが心残りですが。。((対応させてあげる、という方がいらっしゃったらぜひpull request送ってください :) お待ちしております。))
+最後にすばらしいbotの例を書いて終わりにします。
+>|perl|
+use strict;
+use warnings;
+use Skype::Any;
+use Skype::Any::User;
+
+my $skype = Skype::Any->new;
+
+my $username = 'echo123'; # 嫌いな人をどうぞ！
+
+my $user = Skype::Any::User->new($username);
+while (1) {
+    $user->send_message(':)');
+}
+||<
