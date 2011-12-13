@@ -1,0 +1,236 @@
+Net::Google::Analyticsを使ってGoogle Analyticsのデータを引っ張る
+meta-author: issm
+meta-tags: perl
+
+
+** はじめに
+
+こんにちは！名古屋の片隅で細々とPerlを書いている issm と申します．一昨日の夜にボウリングを6ゲームしたおかげで腕とか膝とかお尻とかの筋肉痛が未だに収まりません．
+
+さて，Webサイト云々に携わられているみなさまにおかれましては，クライアントさんからページビューがどうの検索キーワードがこうのと相談を受け，設置した Google Analytics のアクセス解析データをまとめることに苦心されていることと思います．（まぁ実際にはそんなに簡単な内容ではないかもしれませんが．）
+
+Perl Advent Calendar 2011 Casual Track の13日目は，Perl で Google Analytics のデータを引っ張ることを簡単にしてくれるモジュール [http://search.cpan.org/dist/Net-Google-Analytics/:title=Net::Google::Analytics] について，簡単な使い方を紹介します．
+
+- [http://search.cpan.org/dist/Net-Google-Analytics/:title=Nick Wellnhofer / Net-Google-Analytics - search.cpan.org]
+
+
+
+
+
+** Google Analytics Data Export API
+
+Google Analytics には，常に蓄積されているデータを取得するための Web API「Data Export API」が用意されています．
+
+- [http://code.google.com/intl/ja-JP/apis/analytics/docs/gdata/home.html:title=Data Export API - Google アナリティクス - Google Code]
+
+Net::Google::Analytics は，この API とのやりとりをよしなにしてくれるモジュール，という位置づけになります．
+
+
+
+
+
+** 基本的な流れ
+
+処理の流れとしては，次のことを順々に行っていく感じです：
+
+- 認証
+- 各種オブジェクト
+- プロファイルID
+- 集計期間
+- ディメンションと指標
+- データの取得
+
+
+
+*** 認証
+
+Google Analytics にアクセスするための認証情報を，Net::Google::AuthSub モジュールに渡して認証を行います．
+
+- [http://search.cpan.org/dist/Net-Google-AuthSub/:title=Simon Wistow / Net-Google-AuthSub - search.cpan.org]
+
+コードにするとこんな感じです：
+
+>|Perl|
+my $analytics = Net::Google::Analytics->new;
+my $auth      = Net::Google::AuthSub->new(service => 'analytics');
+$auth->login($email, $password);
+$analytics->auth_params($auth->auth_params);
+||<
+
+
+
+*** 各種オブジェクト
+
+おもに使用するオブジェクトです：
+
+>|Perl|
+my $data_feed = $analytics->data_feed;       # データフィード
+my $req       = $data_feed->new_request;     # APIリクエスト
+my $res       = $data_feed->retrieve($req);  # APIレスポンス
+||<
+
+
+
+*** プロファイルID
+
+プロファイルIDの参照方法については，次をご覧ください：
+
+- [http://support.google.com/googleanalytics/bin/answer.py?hl=ja&answer=97705:title=プロファイル ID - アナリティクス ヘルプ]
+
+ところが，最近Google Analyticsにおけるアップデートがあり，URLの書式にも変更がありました．例えば次のような感じです（個人的にしか確認していないため，他に異なる書式が存在しているかもしれません）：
+
+>||
+https://www.google.com/analytics/web/#report/visitors-overview/aXXXXXXXXwYYYYYYYYpZZZZZZZZ/
+||<
+
+「XXXXXXXX」「YYYYYYYY」「ZZZZZZZZ」の部分にはそれぞれ数値があてはまるのですが（桁数は8桁固定ではない），これらのうちの「ZZZZZZZZ」がプロファイルIDとなります．
+
+プロファイルIDがわかったら，その値をセットします．「ga:」というプリフィックスが必要です：
+
+>|Perl|
+$req->ids("ga:${profile_id}");
+||<
+
+
+
+*** 集計期間
+
+集計期間の両端の日付を，YYYY-MM-DD な書式で指定します：
+
+>|Perl|
+my ($start_date, $end_date) = ('2011-12-01', '2011-12-12');
+$req->start_date($start_date);
+$req->end_date($end_date);
+||<
+
+
+
+*** ディメンションと指標
+
+「どのような切り口で」「どのデータを取得するか」を指定するのが，「ディメンション」「指標」です．それぞれについて，ドキュメントからの一部引用を以下に掲載します：
+
+>http://code.google.com/intl/ja-JP/apis/analytics/docs/concepts/gaConceptsDataCalculation.html#dimensionsAndMetrics>
+ディメンションはデータのキーやフィールドのことで、通常は文字列です。通常、ディメンション自体に意味はありませんが、指標と組み合わせることでそのディメンションの観点から指標を分類、つまりセグメント別に分けることができます。
+<<
+
+>http://code.google.com/intl/ja-JP/apis/analytics/docs/concepts/gaConceptsDataCalculation.html#dimensionsAndMetrics>
+指標はウェブサイトに対するユーザーの行動の数値的な概要です。たとえばページビューは個々のページのページビューの合計をまとめた指標です。直帰率はサイトの 1 ページのみの閲覧の割合をまとめたものです。
+<<
+
+
+例えば，「日ごとの訪問者数とページビュー数がほしい！」ということであれば次のように指定できます：
+
+>|Perl|
+$req->dimensions('ga:date');
+$req->metrics('ga:visits,ga:pageviews');
+||<
+
+
+ディメンションと指標に関する詳細については，次あたりをご確認ください：
+
+- [http://code.google.com/intl/ja-JP/apis/analytics/docs/concepts/gaConceptsDataCalculation.html:title=レポート データの算出 - Google アナリティクス - Google Code]
+- [http://code.google.com/intl/ja-JP/apis/analytics/docs/gdata/dimsmets/dimsmets.html:title=Dimensions & Metrics Reference - Google Analytics - Google Code]
+
+
+
+*** データの取得
+
+こんな感じで，取得したデータをごにょごにょすることができます：
+
+>|Perl|
+$res = $data_feed->retrieve($req);
+for my $e ( @{$res->entries} ) {
+    my ($date)           = map $_->value, @{$e->dimensions};
+    my ($visits, $views) = map $_->value, @{$e->metrics};
+
+    ...
+}
+||<
+
+
+
+
+
+** サンプル
+
+個人的に作ったWebサービス [http://www.nicograph.jp:title=にこぐらふ] における，今月の昨日までの12日間の検索キーワード別訪問者数について調べてみます．
+
+主なコードは次のような感じ：
+
+>|Perl|
+use Encode;
+
+...
+
+$req->start_date('2011-12-01');
+$req->end_date('2011-12-12');
+
+$req->dimensions('ga:keyword');
+$req->metrics('ga:visits');
+$req->sort('-ga:visits');  # 降順にソート
+
+$res = $data_feed->retrieve($req);
+
+for my $e ( @{$res->entries} ) {
+    my ($keyword) = map $_->value, @{$e->dimensions};
+    my ($visits)  = map $_->value, @{$e->metrics};
+
+    # 本来ならば，パーセントエンコードな文字の処理とかも必要
+
+    say encode_utf8(sprintf "%4d\t%s", $visits, $keyword);
+}
+||<
+
+このスクリプトの出力結果は次のようになりました：
+
+>||
+  78	(not set)
+   4	にこぐらふ
+   2	evan様
+   2	ぐらふ
+   2	イギリスの食べ物
+   1	"雀姫伝"
+   1	inurl:sm16264521
+   1	m.s.sproject
+   1	my dearest タグ ニコサウンド
+   1	psp 初音ミク -project diva- extend 曲
+   1	vocarock3 収録曲
+   1	【東方mmd】妖精大取材
+   1	ぽぽんぷぐにゃん 検索してはいけない
+   1	ゆっくりカービィのエアライド
+   1	ゴンさん コラ
+   1	ボーカロイドランキング
+   1	モザイク消
+   1	主人公が無双すぎて怖くないゾンビゲーム
+   1	亀梨和也 or 亀梨
+   1	佐々木一匡 2011
+   1	初音ミク -project diva- extend 動画
+   1	大友宗麟 最終章 厳島の戦い
+   1	宮野真守
+   1	寝巻きガブ
+   1	小野 にこ
+   1	我妻由乃
+   1	歌ってみた りぶ
+||<
+
+訪問者数が少ないことは気にしないでください＞＜
+
+
+
+
+
+** まとめ
+
+Net::Google::Analytics モジュールを使うことで，Google Analytics に蓄積されているデータを，いろいろな切り口で引っ張ってくることができます．
+
+あとは，グラフ生成系をはじめ各種形式出力系のモジュールと組み合わせれば，アクセス解析レポートなんかの作成の労力をけっこう減らせるんじゃないでしょうかね．
+
+
+
+
+
+** おわりに
+
+以上，Net::Google::Analytics モジュールについて簡単に紹介してみました．Googne Analyticsなアクセス解析データに触れる際の一助になれば幸いです．
+
+明日は，[http://mysql-casual.org/2011/11/mysql-casual-advent-calendar-2011.html:title=MySQL Casual Advent Calendar 2011] にも寄稿されている hatak さんです．お楽しみに！
