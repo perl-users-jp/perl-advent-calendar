@@ -25,8 +25,7 @@ Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
 一例としてXMLの記述例を挙げておきます。<br/>
 
 <pre><code>
-
-<select id="getAccountByUsernameAndPassword" parameterType="Account" resultType="Account">
+&lt;select id="getAccountByUsernameAndPassword" parameterType="Account" resultType="Account"&gt;
   SELECT
     SIGNON.USERNAME,
     ACCOUNT.EMAIL,
@@ -51,8 +50,9 @@ Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
     AND SIGNON.USERNAME = ACCOUNT.USERID
     AND PROFILE.USERID = ACCOUNT.USERID
     AND PROFILE.FAVCATEGORY = BANNERDATA.FAVCATEGORY
-</select>
+&lt;/select&gt;
 
+&lt;/code&gt;&lt;/pre&gt;
 </code></pre>
 
 プロジェクト名が変わってしまったみたいですが、<a href="http://code.google.com/p/mybatis/downloads/list?can=3&q=Product%3DSample">公式サンプル</a>よりまま<br/>
