@@ -97,7 +97,7 @@ $result = $db->query(...);
 $obj = $result->object    @objs = $result->objects
 </code></pre>
 
-これで2項目をクリアすることができました。<br/>最後は名前付きプレースホルダですね。正規表現を使（ry<br/>ということで、DBIxでどこまでがんばれるか!?<br/>ということで、名前付きプレースホルダのモジュールを見つけてきましたよ。<br/>所要時間は約30秒、圧倒的なスピードでした。<br/>つ <a href="http://search.cpan.org/~izut/DBIx-Placeholder-Named-0.08/lib/DBIx/Placeholder/Named.pm">DBIx::Placeholder::Named</a>
+これで2項目をクリアすることができました。<br/>最後は名前付きプレースホルダですね。正規表現を使（ry<br/>でわなく、DBIxでどこまでがんばれるか!?<br/>ということで、名前付きプレースホルダのモジュールを見つけてきましたよ。<br/>所要時間は約30秒、圧倒的なスピードでした。<br/>つ <a href="http://search.cpan.org/~izut/DBIx-Placeholder-Named-0.08/lib/DBIx/Placeholder/Named.pm">DBIx::Placeholder::Named</a>
 
 <pre><code>
 my $sth = $dbh->prepare(
