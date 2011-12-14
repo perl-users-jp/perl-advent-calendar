@@ -1,0 +1,110 @@
+Time::Piece::Plus - Time::Pieceに便利メソッドを
+meta-author: Nishibayashi Takuji <takuji@senchan.jp>
+meta-tags: perl, time
+
+** はじめに
+こんばんは、takuji31と申します。
+
+今回はPerl歴2年弱の初心者である私が作った[http://search.cpan.org/~takuji/Time-Piece-Plus-0.02/:title=Time::Piece::Plus]というモジュールを紹介します。Hacker(笑)となってしまった方はすみません。
+
+さて皆さん、[http://search.cpan.org/~msergeant/Time-Piece-1.20/Piece.pm:title=Time::Piece]というモジュールはご存知でしょうか？
+既に[http://perl-users.jp/articles/advent-calendar/2011/hacker/7:title=7日目のトラック]にて紹介されているのでご存知でない方はそちらを見ていただければと思います。
+
+このTime::Piece、非常に軽快でシンプルが故に意外とかゆいところに手が届かないことがあるのではないでしょうか？
+例えば[http://search.cpan.org/~drolsky/DateTime-0.70/lib/DateTime.pm:title=DateTime]にあるtruncateメソッドはTime::Pieceにはありません。
+
+例えば今日の0時を取得したい時は
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use 5.012001;
+use Time::Piece;
+
+my $now = localtime();
+
+my $today = localtime(Time::Piece->strptime($now->strftime('%Y/%m/%d 00:00:00'), '%Y/%m/%d %H:%M:%S'));
+
+if($today < $now) {
+    say "$today < $now";
+}
+
+#これをしたいだけなら$now->strftimeでもできるけど、出力確認のために書いてます。
+say $today->strftime('%Y年%m月%d日 %H:%M:%S'); # 2011年12月12日 00:00:00
+
+||<
+
+めんどくさいですね、わかりにくいですね？
+[http://search.cpan.org/~takuji/Time-Piece-Plus-0.02/:title=Time::Piece::Plus]ではこういったものを簡単に書けるようなメソッドを用意しています。
+
+** 使い方
+使い方は簡単です
+>|perl|
+use strict;
+use warnings;
+use 5.012001;
+use Time::Piece::Plus;
+
+my $now = localtime();
+
+my $today            = localtime->today();
+my $today_from_class = Time::Piece::Plus->today();
+
+if($today < $now) {
+    say "$today < $now";
+}
+if($today_from_class < $now) {
+    say "$today < $now";
+}
+if($today_from_class == $today) {
+    say "$today_from_class == $today";
+}
+
+say $today->strftime('%Y年%m月%d日 %H:%M:%S'); # 2011年12月12日 00:00:00
+
+||<
+すごくシンプルになりました。わかりやすいっていいですよね！
+[http://search.cpan.org/~takuji/Time-Piece-Plus-0.02/:title=Time::Piece::Plus]には同様に1日前の0時、1日後の0時を取るメソッドも用意されています。
+Cronで前日のデーターを集計したい時なんかに使えるんではないでしょうか。
+
+** MySQL関連のメソッド
+
+さて、[http://search.cpan.org/~takuji/Time-Piece-Plus-0.02/:title=Time::Piece::Plus]ではこの他にMySQL関連のメソッドも用意しています。
+ぽすぐれないの！MSSQLどこ？！という方はpatches welcomeです！
+
+さて、Time::PieceのMySQL関連のモジュールといえば[http://search.cpan.org/~kasei/Time-Piece-MySQL-0.06/lib/Time/Piece/MySQL.pm:title=Time::Piece::MySQL]というものが既にあります。
+
+しかし、strptimeで解析するとUTCの時間で解析されて一度localtime関数を呼ばないとローカルのタイムゾーンに合わせてくれません。
+これを回避するには一度localtime関数を呼んでTime::Pieceのインスタンスを作って、そこからstrptimeしてやるか、戻り値をlocaltime関数に引数として渡してやります。
+ただこれも、Time::Pieceのlocaltime関数はコンテキストで戻り値が変わったり、Time::Piece1.16未満(Perl5.10や5.12のコアに含まれてます)ではこの呼び方でインスタンスを生成した時に、中身のArrar refの構造が壊れるというバグがあったりします。
+
+後者はバージョン上げればいいじゃなーいと思われるかもしれませんが、上げられない環境もありますよね！はい、身近にあります。
+そういうことを書くたびに考えるのは面倒なので、そこら辺をうまくやってくれるMySQL関連のメソッドを書きました。
+
+>|perl|
+use strict;
+use warnings;
+use 5.012001;
+use Time::Piece::Plus;
+
+my $mysql_datetime = "2011-12-12 20:34:13";
+my $mysql_date = "2011-12-12";
+
+my $datetime = Time::Piece::Plus->parse_mysql_datetime(str => $mysql_datetime, as_localtime => 1);
+my $date     = Time::Piece::Plus->parse_mysql_date(str => $mysql_date, as_localtime => 1);
+
+say $datetime;
+say $date;
+||<
+
+シンプルですね！シンプルイズベストです。
+
+[http://search.cpan.org/~takuji/Time-Piece-Plus-0.02/:title=Time::Piece::Plus]で素敵なMySQLライフを送ってください（？）
+
+
+** まとめ
+
+[http://search.cpan.org/~takuji/Time-Piece-Plus-0.02/:title=Time::Piece::Plus]はかゆいところに手が届くモジュールになっていたかと思います。
+まだ開発段階ですので、今後も更にかゆいところに手が届くモジュールを目指していきたいと思います。
+
+ありがとうございました。

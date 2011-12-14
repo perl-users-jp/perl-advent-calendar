@@ -1,0 +1,113 @@
+Geo::Coordinates::Converter - 位置座標の測地系やフォーマットを変換する
+meta-author: hatak
+meta-tags: perl, geolocation, geohash
+
+こんにちは。[http://blog.hatak.net/:title=hatak] (@hisashi) と申します。
+
+モバイルデバイスでは GPS やネットワーク測位などで位置座標を簡単に取得できます。しかし、緯度や経度の計算は意外と面倒なものです。
+14 日目は、このような位置座標を扱うときに便利なモジュール Geo::Coordinates::Converter をご紹介します。
+
+
+** 測地系の違い
+
+緯度経度で表された座標を扱う場合、「測地系」という基準を考える必要があります。
+測地系には様々な種類があります。日本国内で利用されることの多い測地系は次の 3 種類です。
+
+- 世界測地系 1984 (WGS84)
+-- アメリカで策定された測地系
+-- GPS や Google Map などで採用されている
+- 日本測地系 2000 (JGD2000)
+-- 日本で策定された測地系
+-- 2002 年以降の国内の基盤地図などで採用されている
+- 旧日本測地系 (Tokyo)
+-- 2002 年以前に日本で採用されていた測地系
+-- 日本国内のいくつかのオンライン地図はこちらで提供されている
+
+緯度経度の数値を見ただけでは区別がつきませんが、異なる測地系の座標を重ねた場合にはずれが生じることがあります。
+場所にも依りますが、WGS84 と JGD2000 のズレは 0.1mm 前後と言われているため、現在のモバイルデバイスの測位レベルでは無視できる差異といえます。一方、JGD2000 と Tokyo のズレは関東で 400m 前後と言われており、変換が必要となってきます。
+
+
+
+** Geo::Coordinates::Converter で測地系変換
+
+この測地系間の変換を手軽に行えるモジュールが Geo::Coordinates::Converter です。
+
+- [http://search.cpan.org/dist/Geo-Coordinates-Converter/:title=Kazuhiro Osawa / Geo-Coordinates-Converter - search.cpan.org]
+
+WGS84 の東京タワーの座標 (35.65861, 139.745447) を旧日本測地系に変換してみましょう。
+
+>|perl|
+#!perl
+
+use strict;
+use warnings;
+
+use Geo::Coordinates::Converter;
+
+# WGS84 の値をセット
+my $converter = Geo::Coordinates::Converter->new(
+    lat    => '35.65861',
+    lng    => '139.745447',
+    datum  => 'wgs84',
+);
+
+# WGS84 -> Tokyo に変換して表示
+my $point = $converter->convert('tokyo');
+print $point->lat;
+print $point->lon;
+||<
+
+緯度・経度のフォーマットは角度 (degree) と度分秒 (dms) どちらでセットしても自動で判別してくれます。もちろん、相互変換することもできます。
+
+
+
+** GeoHash に変換
+
+[http://geohash.org/:title=GeoHash] は、緯度と軽度をまとめて一つの文字列で表す座標表現です。
+
+緯度経度をそれぞれ 2 進数で表現し、交互に並べた bit 列を Base32 でエンコードしたものが GeoHash です。
+GeoHash で表現される座標は矩形範囲の中心点であり、同時に座標を中心とした矩形の範囲も表しています。文字列の長さが長いほど大縮尺で狭い範囲を表すことになります。
+これを応用すると、指定範囲内にあるスポットを絞り込む処理が文字列比較だけで行えるというメリットがあります。
+
+この GeoHash のエンコード・デコードのロジックは Geo::Hash モジュールで実装されています。
+
+- [http://search.cpan.org/dist/Geo-Hash/:title=Andy Armstrong / Geo-Hash - search.cpan.org]
+
+これを Geo::Coordinates::Converter から利用するフォーマッターが用意されています。
+
+- [http://search.cpan.org/dist/Geo-Coordinates-Converter-Format-Geohash/:title=Kazuhiro Osawa / Geo-Coordinates-Converter-Format-Geohash - search.cpan.org]
+
+実際に変換してみましょう。
+
+>|perl|
+#!perl
+
+use strict;
+use warnings;
+
+use Geo::Coordinates::Converter;
+
+Geo::Coordinates::Converter->add_default_formats('Geohash');
+
+my $converter = Geo::Coordinates::Converter->new(
+    lat    => '35.65861',
+    lng    => '139.745447',
+)->format('geohash');
+
+# GeoHash に変換して表示
+my $point = $converter->point;
+print $point->geohash;
+||<
+
+もちろん、GeoHash から位置座標に変換することもできます。
+
+
+
+** まとめ
+
+位置座標変換を手軽に行える Geo::Coordinates::Converter モジュールを紹介しました。
+座標系は混在してしまうと表示時のズレとなってしまいます。デバイスで取得する際は取得時の座標系を基に内部で WGS84 などに統一して保持し、描画時に適切な座標系に変換してあげることが大切となります。
+また、文字列で表現する GeoHash も手軽に利用できますので、前処理などで使えば複雑な数値比較を最小限に抑えることもできます。
+
+
+明日は lapis_tw さんです。お楽しみに！

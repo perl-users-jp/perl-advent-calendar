@@ -1,0 +1,134 @@
+DBIx::DBSchema: 環境ごとのテーブルスキーマを管理したい、したかったんだ…
+meta-author: k12u
+meta-tags: perl, dbix
+
+はい、[http://twitter.com/k12u:title=kawamoto]です
+
+皆さん仕事でデータベースを触っていると本番環境、検証環境、開発環境など、複数の環境を扱うことになりますよね。
+複数の環境を扱っていると環境によってテーブルのスキーマの差分ができてしまうのを防ぐ必要が生じます。
+
+今回は、複数の環境の整合性を保つ方法について考えてみたいと思います。
+
+<hr>
+
+* 探したもの
+
+要件を列挙してみます。上の方が優先度高めです。
+
++ MySQLで使える
++- 筆者の都合です
++ 複数の環境のデータベースからテーブル定義を抜き出してきて比較できる
++- 複数の環境とネットワーク的に直接やり取りしなくて済むようにバイト列として直列化できるとなお良い
++ 差分の解消に必要なALTER文を発行したり出力できたりする
++- 必然的にDBMSの種類に依存しそうですね
++ 導入・運用が面倒じゃない
++ 特定のORMやフレームワークに依存しない
++ 管理された差分と管理されていない危険な差分を区別して認識でき、管理された差分は無視して、管理されていない差分を適用するといったコントロールが出来る。
++ スキーマをリビジョン番号で管理するのではなく、DBの内容同士を直接比較したい
++ 依存モジュールが少ない
+
+探すのが大変だったのですが、今回はどうにか見つけた[http://search.cpan.org/~ivan/DBIx-DBSchema-0.39/:title=DBIx::DBSchema]をご紹介します。
+
+<hr>
+* DBIx::DBSchema
+ちょっとサボろうかと思ってぐぐってみたのですが、このモジュール、全く言及されていません。早くも不安がよぎります・・・
+
+こんなコードを書いてみました。
+
+>||
+use strict;
+
+use DBI;
+use Data::Dumper;
+use DBIx::DBSchema;
+
+my $user = 'user';
+my $pass = 'password';
+my $dbh1 = DBI->connect('DBI:mysql:database=test_kawamoto;host=localhost', $user, $pass);
+my $dbh2 = DBI->connect('DBI:mysql:database=test_kawamoto2;host=localhost', $user, $pass);
+
+my $schema1 = new_native DBIx::DBSchema $dbh1;
+print Dumper $schema1;
+
+# Storable で保存される
+$schema1->save('/tmp/test_kawamoto');
+my $actor1 = $schema1->table('actor');
+my $actor2 = $schema1->table('actor2');
+
+print $actor2->sql_alter_table($actor1, $dbh1);
+print $actor2->sql_create_table($dbh1);
+||<
+
+使い方はそこまで難しくありません。
+
+>||
+my $schema1 = new_native DBIx::DBSchema $dbh1;
+||<
+これでスキーマの情報を $dbh1 から吸い出します。
+
+>||
+$schema1->save('/tmp/test_kawamoto');
+||<
+とやればStorable形式でデータを出力します。
+
+>||
+print $actor2->sql_alter_table($actor1, $dbh1);
+||<
+とすると以下のような出力を得ます。CREATE INDEX 書いてくれた!
+>||
+CREATE  INDEX idx_actor_first_name ON actor2 ( first_name )
+||<
+
+続いて
+
+>||
+print $actor2->sql_create_table($dbh1);
+||<
+とやると以下のような出力を得ます。CREATE文ももちろん書ける!
+
+>||
+CREATE TABLE actor2 (
+  PRIMARY KEY (actor_id)
+)
+CREATE  INDEX idx_actor_last_name ON actor2 ( last_name )
+||<
+
+何かおかしいとおもったら、どうやらcolumnsの取得に失敗しているようです・・・
+これはおそらくMySQLの対応が中途半端になっている可能性が・・・
+
+ドキュメントを見るかぎり、Oracle、 Pg、 SQLite、 Sybase、 mysqlに対応しているそうですが、これは残念。
+
+いいところまでいったところですが時間切れなので今回はこれまでにしておきます。
+
+
+<hr>
+* 大変だった話
+CPAN内を探しまくって見つけたアタックリストが以下です。誰得な感じがしますがせっかくなので大公開します。
+
+- [http://search.cpan.org/~ivan/DBIx-DBSchema-0.39/]
++- 今回ご紹介しました
+- [http://search.cpan.org/~crakrjack/DBIx-Migration-Directories-0.11/]
++- インストールにDBD::Pgが必要っぽいのでスキップ
+- [http://search.cpan.org/~jtang/DBIx-Patcher-0.04/]
++- インストールにDBD::Pgが必要っぽいのでスキップ
+- [http://search.cpan.org/~bosu/DBIx-VersionedSchema-0.03/]
++- インストールにDBD::Pgが必要っぽいのでスキップ
+- [http://search.cpan.org/~dhorne/DBIx-VersionedDDL-0.16/]
++- Moose依存、名前の通りバージョンで管理
+- [http://search.cpan.org/~cjones/DBIx-Compare-1.7/]
++- データの比較がメインの機能の模様
+- [http://search.cpan.org/~rwstauner/DBIx-Schema-UpToDate-1.001/]
++- 惜しい感じですが若干目的が違いそうです
+- [http://search.cpan.org/~kitomer/DBIx-Migration-Classes-0.02/]
++- なんか違いそう
+- [http://search.cpan.org/~daniel/DBIx-Migration-0.07/]
++- 機能がだいぶ少なそう
+- [http://search.cpan.org/~tbone/DBIx-Table-Dup-0.03/]
+- [http://search.cpan.org/~domm/DBIx-SchemaChecksum-0.25/]
+- [http://search.cpan.org/~paranoid/DBIx-Changeset-1.11/]
+
+<hr>
+* まとめ
+少し改造が要りそうですが、このモジュールを使って簡単なアプリを書けば複数環境のスキーマの管理ができそうな気がします。ちょっと中途半端ですみません。モジュールを探すのが大変すぎて力尽きました。
+
+お次はおそらく s_ohira さんです。お楽しみに!

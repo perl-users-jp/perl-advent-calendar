@@ -1,0 +1,51 @@
+Acme::DragonBall - つっかもうぜ！ドラ○ンボール！
+meta-author: koji**(koji_magi) <kojiel@gmail.com>
+meta-tags: perl, acme
+
+オッス！オラkoji_magi！
+過去日付の記事を書くと誰かとコンフリクトしそうで、オラわくわくしてきたぞ！
+
+** 「アニメっぽい流れだったので」
+
+<a href="https://github.com/koji--/p5-acme-dragonball">Acme::DragonBall</a>
+
+はい、というわけで今回も20分で作ってみました。ネタに時代を感じるのは察してください。
+ドラゴンボールといえば、ドラゴンレーダーですよね。
+そんでもってボールは星の数が一から七まであります。
+そこで、テキスト中の*の数を数えてドラゴンボールにHitしたらsayしてくれる
+radarを作りました。
+
+>|perl|
+use strict;
+use warnings;
+use Acme::DragonBall qw(radar);
+
+radar("asdf*hdshaf*osd**hfa"); # '四星球みっけ！'
+||<
+
+全部の球を集めるとシェンロンも呼べます。
+
+>|perl|
+use strict;
+use warnings;
+use Acme::DragonBall qw(radar);
+
+radar("*" x 28); # '★ ★ ★  ！！！いでよ、神龍！！！！ ★ ★ ★ ★'
+||<
+
+ちなみにドラゴンボールに無い星数だと、懐かしの台詞や単語がランダムに飛び出します。
+
+>|perl|
+use strict;
+use warnings;
+use Acme::DragonBall qw(radar);
+
+radar("red sousui"); # 'レッドリボン軍だ！'
+||<
+
+さて、今回のAcmeは如何でしたでしょうか？
+参加者さんが少なめで、Acmeトラックも対ベジータ戦の悟空なみに苦戦中です。
+Acmeトラックはいつでも貴方の参戦をお待ちしております。
+
+みんな、オラに<del>ネタ</del>元気を分けてくれ！
+
