@@ -88,7 +88,7 @@ SELECT FROM foo WHERE foo = ? OR bar = ?
 一番、実現したかった項目を満たすことはできましたが、1行で完結してしまったため、<br/>以降の選択肢が限られてしまいました。このモジュールが実現しているSQL実行をキーに<br/>
 残り二つの項目を満たすモジュールを探していきたいと思います。
 
-ということで、DBIx::Simple::DataSectionの規定クラスを確認しましょう。<br/>どうやら、DBIx::Simpleを使っているのでこの名前空間になっているようですね。<br/><a href="http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple.pm">DBIx::Simple</a><br/>結果セットの取り出し方が色々とありますが、objectメソッドを使うと捗りそうですね。
+でわ、DBIx::Simple::DataSectionの規定クラスを確認しましょう。<br/>どうやら、DBIx::Simpleを使っているのでこの名前空間になっているようですね。<br/><a href="http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple.pm">DBIx::Simple</a><br/>結果セットの取り出し方が色々とありますが、objectメソッドを使うと捗りそうですね。
 
 <pre><code>
 $db->result_class = 'DBIx::Simple::Result';
@@ -97,9 +97,18 @@ $result = $db->query(...);
 $obj = $result->object    @objs = $result->objects
 </code></pre>
 
-これで2項目をクリアすることができました。<br/>最後は名前付きプレースホルダですね。正規表現を使（ry<br/>ということで、DBIxでどこまでがんばれるか!?<br/></p><p>
+これで2項目をクリアすることができました。<br/>最後は名前付きプレースホルダですね。正規表現を使（ry<br/>ということで、DBIxでどこまでがんばれるか!?<br/>ということで、名前付きプレースホルダのモジュールを見つけてきましたよ。<br/>所要時間は約30秒、圧倒的なスピードでした。<br/>つ <a href="http://search.cpan.org/~izut/DBIx-Placeholder-Named-0.08/lib/DBIx/Placeholder/Named.pm">DBIx::Placeholder::Named</a>
 
-ということで、名前付きプレースホルダのモジュールを見つけてきましたよ。<br/>所要時間は約30秒、圧倒的なスピードでした。<br/>つ <a href="http://search.cpan.org/~izut/DBIx-Placeholder-Named-0.08/lib/DBIx/Placeholder/Named.pm">DBIx::Placeholder::Named</a>
+<pre><code>
+my $sth = $dbh->prepare(
+    q{ INSERT INTO some_table (this, that) VALUES (:this, :that) }
+) or die $dbh->errstr;
 
-ただ、これを使う場合はDBIx::Simpleとの排他になってしまいますね。<br/>少し、残念な気もしますが、個人的にはやりたかった内容は見つかったので、ほぼ(自己)満足です。<br/>明日はPerl界の3大バーテンダーの一人でもあるcharsbarさん！(と思います)
+$sth->execute({ this => $this, that => $that, });
+</code></pre>
+この例だと、thisとthatがそれぞれ名前付きプレースホルダとして扱われるようですね。
+DBIx::Simple::DataSectionと組み合わせることでかなり直感的に扱うことができそうな感じです。
+ただ、これを使う場合はDBIx::Simpleとの排他になってしまいますね。
+
+個人的にはやりたかった内容は見つかったので、ほぼ(自己)満足です。<br/>明日はPerl界の3大バーテンダーの一人でもあるcharsbarさん！(と思います)
 
