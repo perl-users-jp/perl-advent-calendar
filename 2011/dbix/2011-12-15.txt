@@ -51,7 +51,6 @@ Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
     AND PROFILE.USERID = ACCOUNT.USERID
     AND PROFILE.FAVCATEGORY = BANNERDATA.FAVCATEGORY
 &lt;/select&gt;
-
 </code></pre>
 
 プロジェクト名が変わってしまったみたいですが、<a href="http://code.google.com/p/mybatis/downloads/list?can=3&q=Product%3DSample">公式サンプル</a>よりまま<br/>
