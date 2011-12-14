@@ -1,0 +1,116 @@
+TheSchwartzでちょっとした大きなデータを扱いたい！
+meta-author: lapis_tw
+meta-tags: perl, jobqueue
+
+こんにちは！普段は札幌の片隅でPerlをいじくっているlapis_twです。
+某アイコンが可愛い方に発破かけられたのもあり、初CasualTrackです！
+最近はJobQueueを弄る事が多かったので、JobQueueに関するちょっとしたtipsを書きます。
+といってもQudoとかではなくて、使い古されたTheSchwartzについてなのです。
+
+** TheSchwartz
+散々紹介されてもはや（普通に使う分には）語りどころがない、ジョブキューシステムですね。
+一般的な使い方は下記のような感じになると思います。
+
+*** worker.pl
+>|perl|
+#!/usr/bin/perl
+
+package Worker;
+use strict;
+use warnings;
+use base qw/TheSchwartz::Worker/;
+
+sub worker {
+    my ($class, $job) = shift;
+    # なんかする
+    $job->completed();
+}
+1;
+
+package main;
+use strict;
+use warnings;
+use TheSchwartz;
+
+my $client = TheSchwartz->new( databases => [  { dsn => 'dbi:SQLite:schwartz' } ] );
+$client->can_do('Worker');
+$client->work();
+||<
+*** client.pl
+>|perl|
+#!/usr/bin/perl
+use strict;
+use warnings;
+use TheSchwartz;
+
+my $dbi = DBI->connect( "dbi:SQLite:schwartz" );
+my $client = TheSchwartz->new(
+    databases => [
+        { dsn => "dbi:SQLite:schwartz" }
+    ]
+);
+
+my $handle = $client->insert(
+    'Worker' => { data => "example" }
+);
+||<
+
+Workerを立ち上げて、ClientからJobをDBに投げるといった使い方のはずです。
+WorkerはJobがあった場合workメソッドを実行しますが、実はこのworkメソッド、任意の引数を渡す事ができません。
+TheSchwartz::workの内部では処理がネストされていて、最終的にwork_onceの中で任意に指定したワーカクラスのwork_safelyを呼んでいます。
+よって、外部から渡ってくる物は、$job->argだけなのです。
+
+
+もし、大規模なリソースをworkerで確保しなければならないといった状況だとこれはまずいですね！
+workが呼ばれるたびに大量のメモリを食う事になり、これはオーバーヘッドになります。
+こんな時は思い切って事前にワーカクラスから適当にメソッド生やして受け渡せばいいと思います。
+サンプルでは、ワーカ側でStorableでstoreしたオブジェクトを使うという設定でいきます。
+
+** サンプル
+*** worker.pl
+>|perl|
+#!/usr/bin/perl
+package Worker;
+
+use strict;
+use warnings;
+use base qw(TheSchwartz::Worker);
+use Storable;
+
+our $icons;
+
+sub worker_args {
+    my ($class, $file) = @_;
+
+    $icons = retrive $file;
+}
+
+sub work {
+    my ( $class, $job ) = @_;
+    # なんかする
+    $job->completed();
+}
+1;
+
+package main;
+use strict;
+use warnings;
+use TheSchwartz;
+
+my $client =
+  TheSchwartz->new( databases => [ +{ dsn => 'dbi:SQLite:schwartz' } ] );
+
+my $config = require "config.pl";
+
+# 適当に生やしたメソッドに任意の引数を渡す
+$worker_class->worker_args( $config->{store_file} );
+
+$client->can_do( $config->{worker_class} );
+$client->work;
+||<
+ちょっとイケナイ感じですが、グローバル変数に突っ込んじゃう作戦です。
+新しいデータを取得するにはWorkerを再起動しなくちゃなりませんが、問題ないデータならばこれで大丈夫なはずです。
+jobが投げられるたびに大規模なデータを参照して処理しなきゃ！って時に使えると思います。是非お試し下さい。
+もっとスマートなやり方が欲しい！
+
+お次はOne Page Appsで話題のsu_askaさんです！
