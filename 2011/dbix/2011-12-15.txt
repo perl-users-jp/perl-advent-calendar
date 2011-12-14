@@ -6,7 +6,7 @@ DBIxに関して書くほどの知識もないため、今までの経験から�
 
 ということで、さっそくですが実行部分を見てみますよ！
 
-||>
+>||
 // fetch
 Employee emp = (Employee) sqlMap.queryForObject("getEmployee", new Integer(1));
 
