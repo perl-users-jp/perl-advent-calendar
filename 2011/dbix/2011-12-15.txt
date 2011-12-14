@@ -1,0 +1,132 @@
+<h1>Javaで便利だと思ったORMをDBIxとCPANモジュールで頑張って再現する</h1>
+<p>
+みなさん、こんにちわ。s_ohiraと申します。
+今年も各所で技術系Advent Calendarが盛り上がってますがいかがお過ごしでしょうか？
+</p><p>
+DBIxに関して書くほどの知識もないため、今までの経験から逆算というアプローチをとります。
+CDBIは業務で触ったこともあるんですが、あえてPerlでなくJavaのORMから逆算してみます。
+今回は個人的にお気に入りだったiBATISというORMの簡単な紹介とともに、
+擬似的な使い心地を求めてみようではないか！という形で進行していきたいと思います。
+</p><p>
+ということで、さっそくですが実行部分を見てみますよ！
+</p>
+<pre><code>
+// fetch
+Employee emp = (Employee) sqlMap.queryForObject("getEmployee", new Integer(1));
+
+// fetchrows
+List list = (Employee) sqlMap.queryForList("getFiredEmployees", null);
+
+// insert
+Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
+</code></pre>
+</p><p>
+<a href="http://ibatis.apache.org/docs/java/dev/">iBATIS API Reference</a>よりまま(Java1.4な時代だったんですね！)
+</p><p>
+たった一行で何かが行われているみたいですね。
+引数やら、SQLやら、結果セットやらは一体どこに書かれているのでしょうか？
+そういった定義は漏れなく外部のクラスやXMLに書かれることになります。
+</p><p>
+一例としてXMLの記述例を挙げておきます。
+</p>
+<pre><code>
+<select id="getAccountByUsernameAndPassword" parameterType="Account" resultType="Account">
+  SELECT
+    SIGNON.USERNAME,
+    ACCOUNT.EMAIL,
+    ACCOUNT.FIRSTNAME,
+    ACCOUNT.LASTNAME,
+    ACCOUNT.STATUS,
+    ACCOUNT.ADDR1 AS address1,
+    ACCOUNT.ADDR2 AS address2,
+    ACCOUNT.CITY,
+    ACCOUNT.STATE,
+    ACCOUNT.ZIP,
+    ACCOUNT.COUNTRY,
+    ACCOUNT.PHONE,
+    PROFILE.LANGPREF AS languagePreference,
+    PROFILE.FAVCATEGORY AS favouriteCategoryId,
+    PROFILE.MYLISTOPT AS listOption,
+    PROFILE.BANNEROPT AS bannerOption,
+    BANNERDATA.BANNERNAME
+  FROM ACCOUNT, PROFILE, SIGNON, BANNERDATA
+  WHERE ACCOUNT.USERID = #{username}
+    AND SIGNON.PASSWORD = #{password}
+    AND SIGNON.USERNAME = ACCOUNT.USERID
+    AND PROFILE.USERID = ACCOUNT.USERID
+    AND PROFILE.FAVCATEGORY = BANNERDATA.FAVCATEGORY
+</select>
+</code></pre>
+<p>
+プロジェクト名が変わってしまったみたいですが、<a href="http://code.google.com/p/mybatis/downloads/list?can=3&q=Product%3DSample">公式サンプル</a>よりまま
+</p><p>
+parameterTypeが引数、resultTypeが結果セットの格納されるVO(値オブジェクト)です。
+引数がコレクションとして与えられた場合は#{hoge}という形でそのpropertyを条件にすることもできます。
+</p><p>
+また、idを指定することでコンテナからSQLとVOのマッピングをシンボルとして取り出して(！！)
+お手軽にSQLを実行できる点が密かなお気に入りポイントとなっています。
+パラメータ引数や返り値なんかは単なるVOなので特記することはありませんね。
+ちなみにSQLの定義で動的なSQLなんかも書けますが、割愛します。
+</p><p>
+Perlで作ってやるぜ！な漢気のある方は<a href="http://ibatis.apache.org/docs/java/dev/">API</a>を参考に。
+ちなみに最新の公式は<a href="http://code.google.com/p/mybatis/wiki/Welcome?tm=6">こちら</a>みたいです。
+</p><p>
+今回はPerl Advent CalendarなのでJavaの話はさっさと切り上げることにして、
+個人的に今回、実現したい機能は以下のものとなります。
+</p>
+<ul>
+<li>実行するSQLをシンボルとして取り出す</li>
+<li>オブジェクトへのマッピング</li>
+<li>名前付きプレースホルダ</li>
+</ul>
+<p>
+ということで、DBIxを設定ファイルから使うためのモジュールをCPANから探すことにしましょう。
+</p><p>
+まずは今回、どうしても実現したかったSQLのシンボル化を探すことにします。
+普段はmiyagawaさんが作られたData::Section::Simpleを使ってSQLをシンボル化していたのですが、
+使い心地そのままなモジュールがCPANにあります。
+</p><p>
+DBIx::Simple::DataSection 
+http://search.cpan.org/~kitano/DBIx-Simple-DataSection-0.02/lib/DBIx/Simple/DataSection.pm
+</p>
+<pre><code>
+my $rs = $db->query_by_sql('select.sql', $foo, $bar) 
+    or die $db->error;
+
+__DATA__
+@@ select.sql 
+SELECT FROM foo WHERE foo = ? OR bar = ?
+</code></pre>
+<p>
+今度はCPANから、またもままで引用です。
+この例ではselect.sqlというシンボルを作って、query_by_sqlという関数に食わせています。
+サンプルでは$foo, $barをそれぞれ渡していますが、配列で一気に渡すことも可能です。
+</p><p>
+一番、実現したかった項目を満たすことはできましたが、1行で完結してしまったため、
+以降の選択肢が限られてしまいました。このモジュールが実現しているSQL実行をキーに
+残り二つの項目を満たすモジュールを探していきたいと思います。
+</p><p>
+ということで、DBIx::Simple::DataSectionの規定クラスを確認しましょう。
+どうやら、DBIx::Simpleを使っているのでこの名前空間になっているようですね。
+<a href="http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple.pm">DBIx::Simple</a>
+結果セットの取り出し方が色々とありますが、objectメソッドを使うと捗りそうですね。
+</p>
+<pre><code>
+$db->result_class = 'DBIx::Simple::Result';
+$result = $db->query(...);
+
+$obj = $result->object    @objs = $result->objects
+</code></pre>
+<p>
+これで2項目をクリアすることができました。
+最後は名前付きプレースホルダですね。正規表現を使（ry
+ということで、DBIxでどこまでがんばれるか!?
+</p><p>
+ということで、名前付きプレースホルダのモジュールを見つけてきましたよ。
+所要時間は約30秒、圧倒的なスピードでした。
+つ <a href="http://search.cpan.org/~izut/DBIx-Placeholder-Named-0.08/lib/DBIx/Placeholder/Named.pm">DBIx::Placeholder::Named</a>
+</p><p>
+ただ、これを使う場合はDBIx::Simpleとの排他になってしまいますね。
+少し、残念な気もしますが、個人的にはやりたかった内容は見つかったので、ほぼ(自己)満足です。
+明日はPerl界の3大バーテンダーの一人でもあるcharsbarさん！(と思います)
+</p>
