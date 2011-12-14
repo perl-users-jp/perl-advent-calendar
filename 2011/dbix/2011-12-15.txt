@@ -15,6 +15,7 @@ List list = (Employee) sqlMap.queryForList("getFiredEmployees", null);
 
 // insert
 Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
+
 </code></pre>
 
 <a href="http://ibatis.apache.org/docs/java/dev/">iBATIS API Reference</a>よりまま(Java1.4な時代だったんですね！)<br/>
@@ -50,6 +51,7 @@ Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
     AND PROFILE.USERID = ACCOUNT.USERID
     AND PROFILE.FAVCATEGORY = BANNERDATA.FAVCATEGORY
 </select>
+
 </code></pre>
 
 プロジェクト名が変わってしまったみたいですが、<a href="http://code.google.com/p/mybatis/downloads/list?can=3&q=Product%3DSample">公式サンプル</a>よりまま<br/>
