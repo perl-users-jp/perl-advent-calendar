@@ -25,6 +25,7 @@ Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
 一例としてXMLの記述例を挙げておきます。<br/>
 
 <pre><code>
+
 <select id="getAccountByUsernameAndPassword" parameterType="Account" resultType="Account">
   SELECT
     SIGNON.USERNAME,
