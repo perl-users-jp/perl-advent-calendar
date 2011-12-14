@@ -55,7 +55,7 @@ Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
 プロジェクト名が変わってしまったみたいですが、<a href="http://code.google.com/p/mybatis/downloads/list?can=3&q=Product%3DSample">公式サンプル</a>よりまま<br/>
 
 parameterTypeが引数、resultTypeが結果セットの格納されるVO(値オブジェクト)です。<br/>
-引数がコレクションとして与えられた場合は#{hoge}という形でそのpropertyを条件にすることもできます。
+引数がコレクションとして与えられた場合は#{hoge}という形で<br/>そのpropertyを条件にすることもできます。
 
 また、idを指定することでコンテナからSQLとVOのマッピングをシンボルとして取り出して(！！)<br/>お手軽にSQLを実行できる点が密かなお気に入りポイントとなっています。<br/>パラメータ引数や返り値なんかは単なるVOなので特記することはありませんね。<br/>ちなみにSQLの定義で動的なSQLなんかも書けますが、割愛します。<br/>
 
@@ -63,13 +63,13 @@ Perlで作ってやるぜ！な漢気のある方は<a href="http://ibatis.apach
 
 今回はPerl Advent CalendarなのでJavaの話はさっさと切り上げることにして、<br/>個人的に今回、実現したい機能は以下のものとなります。
 
-* 実行するSQLをシンボルとして取り出す
-* オブジェクトへのマッピング
-* 名前付きプレースホルダ
+<ul>
+  <li>実行するSQLをシンボルとして取り出す</li>
+  <li>オブジェクトへのマッピング</li>
+  <li>名前付きプレースホルダ</li>
+</ul>
 
-ということで、DBIxを設定ファイルから使うためのモジュールをCPANから探すことにしましょう。
-
-まずは今回、どうしても実現したかったSQLのシンボル化を探すことにします。<br/>普段はmiyagawaさんが作られたData::Section::Simpleを使ってSQLをシンボル化していたのですが、<br/>使い心地そのままなモジュールがCPANにあります。
+ということで、早速、DBIxモジュールをCPANから探すことにしましょう。<br/>まずは今回、どうしても実現したかったSQLのシンボル化を探すことにします。<br/>普段はmiyagawaさんが作られたData::Section::Simpleを使ってSQLをシンボル化していたのですが、<br/>使い心地そのままなモジュールがCPANにあります。
 
 DBIx::Simple::DataSection<br/>http://search.cpan.org/~kitano/DBIx-Simple-DataSection-0.02/lib/DBIx/Simple/DataSection.pm
 
@@ -82,17 +82,12 @@ __DATA__
 SELECT FROM foo WHERE foo = ? OR bar = ?
 </code></pre>
 
-今度はCPANから、またもままで引用です。<br/>
-この例ではselect.sqlというシンボルを作って、query_by_sqlという関数に食わせています。<br/>
-サンプルでは$foo, $barをそれぞれ渡していますが、配列で一気に渡すことも可能です。
+今度はCPANから、またもままで引用です。<br/>この例ではselect.sqlというシンボルを作って、query_by_sqlという関数に食わせています。<br/>サンプルでは$foo, $barをそれぞれ渡していますが、配列で一気に渡すことも可能です。
 
 一番、実現したかった項目を満たすことはできましたが、1行で完結してしまったため、<br/>以降の選択肢が限られてしまいました。このモジュールが実現しているSQL実行をキーに<br/>
 残り二つの項目を満たすモジュールを探していきたいと思います。
 
-ということで、DBIx::Simple::DataSectionの規定クラスを確認しましょう。<br/>
-どうやら、DBIx::Simpleを使っているのでこの名前空間になっているようですね。<br/>
-<a href="http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple.pm">DBIx::Simple</a><br/>
-結果セットの取り出し方が色々とありますが、objectメソッドを使うと捗りそうですね。
+ということで、DBIx::Simple::DataSectionの規定クラスを確認しましょう。<br/>どうやら、DBIx::Simpleを使っているのでこの名前空間になっているようですね。<br/><a href="http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple.pm">DBIx::Simple</a><br/>結果セットの取り出し方が色々とありますが、objectメソッドを使うと捗りそうですね。
 
 <pre><code>
 $db->result_class = 'DBIx::Simple::Result';
