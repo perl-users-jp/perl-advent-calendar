@@ -62,7 +62,7 @@ barn と cond を 100% にするのは結構たいへんなので sub と stmt �
 
 cond とかをクリックすると以下のようになっててとってもわかりやすいですね。
 
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/test/2011-12-15/5605bfcd423be976d6b15cf4adda6593.png.png" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/test/2011-12-15/5605bfcd423be976d6b15cf4adda6593.png" />
 
 これを見ながらいろいろと修正してカバレッジを上げて行きましょう！！
 
