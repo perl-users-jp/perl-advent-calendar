@@ -106,9 +106,7 @@ my $sth = $dbh->prepare(
 
 $sth->execute({ this => $this, that => $that, });
 </code></pre>
-この例だと、thisとthatがそれぞれ名前付きプレースホルダとして扱われるようですね。
-DBIx::Simple::DataSectionと組み合わせることでかなり直感的に扱うことができそうな感じです。
-ただ、これを使う場合はDBIx::Simpleとの排他になってしまいますね。
+この例だと、thisとthatがそれぞれ名前付きプレースホルダとして扱われるようですね。<br/>DBIx::Simple::DataSectionと組み合わせることでかなり直感的に扱うことができそうな感じです。<br/>ただ、これを使う場合はDBIx::Simpleとの排他になってしまいますね。
 
 個人的にはやりたかった内容は見つかったので、ほぼ(自己)満足です。<br/>明日はPerl界の3大バーテンダーの一人でもあるcharsbarさん！(と思います)
 
