@@ -42,8 +42,8 @@ use DBI;
 use Data::Dumper;
 use DBIx::DBSchema;
 
-my $user = 'game';
-my $pass = '';
+my $user = 'user';
+my $pass = 'password';
 my $dbh1 = DBI->connect('DBI:mysql:database=test_kawamoto;host=localhost', $user, $pass);
 my $dbh2 = DBI->connect('DBI:mysql:database=test_kawamoto2;host=localhost', $user, $pass);
 
