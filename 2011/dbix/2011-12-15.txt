@@ -15,7 +15,7 @@ List list = (Employee) sqlMap.queryForList("getFiredEmployees", null);
 
 // insert
 Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
-||<
+</code></pre>
 
 <a href="http://ibatis.apache.org/docs/java/dev/">iBATIS API Reference</a>よりまま(Java1.4な時代だったんですね！)<br/>
 
