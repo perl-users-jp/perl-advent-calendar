@@ -6,7 +6,7 @@ DBIxに関して書くほどの知識もないため、今までの経験から�
 
 ということで、さっそくですが実行部分を見てみますよ！
 
->||
+<pre><code>
 // fetch
 Employee emp = (Employee) sqlMap.queryForObject("getEmployee", new Integer(1));
 
@@ -23,7 +23,7 @@ Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
 
 一例としてXMLの記述例を挙げておきます。<br/>
 
->||
+<pre><code>
 <select id="getAccountByUsernameAndPassword" parameterType="Account" resultType="Account">
   SELECT
     SIGNON.USERNAME,
@@ -50,7 +50,7 @@ Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
     AND PROFILE.USERID = ACCOUNT.USERID
     AND PROFILE.FAVCATEGORY = BANNERDATA.FAVCATEGORY
 </select>
-||<
+</code></pre>
 
 プロジェクト名が変わってしまったみたいですが、<a href="http://code.google.com/p/mybatis/downloads/list?can=3&q=Product%3DSample">公式サンプル</a>よりまま<br/>
 
@@ -73,14 +73,14 @@ Perlで作ってやるぜ！な漢気のある方は<a href="http://ibatis.apach
 
 DBIx::Simple::DataSection<br/>http://search.cpan.org/~kitano/DBIx-Simple-DataSection-0.02/lib/DBIx/Simple/DataSection.pm
 
->||
+<pre><code>
 my $rs = $db->query_by_sql('select.sql', $foo, $bar) 
     or die $db->error;
 
 __DATA__
 @@ select.sql 
 SELECT FROM foo WHERE foo = ? OR bar = ?
-||<
+</code></pre>
 
 今度はCPANから、またもままで引用です。<br/>
 この例ではselect.sqlというシンボルを作って、query_by_sqlという関数に食わせています。<br/>
@@ -94,12 +94,12 @@ SELECT FROM foo WHERE foo = ? OR bar = ?
 <a href="http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple.pm">DBIx::Simple</a><br/>
 結果セットの取り出し方が色々とありますが、objectメソッドを使うと捗りそうですね。
 
->||
+<pre><code>
 $db->result_class = 'DBIx::Simple::Result';
 $result = $db->query(...);
 
 $obj = $result->object    @objs = $result->objects
-||<
+</code></pre>
 
 これで2項目をクリアすることができました。<br/>最後は名前付きプレースホルダですね。正規表現を使（ry<br/>ということで、DBIxでどこまでがんばれるか!?<br/></p><p>
 
