@@ -1,8 +1,93 @@
-plackupでワンライナー + おまけ
+dropbox-api-command - DropboxでLinuxライクなコマンド操作を
 meta-author: aska
 meta-tags: perl
 
 はい、One Page Appsの@su_askaです。
+
+今日はちゃんとPerlの話をしようと思います。
+
+DropboxというとクライアントOSにインストールして使用するイメージが強いですが、自分のサーバー上でも利用したい場合もあります。
+
+Linux用のパッケージもあるので全部同期して構わなければそれをインストールする方法もあるのですが、デーモンまで上げるのはちょっと大袈裟だなーというシチュエーションもありますよね！
+
+例えば...
+
+- 個人契約のサーバーで運用しているDBのバックアップ
+- 期間削除
+
+そんな時はdropbox-api-commandの出番です！（迫真
+
+https://github.com/s-aska/dropbox-api-command
+
+インストールの仕方や細かい使用方法は上記URLを参照下さい。
+
+** 豊富なコマンド群
+
+linuxライクな
+
+- ls
+- **find**
+- **sync**
+- cp
+- mv
+- rm
+- mkdir
+- get
+- put
+- uid
+
+API単体の操作はcurlでも可能ですがrsyncっぽい処理を自作するのはなかなか面倒です!
+
+*** syncの使用例 ( remote => local )
+
+delete ( -d ), dry run ( -n ), verbose ( -v ) に作り手のこだわりを感じますね!!
+
+>||
+> dropbox-api sync dropbox:/product/google-tasks-checker-plus/src /tmp/product -dnv
+remote_base: /product/chrome-extentions/google-tasks-checker-plus/src
+local_base: /private/tmp/product
+** download **
+skip background.html
+download /private/tmp/product/external.png
+download /private/tmp/product/icon-32.png
+download /private/tmp/product/icon-128.png
+skip icon.gif
+skip jquery-1.4.2.min.js
+skip main.js
+skip manifest.json
+skip options.html
+skip popup.html
+skip reset.css
+** delete **
+skip background.html
+remove background.html.tmp
+skip icon.gif
+skip jquery-1.4.2.min.js
+skip main.js
+skip manifest.json
+skip options.html
+skip popup.html
+skip reset.css
+||<
+
+** 今なら親切なマニュアル付き
+
+意外とこの手のプロダクトはgithubに置きっ放しで作者以外使い方がわからなかったりオプションの説明が抜けていたりするものも少なくないのですが、このプロダクトはすべてのコマンド・オプション・実行結果のサンプルをREADMEに張っていますし、helpサブコマンドから各コマンドの使用方法を参照することができます。
+
+** アプリケーションへの組み込み
+
+Dropbox API v1.0 対応の WebService::Dropbox をご利用下さい。
+
+https://metacpan.org/module/WebService::Dropbox
+
+すべてのREST APIに対応するメソッドがあり対応する名前がそのまま、日本語のエスケープ処理等気にせずdecodeされたutf8文字列でファイル名を投げれるので凄くストレスフリーですね!
+
+
+明日は Werlのダメ人間 さんです。お楽しみに！
+
+<a onclick="document.getElementById('omake').style.display = 'block'">おまけ</a>
+
+<div id="omake" style="display: none">
 
 今日はちゃんとPerlの話をしようと思います。
 
@@ -178,4 +263,4 @@ sub db {
 - MarkdownDiary ... http://blog.7kai.org/ (blogっぽいMarkdownビューア )
 - 7kai Tasks ...https://tasks.7kai.org/ (ソーシャルタスク管理サービス)
 
-明日は Werlのダメ人間 さんです。お楽しみに！
+</div>
