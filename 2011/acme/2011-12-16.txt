@@ -1,0 +1,55 @@
+Acme::NumericalArgumenttttttttttttttttttttt
+meta-author: k12u
+meta-tags: perl, acme
+
+はい、[http://twitter.com/k12u:title=kawamoto]です
+
+CPANにモジュールをupしたことはありませんが、ちょっとモジュール作ってみました。
+[https://github.com/k12u/p5-acme-numericalarugment:title=Acme:NumericalArgument]です。
+
+使い方は[https://github.com/k12u/p5-acme-numericalarugment/blob/master/t/01-base.t:title=test]に書いてあるまんまです。
+
+>||
+package MyPackage;
+
+use parent 'Acme::NumericalArgument';
+sub hello {
+    my ($self, $count, $arg) = @_;
+    return("Hello" x $count . $arg);
+}
+
+package main;
+
+use strict;
+use warnings;
+use Test::More;
+use Test::Exception;
+
+is(MyPackage->new->helloooooooooooooooooo(" World"), ("Hello" x 18)." World");
+note(MyPackage->new->helloooooooooooooooooo(" World"));
+dies_ok { MyPackage->new->noooo };
+
+done_testing;
+||<
+
+Acme::NumericalArgument のサブクラスMyPackageで
+>||
+MyPackage->new->helloooooooooooooooooo(" World")
+||<
+などとメソッドを呼び出すと、
+
+>||
+sub hello {
+    my ($self, $count, $arg) = @_;
+    return("Hello" x $count . $arg);
+    # HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello World
+}
+||<
+といった具合にメソッド名の "o" の数 (18) が第1引数として渡されます。
+
+実用性はもちろんありませんが、退屈な作業の時でも
+>||
+shutdownnnnnnnnnnnn
+||<
+こんなコマンドでサーバがたくさんshutdownしたりするとまあまあ気持いいと思います。
+
