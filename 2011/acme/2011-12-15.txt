@@ -1,0 +1,6 @@
+将
+meta-tags: perl, acme
+
+さあ、このページをご覧の貴方！　本日のAcmeな記事を書いてみませんか！？
+<a href="http://atnd.org/events/22670">いらっしゃい！</a>
+
