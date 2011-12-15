@@ -1,0 +1,73 @@
+HTTP通信を含むモジュールのテスト #2
+meta-author: ikasam_a
+meta-tags: perl, testing, http, testdouble
+
+**はじめに
+
+こんにちは。ikasam_a です。
+
+8日目に bayashi さんが [http://perl-users.jp/articles/advent-calendar/2011/test/8:title=HTTP通信を含むモジュールのテスト] というエントリを書かれていますが、今日はその続編的な話をします。
+
+**フェイクとスタブ
+
+前のエントリでは [https://metacpan.org/module/Test::Fake::HTTPD:title=Test::Fake::HTTPD] を使ってフェイクサーバを立ててテストする、という手法が紹介されています。これは [http://xunitpatterns.com/Test%20Double.html:title=テストダブル (Test Double)] で言うところの Fake という概念で、"動作するけど手抜き" なサーバを用意して実際に HTTP 通信可能にするってわけです。これで実際のサービスに DoS することなくテストできるので、積極的に使いたいところです。
+
+テストダブルとは何ぞや？という話は、別のエントリでしたいと思いますので、今日はさらっと流してください！
+
+このテストダブルには他にも概念カテゴリがあって、例えばよく聞くものにスタブ (Stub) というものがあります。簡単に言うと、右から左へ以下略な感じに "このメソッドを呼ばれたらこの値を返す" という定義をするわけです。この概念を使えば "HTTP クライアントの送信メソッドが呼ばれたら、決め打ちのレスポンスを返す" ということが可能で、HTTP 通信自体をすっ飛ばしちゃってテストできちゃうわけですね。
+
+**HTTPリクエストスタブ
+というわけで前置きが長くなりましたが、LWP::UserAgent のリクエストスタブとして動作する [https://metacpan.org/module/Test::Mock::LWP::Conditional:title=Test::Mock::LWP::Conditional] というモジュールを書きました。これを使うと、URL ごとに決まった HTTP::Response を返すようにスタブを当てることができます。
+
+>|perl|
+use Test::More;
+use Test::Mock::LWP::Conditional;
+use LWP::UserAgent;
+use HTTP::Response;
+
+Test::Mock::LWP::Conditional->stub_request(
+    "http://example.com/" => HTTP::Response->new(503)
+);
+
+my $ua = LWP::UserAgent->new;
+my $res = $ua->get("http://example.com/");
+is $res->code => 503, "stubbed response ok";
+
+done_testing;
+||<
+
+LWP::UserAgent のインスタンスごとに独立してスタブを当てることもできます。
+>|perl|
+my $ua = LWP::UserAgent->new;
+$ua->stub_request("http://example.com/foo" => HTTP::Response->new(403));
+
+my $res = $ua->get("http://example.com/foo");
+is $res->code => 403, "per instance stubs ok";
+||<
+
+途中でスタブをクリアしたい場合はクラスメソッドの reset_all を呼びましょう。
+>|perl|
+Test::Mock::LWP::Conditional->reset_all;
+||<
+
+同じ URL に複数スタブを当てた場合は、リクエスト回数と同期します。リクエストがスタブ数を超えると、最後のスタブが繰り返し使われます。
+>|perl|
+my $url = "http://example.com/continuous";
+$ua->stub_request($url => HTTP::Response->new(401)); # 1st
+$ua->stub_request($url => HTTP::Response->new(403)); # 2nd
+$ua->stub_request($url => HTTP::Response->new(500)); # 3rd..nth
+
+is $ua->get($url)->code => 401, "1st status is 401";
+is $ua->get($url)->code => 403, "2nd status is 403";
+is $ua->get($url)->code => 500, "3rd status is 500";
+is $ua->get($url)->code => 500, "4th status is 500, too";
+||<
+
+今できることは大体こんな感じです。簡単ですね。
+
+なぜかモジュールの名前に "モック" が入っているわけですが、これは既存の同様なモジュールに Test::Mock::LWP や Test::Mock::LWP::Dispatch というのがあるからだったりします。これらのプロダクトは、使い勝手に少々微妙なところがあったり、実際には依存していないのに requires 'Moose' していたりということがあって、今回置き換えとなるようなモジュールを書いてみました。
+
+**おわりに
+さて、実は "HTTP通信を含むモジュールのテスト" という観点では、フェイクとスタブのどちらを使っても、大体同じことが実現できることがほとんどです。それでは、なぜ同じ事を実現するために、フェイクやらスタブやら他にもモックやらと、色々と概念があるのでしょうか。ややこしいですが、そこはやはりあるにはあるなりの理由というのもちゃんとあります。次の機会にはこれら "テストダブル" について話してみたいなーなんて思います。
+
+フェイクやスタブ、場面で適切なものをチョイスするのも大事ですが、最も大事なのはこういった手段を活用してカジュアルにテストを書くことだと思います。今回のモジュールが HTTP 通信を伴うモジュールテストの一助になれば幸いです！
