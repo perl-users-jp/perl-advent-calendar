@@ -1,0 +1,152 @@
+Perl Life
+meta-author: aska
+meta-tags: perl
+
+はい、One Page Appsの@su_askaです。
+
+今日はちゃんとPerlの話をしようと思います。
+
+* plackupでワンライナー
+
+** Proxy通している時のIPや検証用携帯のUAをサクっと確認
+
+>|perl|
+plackup -e "sub { use Data::Dumper;warn Dumper(@_);[200, ['Content-Type', 'text/html'], ['ok']] }"
+||<
+
+※補足: いにしえのエンジニアはenv.cgiとか太古のいくさで使用していたそうです、未来の学者が言っていました。
+
+** 適当なヘッダー返して挙動確認とか
+
+>|perl|
+plackup -e "sub { [404, ['Content-Type', 'text/html', 'X-XRDS-Location', 'http://www.example.jp/xrds'], ['404']] }"
+||<
+
+※補足: Yadisの検証とかこの携帯utf8食えるのかなとかとか
+
+** CPANにUPする前の簡単なPODチェック
+
+>|perl|
+plackup -MDocLife::Pod -e 'DocLife::Pod->new( root => "./lib" )->to_app'
+||<
+
+※補足: これでCPANっぽくPOD表示するHTTPDが上がります、どさくさに紛れて自分が作ったモジュール晒してみました
+
+* まとめ
+
+ワンライナーのいいところはゴミ残らない所ですが、前書いたワンライナーまた使いたいって時に出てこないのがわるいところですね!
+
+じゃあgistにあげとけよタコ!!!!
+
+で、gistに上げてたら今度は検索できなくて詰んだりします。そういう時は下のAPIをブラウザでアクセスしてCtrl-Fしましょう。
+
+https://api.github.com/users/s-aska/gists (s-askaの所はあなたのIDにしてね!)
+
+descriptionとか埋めてないとこれでも探せないので埋めておいた方が良いです。
+
+はいっ、次の話題に移ります、ネタなんか薄いので色々持ってきました。
+
+* ガラケーサイト with Amon2
+
+Amon2で書いたアプリでどうしてもガラケー対応（sjis対応）が必要だったのですが、プラグインで事足りました。
+
+>|perl|
+__PACKAGE__->load_plugins(
+    'Web::MobileAgent',
+    'Web::MobileCharset',
+);
+||<
+
+諸事情でHTTP::SessionではなくPlack::Session使っていたのですが、ついでにPlack::Session::State::URI書いたので宜しければどうぞ。
+
+* MySQL Casual with Teng
+
+jsonの値MySQLに突っ込みたい時に xxx_json 的なカラムは自動encode/decodeする的なコード
+
+よくある_onをDateTimeにする奴とかと一緒な感じですね、もっとスマートな書き方あるよって人は教えてあげて下さい。
+
+>|perl|
+sub db {
+    my $c = shift;
+    unless ( defined $c->{db} ) {
+        my $conf = $c->config->{DBI}
+          or die "missing configuration for 'DB'";
+        my $dbh = DBI->connect(@$conf);
+        my $schema = Teng::Schema::Loader->load(
+            namespace => 'MyApp::DB',
+            dbh => $dbh
+        );
+        for my $table (values %{ $schema->tables }) {
+            for my $column (grep /_json$/, @{ $table->columns }) {
+                $table->add_inflator($column, sub {
+                    $_[0] ? decode_json(shift) : {}
+                });
+                $table->add_deflator($column, sub {
+                    encode_json(shift)
+                });
+            }
+        }
+        $c->{db} = FeedbackAdmin::DB->new(
+            dbh    => $dbh,
+            schema => $schema
+        );
+    }
+    return $c->{db};
+}
+||<
+
+* Perlのススメ
+
+このエントリーを見てくれた「私まだPerlそんなに...」という方もいるかも知れません（居ないよ!!）、なので色々紹介してみましょう!!
+
+** 書
+
+- 初めてのPerl
+- 続・初めてのPerl
+- モダンPerl入門
+- Perl CPANモジュールガイド
+- 体系的に学ぶ 安全なWebアプリケーションの作り方
+
+とりあえず「Webアプリケーション作りたいけど脆弱性怖いよう」という方は徳丸本読むといいと思います、私まだ読んでないんですけどね、正月読みますよ!
+
+** 環境
+
+今更感満載ですがこれが全部揃わないことにはperlの開発は始まりません
+
+- perlbrew ... システムPerlで開発しちゃらめーーー
+- cpanm ... モジュールのインストールはもちろん
+- carton ... バージョン管理もバッチリ
+- Plack ... mod_perlはオワコン
+- git ... 商用のVCS使ったことねーから!!
+- TextMate ... EmacsやVimが人気ですが個人的にはTextMateが好みです
+- MBP ... やっぱり開発はUnixが望ま...、おっと<a href="http://mattn.kaoriya.net">mattn</a>さんの影が
+- 水 ... 長時間開発する際は適度な水分補給を忘れずに
+
+** 頻用Module
+
+- Amon2 ... 紳士はCatalystと聞くと重たい気持ちになる
+- JSON ... 紳士はXMLなんて使わないんです（ｷﾘｯ
+- Xslate ... 紳士はTTとかマジ勘弁
+- Furl ... LWP使っていいのは小学生まで
+- Teng ... Tengまで要らないときは Amon2::DBI, DBIx::Simple あたりがオススメです
+
+** 集い
+
+#perl-casual@freenode.netや各地PM、最近はTwitterもあるので気軽にやり取りできるようになりました。
+
+まずはビールからという人はPMに顔を出すのが一番手っ取り早いと懐います、あとMySQL Casualとかいいと思います、私は泥酔して@myfinderさんにご迷惑を（ｒｙ
+
+あとはPerl話沢山聴きたい時はYAPCですが年に一回でチケットが売り切れ続出なので早目にチェックするといいと思います、トークするとチケット無料です、やったね！
+
+** 戦果
+
+1記事書かせて頂いた記念に自分の成果物を晒したいと思います。
+
+- DocLife ... cpan/githubのお供に
+- dropbox-api-command ... Linux環境でデーモンじゃなくてスクリプトでDropbox扱いたい時に
+- bookma!{ぶ) ... http://bookma.org/
+- 7kai Tasks ...https://tasks.7kai.org/ (ソーシャルタスク管理サービス)
+- MarkdownBinder ... http://doc.7kai.org/ (wikiっぽいMarkdownビューア )
+- MarkdownDiary ... http://blog.7kai.org/ (blogっぽいMarkdownビューア )
+
+明日は Werlのダメ人間 さんです。お楽しみに！
