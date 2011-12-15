@@ -1,4 +1,4 @@
-Perl Life
+plackupでワンライナー + おまけ
 meta-author: aska
 meta-tags: perl
 
@@ -16,7 +16,7 @@ plackup -e "sub { use Data::Dumper;warn Dumper(@_);[200, [], ['ok']] }"
 
 ※補足: Proxyを使用している際のIPアドレスや検証用携帯電話のUAを確認
 
-** 適当なヘッダー返してクローラーの挙動を検証
+** give me 適当なヘッダー
 
 >|perl|
 plackup -e "sub { [404, ['X-XRDS-Location', 'http://www.example.jp/xrds'], ['404']] }"
@@ -24,7 +24,7 @@ plackup -e "sub { [404, ['X-XRDS-Location', 'http://www.example.jp/xrds'], ['404
 
 ※補足: Yadisの検証
 
-** CPANにUPする前のPODチェック
+** CPANにUPする前に欠かせない紳士のPODチェック
 
 >|perl|
 plackup -MDocLife::Pod -e 'DocLife::Pod->new( root => "./lib" )->to_app'
