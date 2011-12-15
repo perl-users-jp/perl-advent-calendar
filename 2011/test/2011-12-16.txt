@@ -10,14 +10,14 @@ meta-tags: perl, testing, http, testdouble
 
 **フェイクとスタブ
 
-前のエントリでは [https://metacpan.org/module/Test::Fake::HTTPD:title=Test::Fake::HTTPD] を使ってフェイクサーバを立ててテストする、という手法が紹介されています。これは [http://xunitpatterns.com/Test%20Double.html:title=テストダブル (Test Double)] で言うところの Fake という概念で、"動作するけど手抜き" なサーバを用意して実際に HTTP 通信可能にするってわけです。これで実際のサービスに DoS することなくテストできるので、積極的に使いたいところです。
+前のエントリでは <a href="https://metacpan.org/module/Test::Fake::HTTPD">Test::Fake::HTTPD</a> を使ってフェイクサーバを立ててテストする、という手法が紹介されています。これは [http://xunitpatterns.com/Test%20Double.html:title=テストダブル (Test Double)] で言うところの Fake という概念で、"動作するけど手抜き" なサーバを用意して実際に HTTP 通信可能にするってわけです。これで実際のサービスに DoS することなくテストできるので、積極的に使いたいところです。
 
 テストダブルとは何ぞや？という話は、別のエントリでしたいと思いますので、今日はさらっと流してください！
 
 このテストダブルには他にも概念カテゴリがあって、例えばよく聞くものにスタブ (Stub) というものがあります。簡単に言うと、右から左へ以下略な感じに "このメソッドを呼ばれたらこの値を返す" という定義をするわけです。この概念を使えば "HTTP クライアントの送信メソッドが呼ばれたら、決め打ちのレスポンスを返す" ということが可能で、HTTP 通信自体をすっ飛ばしちゃってテストできちゃうわけですね。
 
 **HTTPリクエストスタブ
-というわけで前置きが長くなりましたが、LWP::UserAgent のリクエストスタブとして動作する [https://metacpan.org/module/Test::Mock::LWP::Conditional:title=Test::Mock::LWP::Conditional] というモジュールを書きました。これを使うと、URL ごとに決まった HTTP::Response を返すようにスタブを当てることができます。
+というわけで前置きが長くなりましたが、LWP::UserAgent のリクエストスタブとして動作する <a href="https://metacpan.org/module/Test::Mock::LWP::Conditional">Test::Mock::LWP::Conditional</a> というモジュールを書きました。これを使うと、URL ごとに決まったレスポンスを返すようにスタブを当てることができます。
 
 >|perl|
 use Test::More;
