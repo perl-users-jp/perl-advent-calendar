@@ -43,8 +43,8 @@ API単体の操作はcurlでも可能ですがrsyncっぽい処理を自作す�
 delete ( -d ), dry run ( -n ), verbose ( -v ) に作り手のこだわりを感じますね!!
 
 >||
-> dropbox-api sync dropbox:/product/google-tasks-checker/src /tmp/product -dnv
-remote_base: /product/chrome-extentions/google-tasks-checker/src
+> dropbox-api sync dropbox:/product/checker/src /tmp/product -dnv
+remote_base: /product/chrome-extentions/checker/src
 local_base: /private/tmp/product
 ** download **
 skip background.html
