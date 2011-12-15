@@ -50,28 +50,37 @@ descriptionとか埋めてないとこれでも探せないので埋めておい
 
 はいっ、次の話題に移ります、ネタなんか薄いので色々持ってきました。
 
-* ガラケーサイト with Amon2
+* ガラケーサイト with Plack::Session
 
-Amon2で書いたアプリでどうしてもガラケー対応（sjis対応）が必要だったのですが、プラグインで事足りました。
+Amon2::Setup::Flavor::MobileJP 便利ですよ! (詳しくはamon2トラック参照)
+
+Amon2::Setup::Flavor::MobileJP !! (大事なことなので2回言いました)
+
+Plack::MiddlewareでSession使う必要があり、
+
+HTTP::SessionからURIに埋めるヤツを複写して使っていたのですが、
+
+今はcpanに上げています。
+
+Plack::Session::State::URI使うとcookieダメな子も安心!
+
+※CookieいけるときはCookieで的な事まではしてないです、ごめんよ
 
 >|perl|
-__PACKAGE__->load_plugins(
-    'Web::MobileAgent',
-    'Web::MobileCharset',
-);
+enable 'Plack::Middleware::Session',
+    %{ $config->{Session} },
+    state => Plack::Session::State::URI->new(
+        session_id_name => 'sss',
+    );
 ||<
-
-諸事情でPlack::Session使っていたのですが、
-
-ついでにPlack::Session::State::URI書いたので宜しければどうぞ。
 
 * MySQL Casual with Teng
 
 jsonの値MySQLに突っ込みたい時に xxx_json 的なカラムは自動en/decodeする的なコード
 
-よくある_onをDateTimeにする奴とかと一緒な感じですね、
+よくある_onをDateTimeにする奴とかと一緒な感じですね。 (詳しくはtengトラック参照)
 
-もっとスマートな書き方あるよって人は教えてあげて下さい。
+やり方は色々あります、以下はあくまでサンプルという事でお願いします。
 
 >|perl|
 sub db {
@@ -102,6 +111,10 @@ sub db {
     return $c->{db};
 }
 ||<
+
+- スキーマから定義
+- _json で終わるカラム名は自動 en/decode
+- カラム拡張とかもしたいので MyApp::DB は書いてある
 
 * Perlのススメ
 
