@@ -8,37 +8,41 @@ meta-tags: perl
 
 * plackupでワンライナー
 
-** Proxy通している時のIPや検証用携帯のUAをサクっと確認
+** envをげろげろーってするやつ
 
 >|perl|
-plackup -e "sub { use Data::Dumper;warn Dumper(@_);[200, ['Content-Type', 'text/html'], ['ok']] }"
+plackup -e "sub { use Data::Dumper;warn Dumper(@_);[200, [], ['ok']] }"
 ||<
 
-※補足: いにしえのエンジニアはenv.cgiとか太古のいくさで使用していたそうです、未来の学者が言っていました。
+※補足: Proxyを使用している際のIPアドレスや検証用携帯電話のUAを確認
 
-** 適当なヘッダー返して挙動確認とか
+** 適当なヘッダー返してクローラーの挙動を検証
 
 >|perl|
-plackup -e "sub { [404, ['Content-Type', 'text/html', 'X-XRDS-Location', 'http://www.example.jp/xrds'], ['404']] }"
+plackup -e "sub { [404, ['X-XRDS-Location', 'http://www.example.jp/xrds'], ['404']] }"
 ||<
 
-※補足: Yadisの検証とかこの携帯utf8食えるのかなとかとか
+※補足: Yadisの検証
 
-** CPANにUPする前の簡単なPODチェック
+** CPANにUPする前のPODチェック
 
 >|perl|
 plackup -MDocLife::Pod -e 'DocLife::Pod->new( root => "./lib" )->to_app'
 ||<
 
-※補足: これでCPANっぽくPOD表示するHTTPDが上がります、どさくさに紛れて自分が作ったモジュール晒してみました
+※補足: CPANっぽくPOD表示するHTTPDが上がります
 
 * まとめ
 
-ワンライナーのいいところはゴミ残らない所ですが、前書いたワンライナーまた使いたいって時に出てこないのがわるいところですね!
+ワンライナーのいいところはゴミ残らない所ですが、
 
-じゃあgistにあげとけよタコ!!!!
+前書いたワンライナーまた使いたいって時に出てこないのがわるいところですね!
 
-で、gistに上げてたら今度は検索できなくて詰んだりします。そういう時は下のAPIをブラウザでアクセスしてCtrl-Fしましょう。
+<strong>じゃあgistにあげとけよタコ!!!!</strong>
+
+で、gistに上げてたら今度は検索できなくて詰んだりします。
+
+そういう時は下のAPIをブラウザでアクセスしてCtrl-Fしましょう。
 
 https://api.github.com/users/s-aska/gists (s-askaの所はあなたのIDにしてね!)
 
@@ -57,13 +61,17 @@ __PACKAGE__->load_plugins(
 );
 ||<
 
-諸事情でHTTP::SessionではなくPlack::Session使っていたのですが、ついでにPlack::Session::State::URI書いたので宜しければどうぞ。
+諸事情でPlack::Session使っていたのですが、
+
+ついでにPlack::Session::State::URI書いたので宜しければどうぞ。
 
 * MySQL Casual with Teng
 
-jsonの値MySQLに突っ込みたい時に xxx_json 的なカラムは自動encode/decodeする的なコード
+jsonの値MySQLに突っ込みたい時に xxx_json 的なカラムは自動en/decodeする的なコード
 
-よくある_onをDateTimeにする奴とかと一緒な感じですね、もっとスマートな書き方あるよって人は教えてあげて下さい。
+よくある_onをDateTimeにする奴とかと一緒な感じですね、
+
+もっとスマートな書き方あるよって人は教えてあげて下さい。
 
 >|perl|
 sub db {
@@ -86,7 +94,7 @@ sub db {
                 });
             }
         }
-        $c->{db} = FeedbackAdmin::DB->new(
+        $c->{db} = MyApp::DB->new(
             dbh    => $dbh,
             schema => $schema
         );
@@ -97,9 +105,15 @@ sub db {
 
 * Perlのススメ
 
-このエントリーを見てくれた「私まだPerlそんなに...」という方もいるかも知れません（居ないよ!!）、なので色々紹介してみましょう!!
+このエントリーを見てくれた人の中には
+
+「実は私まだPerl Mongerじゃ...」という方もいるかも知れません（居ないよ!!）
+
+なので色々紹介してみましょう!!
 
 ** 書
+
+みんなもどんどん書いてみよう!
 
 - 初めてのPerl
 - 続・初めてのPerl
@@ -107,11 +121,9 @@ sub db {
 - Perl CPANモジュールガイド
 - 体系的に学ぶ 安全なWebアプリケーションの作り方
 
-とりあえず「Webアプリケーション作りたいけど脆弱性怖いよう」という方は徳丸本読むといいと思います、私まだ読んでないんですけどね、正月読みますよ!
-
 ** 環境
 
-今更感満載ですがこれが全部揃わないことにはperlの開発は始まりません
+今更感満載ですがこれが全部揃わないことにはperlの開発は始まりません!!
 
 - perlbrew ... システムPerlで開発しちゃらめーーー
 - cpanm ... モジュールのインストールはもちろん
@@ -122,13 +134,15 @@ sub db {
 - MBP ... やっぱり開発はUnixが望ま...、おっと<a href="http://mattn.kaoriya.net">mattn</a>さんの影が
 - 水 ... 長時間開発する際は適度な水分補給を忘れずに
 
-** 頻用Module
+** 超頻用Module
+
+アプリ書く時にほぼ毎回全部使う奴ですね!!!
 
 - Amon2 ... 紳士はCatalystと聞くと重たい気持ちになる
 - JSON ... 紳士はXMLなんて使わないんです（ｷﾘｯ
 - Xslate ... 紳士はTTとかマジ勘弁
 - Furl ... LWP使っていいのは小学生まで
-- Teng ... Tengまで要らないときは Amon2::DBI, DBIx::Simple あたりがオススメです
+- Teng ... Liteな時は Amon2::DBI, DBIx::Simple あたりがオススメ
 
 ** 集い
 
@@ -136,17 +150,19 @@ sub db {
 
 まずはビールからという人はPMに顔を出すのが一番手っ取り早いと懐います、あとMySQL Casualとかいいと思います、私は泥酔して@myfinderさんにご迷惑を（ｒｙ
 
-あとはPerl話沢山聴きたい時はYAPCですが年に一回でチケットが売り切れ続出なので早目にチェックするといいと思います、トークするとチケット無料です、やったね！
+あとはPerl話沢山聴きたい時はYAPCですが年に一回でチケットが売り切れ続出なので早目にチェックするといいと思います、トークするとチケット無料です、やったね！（ｒｙ
 
-** 戦果
+** 今年の戦果
 
-1記事書かせて頂いた記念に自分の成果物を晒したいと思います。
+1記事書かせて頂いた記念に自分の成果物を晒したいと思います!
+
+来年もいっぱいなにか作ってると思います!!
 
 - DocLife ... cpan/githubのお供に
 - dropbox-api-command ... Linux環境でデーモンじゃなくてスクリプトでDropbox扱いたい時に
 - bookma!{ぶ) ... http://bookma.org/
-- 7kai Tasks ...https://tasks.7kai.org/ (ソーシャルタスク管理サービス)
 - MarkdownBinder ... http://doc.7kai.org/ (wikiっぽいMarkdownビューア )
 - MarkdownDiary ... http://blog.7kai.org/ (blogっぽいMarkdownビューア )
+- 7kai Tasks ...https://tasks.7kai.org/ (ソーシャルタスク管理サービス)
 
 明日は Werlのダメ人間 さんです。お楽しみに！
