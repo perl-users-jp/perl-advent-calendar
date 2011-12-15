@@ -5,7 +5,7 @@ meta-tags: perl, acme
 はい、[http://twitter.com/k12u:title=kawamoto]です
 
 CPANにモジュールをupしたことはありませんが、ちょっとモジュール作ってみました。
-[https://github.com/k12u/p5-acme-numericalarugment:title=Acme:NumericalArgument]です。
+[https://github.com/k12u/p5-acme-numericalarugment:title=Acme::NumericalArgument]です。
 
 使い方は[https://github.com/k12u/p5-acme-numericalarugment/blob/master/t/01-base.t:title=test]に書いてあるまんまです。
 
