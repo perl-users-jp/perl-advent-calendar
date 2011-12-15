@@ -9,6 +9,8 @@ meta-tags: perl, anyevent, jsdeferred, monad
 コールバック方式の関数を順に呼び出す場合、一般に記述がネストします。
 
 >|perl|
+use AnyEvent;
+
 sub add1($$) {
     my ($n, $cb) = @_;
     my $t; $t = AE::timer 1, 0, sub {
