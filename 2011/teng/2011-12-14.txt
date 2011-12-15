@@ -1,0 +1,105 @@
+#14 schema dumper
+
+先日Teng::Schema::Loaderの解説をしましたが、
+TengにはTeng::Schema::Dumperというモジュールがあります。
+Loaderはプログラム実行時に動的にdatabaseにschema情報を読み出し、
+TengのSchemaクラスを構築しましたが、Dumperはdatabaseから読みだしたschema情報を
+Teng::Schea::Declare形式で出力し、ファイルに保存して利用することを目的としています。
+
+多くのテーブル定義がある場合、手でSchemaクラスを書くのは大変なので、
+ある程度処理を自動化デキルようになっているのです。
+
+Teng::Schema::Dumperは以下のように利用します。
+
+>||
+#! perl
+use strict;
+use warnings;
+use DBI;
+use Teng::Schema::Dumper;
+
+my $dbh = DBI->connect('dbi:SQLite:./sample.db','','');
+print Teng::Schema::Dumper->dump(
+    dbh       => $dbh,
+    namespace => 'Proj::DB',
+), "\n";
+||<
+
+このようなスクリプトを書き実行すると、
+
+>||
+package Proj::DB::Schema;
+use Teng::Schema::Declare;
+table {
+    name 'user';
+    pk 'id';
+    columns (
+        'id',
+        'name',
+        'created_at',
+        'updated_at',
+    );
+};
+
+1;
+||<
+
+Teng::Schema::Declareをつかった構成のテキストが出力されるので、それをファイルに保存するだけです。
+
+またtable毎にinflate/deflateの定義を挿し込みたい場合は以下のようにします。
+
+>||
+#! perl
+use strict;
+use warnings;
+use DBI;
+use Teng::Schema::Dumper;
+
+my $dbh = DBI->connect('dbi:SQLite:./sample.db','','');
+print Teng::Schema::Dumper->dump(
+    dbh       => $dbh,
+    namespace => 'Proj::DB',
+    inflate   => +{ user => q|
+        inflate qr/.+_at/ => sub {
+            my ($col_value) = @_;
+        };
+        deflate qr/.+_at/ => sub {
+            my ($col_value) = @_;
+        };
+    |,},
+), "\n";
+||<
+
+こうすると、tableに対応したinfalte/deflateを埋め込むことができます。
+
+>||
+package Proj::DB::Schema;
+use Teng::Schema::Declare;
+table {
+    name 'user';
+    pk 'id';
+    columns (
+        'id',
+        'name',
+        'created_at',
+        'updated_at',
+    );
+
+        inflate qr/.+_at/ => sub {
+            my ($col_value) = @_;
+        };
+        deflate qr/.+_at/ => sub {
+            my ($col_value) = @_;
+        };
+    };
+
+1;
+||<
+
+
+Teng::Schema::DumperはLoaderとやりたいことがほぼかぶっているので、機能の統一を考えています。
+その為、若干無理やりやっている部分や微妙な部分がありますが、機能統一のタイミングで調整しようと思っています。
+が、当面は静的にファイルを持ちたい場合にはDumperを利用するとよいでしょう。
+
+明日はschemaのマイグレーションについての私の考えをまとめてみたいと思います
+

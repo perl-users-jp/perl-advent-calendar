@@ -1,0 +1,187 @@
+データの偏りを考慮したデータ増幅：【続】PerlとOracleDatabaseでの性能試験
+meta-author: dukkiedukkie <dukkiedukkie@yahoo.co.jp>
+meta-tags: perl, oracle, test
+
+** 単純な増幅ではテストで見抜けない性能ボトルネック
+
+こんにちは。dukkiedukkieです。クリスマスが近づいてきてますね。
+さて、先日[http://perl-users.jp/articles/advent-calendar/2011/test/6]を書かせていただきましたが、今日はその話の続きで。
+
+エンティティのカーディナリティを考慮しつつデータ増幅を行ったとしても、先日のやり方では、全ての増幅データのデータ量が均一になってしまいます。ですが、現実のデータストア運用現場で発生する問題には、
+「WHERE条件句で絞込みを行なっているのだけど、この条件指定に対してマッチする行数が多すぎて、結果の返却スピードが遅い」
+「実行計画的には変わらないのだけど、当該IDのみconsistent gets量がメガバイト単位になってしまって、どうしてもクエリがスローダウンしてしまう」
+「AWRとかRDBMSの統計情報を見ると、バッファイン、バッファアウトが頻繁に発生しているみたいで、どうやらこの条件句で絞られているものの、そのデータをバッファに載せ替えるのが全体的にRDBMSに負荷を与えている」
+「当然、Disk I/Oも上がってる」
+「その結果を非正規形な感じでKVSに載せているが、データ件数の多いキーだけレスポンスタイムも下がってしまう。。。」
+
+なあんて事態を体験した方も少なからずいらっしゃるはず。
+
+性能試験のために頑張って徹夜でデータを増幅したとしても、こういった「データ件数の偏りから発生する問題とその解決方法」がテストできないことになってしまいます。
+
+
+** データの偏りを考慮したデータ増幅を行うには？
+
+例えば、引き続き、RDBMSのテーブルとして音楽CDを例にします。CDのジャンルを管理する genre テーブルがあって、
+>|sql|
+mysql> desc genre;
++------------+------------------+------+-----+---------+-------+
+| Field      | Type             | Null | Key | Default | Extra |
++------------+------------------+------+-----+---------+-------+
+| genre_id   | int(10) unsigned | NO   | PRI | NULL    |       |
+| genre_name | varchar(127)     | NO   |     | NULL    |       |
++------------+------------------+------+-----+---------+-------+
+||<
+のような構造で、
+>|sql|
+mysql> select * from genre;
++----------+------------------+
+| genre_id | genre_name       |
++----------+------------------+
+|        1 | pops             |
+|        2 | k-pops           |
+|        3 | rock             |
+|        4 | funk             |
+|        5 | punk             |
+|        6 | soul             |
+|        7 | jazz             |
+|        8 | progressive rock |
+|        9 | swamp            |
++----------+------------------+
+||<
+というようなデータが並んでいるとします。CDとジャンルの紐付けを行うリレーショナルエンティティがcd_genreテーブルで、
+>|sql|
+mysql> desc cd_genre;
++----------+------------------+------+-----+---------+-------+
+| Field    | Type             | Null | Key | Default | Extra |
++----------+------------------+------+-----+---------+-------+
+| cd_id    | int(10) unsigned | NO   | PRI | NULL    |       |
+| genre_id | int(10) unsigned | NO   | PRI | NULL    |       |
++----------+------------------+------+-----+---------+-------+
+||<
+だとします。当然Popsにジャンル分けされるCDのほうが、Progressive Rockにジャンル分けされるCD数より断然多く、かつ、このテーブルはオンラインサイト（死語？w）から頻繁にreadされています。データ増幅で均等にデータ増幅してもその際の性能スピードを検証したことになりません。
+
+** データごとに増加トレンドを求めてデータを増やす。
+このような場合、自分の経験では以下のようにやってきました。
+まず、現状のリレーション量を２つの別の時点でキャプチャする。例えば10月のcd_genreテーブルのデータ量が、
+>|sql|
+mysql> select g.genre_id, g.genre_name, count(*)  from genre g, cd_genre cg
+where g.genre_id = cg.genre_id group by g.genre_id;
++----------+------------------+----------+
+| genre_id | genre_name       | count(*) |
++----------+------------------+----------+
+|        1 | pops             |    40000 |
+|        2 | k-pops           |       10 |
+|        3 | rock             |    20000 |
+|        4 | funk             |     4500 |
+|        5 | punk             |     1700 |
+|        6 | soul             |     1200 |
+|        7 | jazz             |      210 |
+|        8 | progressive rock |      107 |
+|        9 | swamp            |       15 |
++----------+------------------+----------+
+||<
+で、ちょうど一ヶ月後の11月にカウントした結果が、
+>|sql|
+mysql> select g.genre_id, g.genre_name, count(*)  from genre g, cd_genre cg
+where g.genre_id = cg.genre_id group by g.genre_id;
++----------+------------------+----------+
+| genre_id | genre_name       | count(*) |
++----------+------------------+----------+
+|        1 | pops             |    43000 |
+|        2 | k-pops           |       20 |
+|        3 | rock             |    20100 |
+|        4 | funk             |     4500 |
+|        5 | punk             |     1703 |
+|        6 | soul             |     1264 |
+|        7 | jazz             |      208 |
+|        8 | progressive rock |      102 |
+|        9 | swamp            |       13 |
++----------+------------------+----------+
+||<
+単純に増加トレンドを「11月のデータ量÷10月のデータ量」で求めて、リニアにその増加傾向がしばらく１年後まで続くと仮定して、perlを書いてデータを増幅する（前回同様、OracleのSQL*Loaderに渡すためのTSVを出力する）。
+>|perl|
+use strict;
+use warnings;
+use POSIX qw(ceil);
+use IO::File;
+
+#- ジャンルID記憶用：まあ、本当はDB問い合わせですねw
+my $genre_id = +{
+	'pops' =>    1,
+	'k-pops' =>  2,
+	'rock' =>    3,
+	'funk' =>    4,
+	'punk' =>    5,
+	'soul' =>    6,
+	'jazz' =>    7,
+	'progressive rock' => 8,
+	'swamp' =>   9,
+};
+
+#- 現時点のcd_genre表データ件数
+my $current = +{
+	'pops' => 43000,
+	'k-pops' =>  20,
+	'rock' => 20100,
+	'funk' =>  4500,
+	'punk' =>  1703,
+	'soul' =>  1264,
+	'jazz' =>   208,
+	'progressive rock' => 102,
+	'swamp' =>   13,
+};
+#- 増加トレンド係数を記憶。これも本当はDB問い合わせから。
+my $trends_per_month = +{
+	'pops' =>    1.075,
+	'k-pops' =>  2.000,
+	'rock' =>    1.005,
+	'funk' =>    1.001,
+	'punk' =>    1.002,
+	'soul' =>    1.054,
+	'jazz' =>    0.994,
+	'progressive rock' => 0.958,
+	'swamp' =>   0.912,
+};
+
+#- Nカ月後の将来
+my $months = 12;
+
+#- 将来予測データ量保管用
+my $future_rows = +{};
+
+#- ダミーのCDテーブル用ID
+my $cd_id = 1000000;
+my $fh_cd = IO::File->new("cd.dat", 'w');
+my $fh_cd_genre = IO::File->new("cd_genre.dat", 'w');
+#- 増幅数値予測
+foreach my $genre ( keys %{$current} ) {
+	my ( $row_num ) = 
+		ceil ( $current->{$genre} 
+		* ($trends_per_month->{$genre} ** $months ) );
+	$future_rows->{$genre} = $row_num; 
+	print "$genre has $current->{$genre} cds,";
+	print " but $months later will have $row_num cds.\n";1
+	for ( my $i = 0; $i < $future_rows->{$genre}; $i++ ) {
+		#- dummy cd record; ダミーのCD行を増幅
+		my $cd_title = 'dummy' . $cd_id;
+		my $dummy_artist_id = 9999999;
+		print $fh_cd("$cd_id\t$cd_title\t$dummy_artist_id\n");
+		#- CDとジャンル情報を増幅
+		print $fh_cd_genre("$cd_id\t$genre_id->{$genre}\n");
+		$cd_id++;
+	}
+}
+close $fh_cd_genre;
+close $fh_cd;
+||<
+みたいなのを書いてsqlldrコマンドに食わせて、データの偏りを考慮した増幅を行いました。まあ「流行の廃れや失速」「季節変動」なんかを考慮しない将来予測なんですけどね(^^ゞ。まあ、それを加えたければもう少しデータ量の推移を分析して適切な係数や重み付けを計算式に入れればいいのかな、と考えています。
+
+これらのデータを積んで、データ量が多い場合のテストケース、少ない場合のケースを用意してレスポンスタイムやQPSやTPSを求めていく。性能試験には「膨大なデータから将来のトレンドを見抜く」というデータマイニング的恍惚も味わえる（ｗ）という喜びもあるため、私は結構好きなんです。
+
+** OLTP性能限界試験
+さて、そのデータを積んでMax QPS やらMax
+TPSやらの性能限界値を求めてその後のシステムキャパシティ管理にそれら数値を活用していくわけで、
+クエリをfork()して子プロセスで大量に発し、セマフォを利用して待ち合わせたりするテストプログラムをPerlで書いたりするわけですが、その話も”オッサンPerl”ノリで書くと長ったらしいので、自分のPerl脳が完全にModernPerl指向に置換された日にまた、書かせて下さいm(_ _)m。
+
+TestTrackで書くのは多分、今年これが最後かもしれませんが、本当にこのイベント楽しかったです。皆さんの文章、本当に勉強になるので一つ一つきちんと理解を進めていこうと思います！　最後までお読みいただいたかたがた、ありがとうございました！
+

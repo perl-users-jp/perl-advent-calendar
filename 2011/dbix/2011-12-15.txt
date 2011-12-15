@@ -1,0 +1,112 @@
+Javaで便利だと思ったORMをDBIxなモジュールで頑張って再現する
+
+みなさん、こんにちわ。s_ohiraと申します。<br/>今年も各所で技術系Advent Calendarが盛り上がってますがいかがお過ごしでしょうか？
+
+DBIxに関して書くほどの知識もないため、今までの経験から逆算というアプローチをとります。<br/>CDBIは業務で触ったこともあるんですが、あえてPerlでなくJavaのORMから逆算してみます。<br/>今回は個人的にお気に入りだったiBATISというORMの簡単な紹介とともに、<br/>擬似的な使い心地を求めてみようではないか！という形で進行していきたいと思います。
+
+ということで、さっそくですが実行部分を見てみますよ！
+
+<pre><code>
+// fetch
+Employee emp = (Employee) sqlMap.queryForObject("getEmployee", new Integer(1));
+
+// fetchrows
+List list = (Employee) sqlMap.queryForList("getFiredEmployees", null);
+
+// insert
+Integer generatedKey = (Integer) session.insert ("insertEmployee", emp2);
+
+</code></pre>
+
+<a href="http://ibatis.apache.org/docs/java/dev/">iBATIS API Reference</a>よりまま(Java1.4な時代だったんですね！)<br/>
+
+たった一行で何かが行われているみたいですね。<br/>引数やら、SQLやら、結果セットやらは一体どこに書かれているのでしょうか？<br/>そういった定義は漏れなく外部のクラスやXMLに書かれることになります。
+
+一例としてXMLの記述例を挙げておきます。<br/>
+
+<pre><code>
+&lt;select id="getAccountByUsernameAndPassword" parameterType="Account" resultType="Account"&gt;
+  SELECT
+    SIGNON.USERNAME,
+    ACCOUNT.EMAIL,
+    ACCOUNT.FIRSTNAME,
+    ACCOUNT.LASTNAME,
+    ACCOUNT.STATUS,
+    ACCOUNT.ADDR1 AS address1,
+    ACCOUNT.ADDR2 AS address2,
+    ACCOUNT.CITY,
+    ACCOUNT.STATE,
+    ACCOUNT.ZIP,
+    ACCOUNT.COUNTRY,
+    ACCOUNT.PHONE,
+    PROFILE.LANGPREF AS languagePreference,
+    PROFILE.FAVCATEGORY AS favouriteCategoryId,
+    PROFILE.MYLISTOPT AS listOption,
+    PROFILE.BANNEROPT AS bannerOption,
+    BANNERDATA.BANNERNAME
+  FROM ACCOUNT, PROFILE, SIGNON, BANNERDATA
+  WHERE ACCOUNT.USERID = #{username}
+    AND SIGNON.PASSWORD = #{password}
+    AND SIGNON.USERNAME = ACCOUNT.USERID
+    AND PROFILE.USERID = ACCOUNT.USERID
+    AND PROFILE.FAVCATEGORY = BANNERDATA.FAVCATEGORY
+&lt;/select&gt;
+</code></pre>
+
+プロジェクト名が変わってしまったみたいですが、<a href="http://code.google.com/p/mybatis/downloads/list?can=3&q=Product%3DSample">公式サンプル</a>よりまま<br/>
+
+parameterTypeが引数、resultTypeが結果セットの格納されるVO(値オブジェクト)です。<br/>
+引数がコレクションとして与えられた場合は#{hoge}という形で<br/>そのpropertyを条件にすることもできます。
+
+また、idを指定することでコンテナからSQLとVOのマッピングをシンボルとして取り出して(！！)<br/>お手軽にSQLを実行できる点が密かなお気に入りポイントとなっています。<br/>パラメータ引数や返り値なんかは単なるVOなので特記することはありませんね。<br/>ちなみにSQLの定義で動的なSQLなんかも書けますが、割愛します。<br/>
+
+Perlで作ってやるぜ！な漢気のある方は<a href="http://ibatis.apache.org/docs/java/dev/">API</a>を参考に。<br/>ちなみに最新の公式は<a href="http://code.google.com/p/mybatis/wiki/Welcome?tm=6">こちら</a>みたいです。
+
+今回はPerl Advent CalendarなのでJavaの話はさっさと切り上げることにして、<br/>個人的に今回、実現したい機能は以下のものとなります。
+
+<ul>
+  <li>実行するSQLをシンボルとして取り出す</li>
+  <li>オブジェクトへのマッピング</li>
+  <li>名前付きプレースホルダ</li>
+</ul>
+
+ということで、早速、DBIxモジュールをCPANから探すことにしましょう。<br/>まずは今回、どうしても実現したかったSQLのシンボル化を探すことにします。<br/>普段はmiyagawaさんが作られたData::Section::Simpleを使ってSQLをシンボル化していたのですが、<br/>使い心地そのままなモジュールがCPANにあります。
+
+DBIx::Simple::DataSection<br/>http://search.cpan.org/~kitano/DBIx-Simple-DataSection-0.02/lib/DBIx/Simple/DataSection.pm
+
+<pre><code>
+my $rs = $db->query_by_sql('select.sql', $foo, $bar) 
+    or die $db->error;
+
+__DATA__
+@@ select.sql 
+SELECT FROM foo WHERE foo = ? OR bar = ?
+</code></pre>
+
+今度はCPANから、またもままで引用です。<br/>この例ではselect.sqlというシンボルを作って、query_by_sqlという関数に食わせています。<br/>サンプルでは$foo, $barをそれぞれ渡していますが、配列で一気に渡すことも可能です。
+
+一番、実現したかった項目を満たすことはできましたが、1行で完結してしまったため、<br/>以降の選択肢が限られてしまいました。このモジュールが実現しているSQL実行をキーに<br/>
+残り二つの項目を満たすモジュールを探していきたいと思います。
+
+でわ、DBIx::Simple::DataSectionの規定クラスを確認しましょう。<br/>どうやら、DBIx::Simpleを使っているのでこの名前空間になっているようですね。<br/><a href="http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple.pm">DBIx::Simple</a><br/>結果セットの取り出し方が色々とありますが、objectメソッドを使うと捗りそうですね。
+
+<pre><code>
+$db->result_class = 'DBIx::Simple::Result';
+$result = $db->query(...);
+
+$obj = $result->object    @objs = $result->objects
+</code></pre>
+
+これで2項目をクリアすることができました。<br/>最後は名前付きプレースホルダですね。正規表現を使（ry<br/>でわなく、DBIxでどこまでがんばれるか!?<br/>ということで、名前付きプレースホルダのモジュールを見つけてきましたよ。<br/>所要時間は約30秒、圧倒的なスピードでした。<br/>つ <a href="http://search.cpan.org/~izut/DBIx-Placeholder-Named-0.08/lib/DBIx/Placeholder/Named.pm">DBIx::Placeholder::Named</a>
+
+<pre><code>
+my $sth = $dbh->prepare(
+    q{ INSERT INTO some_table (this, that) VALUES (:this, :that) }
+) or die $dbh->errstr;
+
+$sth->execute({ this => $this, that => $that, });
+</code></pre>
+この例だと、thisとthatがそれぞれ名前付きプレースホルダとして扱われるようですね。<br/>DBIx::Simple::DataSectionと組み合わせることでかなり直感的に扱うことができそうな感じです。<br/>ただ、これを使う場合はDBIx::Simpleとの排他になってしまいますね。
+
+個人的にはやりたかった内容は見つかったので、ほぼ(自己)満足です。<br/>明日はPerl界の3大バーテンダーの一人でもあるcharsbarさん！(と思います)
+

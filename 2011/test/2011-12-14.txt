@@ -1,0 +1,61 @@
+Test::Exception で Death テスト
+meta-author: ikasam_a
+meta-tags: perl, testing
+
+こんにちは。ikasam_a です。
+
+今日は、以前のテスト分類のお話とは一転して Test::Exception というモジュールを紹介します。
+
+これを使うと、実行中に die しちゃうようなコードを気軽にテストできます。
+
+例えば、アイコンを作りたいんだけど不正な状態だったら例外投げちゃう感じのクラスがあるとしますね。例ですよ。そんなクラスのテストもこんな感じで書けるようになります。
+
+>|perl|
+use Test::More;
+use Test::Exception;
+use My::Icon;
+
+lives_ok {
+    My::Icon->new(+{ name => 'ikasam_a', state => 'cute' });
+} 'icon is cute';
+
+dies_ok {
+    My::Icon->new(+{ name => 'nekokak', state => 'cute' });
+} 'icon is not cute';
+
+done_testing;
+||<
+
+読んで字のごとくですね。lives_ok はブロックの中で例外が発生しなければ ok になります。一方 dies_ok 例外が発生すると ok になります。
+
+このテストを実行するとこんな感じですね。
+
+>||
+$ prove -lvc 01_cute.t
+01_cute.t .. 
+ok 1 - icon is cute
+ok 2 - icon is not cute
+1..2
+ok
+All tests successful.
+Files=1, Tests=2,  0 wallclock secs ( 0.02 usr  0.01 sys +  0.01 cusr  0.00 csys =  0.04 CPU)
+Result: PASS
+||<
+
+簡単ですね。
+
+Test::Exception には throws_ok というのもあって、これは発生した例外メッセージや例外オブジェクトのマッチングができるので、dies_ok より詳しい条件で例外チェックができます。
+
+>|perl|
+throws_ok {
+    open my $fh, '<', 'not_existent_file' or die $!;
+} qr/No such file/, 'does not open file';
+
+throws_ok { $foo->bar } 'Foo::Exception', '$foo->bar raise "Foo:Exception" object';
+||<
+
+例外が発生するかどうかをテストするには、eval してチェックして以下略、という書き方ももちろんできますが、Test::Exception を使うと上記のように簡潔にテストが書けていいですね。
+
+また、似たようなモジュールに Test::Exit というのがあって、こちらは exit されたかどうかや終了コードを判定できるようになっています。状況に合わせて使うといいでしょう。
+
+さて明日は誰でしょう？お楽しみに！
