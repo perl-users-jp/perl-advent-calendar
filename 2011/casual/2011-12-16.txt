@@ -43,8 +43,8 @@ API単体の操作はcurlでも可能ですがrsyncっぽい処理を自作す�
 delete ( -d ), dry run ( -n ), verbose ( -v ) に作り手のこだわりを感じますね!!
 
 >||
-> dropbox-api sync dropbox:/product/google-tasks-checker-plus/src /tmp/product -dnv
-remote_base: /product/chrome-extentions/google-tasks-checker-plus/src
+> dropbox-api sync dropbox:/product/google-tasks-checker/src /tmp/product -dnv
+remote_base: /product/chrome-extentions/google-tasks-checker/src
 local_base: /private/tmp/product
 ** download **
 skip background.html
@@ -89,7 +89,7 @@ https://metacpan.org/module/WebService::Dropbox
 
 <div id="omake" style="display: none">
 
-今日はちゃんとPerlの話をしようと思います。
+※以下ボツネタ
 
 * plackupでワンライナー
 
@@ -99,15 +99,11 @@ https://metacpan.org/module/WebService::Dropbox
 plackup -e "sub { use Data::Dumper;warn Dumper(@_);[200, [], ['ok']] }"
 ||<
 
-※補足: Proxyを使用している際のIPアドレスや検証用携帯電話のUAを確認
-
 ** give me 適当なヘッダー
 
 >|perl|
 plackup -e "sub { [404, ['X-XRDS-Location', 'http://www.example.jp/xrds'], ['404']] }"
 ||<
-
-※補足: Yadisの検証
 
 ** CPANにUPする前に欠かせない紳士のPODチェック
 
@@ -115,31 +111,19 @@ plackup -e "sub { [404, ['X-XRDS-Location', 'http://www.example.jp/xrds'], ['404
 plackup -MDocLife::Pod -e 'DocLife::Pod->new( root => "./lib" )->to_app'
 ||<
 
-※補足: CPANっぽくPOD表示するHTTPDが上がります
+* ワンライナーの探し方（過去自分で書いた）
 
-* まとめ
-
-ワンライナーのいいところはゴミ残らない所ですが、
-
-前書いたワンライナーまた使いたいって時に出てこないのがわるいところですね!
-
-<strong>じゃあgistにあげとけよタコ!!!!</strong>
-
-で、gistに上げてたら今度は検索できなくて詰んだりします。
-
-そういう時は下のAPIをブラウザでアクセスしてCtrl-Fしましょう。
+gistに上げてAPIをブラウザでアクセスしてCtrl-F
 
 https://api.github.com/users/s-aska/gists (s-askaの所はあなたのIDにしてね!)
 
-descriptionとか埋めてないとこれでも探せないので埋めておいた方が良いです。
-
-はいっ、次の話題に移ります、ネタなんか薄いので色々持ってきました。
+description埋めてないとこれでも探せないZe☆
 
 * ガラケーサイト with Plack::Session
 
-Amon2::Setup::Flavor::MobileJP 便利ですよ! (詳しくはamon2トラック参照)
+Amon2::Setup::Flavor::MobileJP ! ※詳しくはamon2トラック参照
 
-Amon2::Setup::Flavor::MobileJP !! (大事なことなので2回言いました)
+Amon2::Setup::Flavor::MobileJP !! ※大 (ry
 
 Plack::MiddlewareでSession使う必要があり、
 
@@ -149,7 +133,7 @@ HTTP::SessionからURIに埋めるヤツを複写して使っていたのです�
 
 Plack::Session::State::URI使うとcookieダメな子も安心!
 
-※CookieいけるときはCookieで的な事まではしてないです、ごめんよ
+※CookieいけるときはCookieで的な事まではしてないです、ごめんよみんな
 
 >|perl|
 enable 'Plack::Middleware::Session',
