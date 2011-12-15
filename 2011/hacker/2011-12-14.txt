@@ -1,0 +1,150 @@
+Data::Monad::CondVar でAnyEvent を使いやすくする
+meta-author: hiratara
+meta-tags: perl, anyevent, jsdeferred, monad
+
+こんにちは。hiratara です。みなさん、意識は高まっていますか？ 私は上々です。今回は拙作の [http://search.cpan.org/~hiratara/Data-Monad-CondVar/:title=Data::Monad::CondVar] というモジュールを紹介させて頂きます。
+
+モジュール名にMonad というNGワードが入っていますが、このモジュールはAnyEvent 用のJSDeferred です。JSDeferred はみなさん好きですね？ 嫌いな人は好きになるまで何度も繰り返し使って好きになればいいと思います。
+
+コールバック方式の関数を順に呼び出す場合、一般に記述がネストします。
+
+>|perl|
+sub add1($$) {
+    my ($n, $cb) = @_;
+    my $t; $t = AE::timer 1, 0, sub {
+        $cb->($n + 1);
+        undef $t;
+    };
+}
+
+my $cv = AE::cv;
+add1 0 => sub {
+    my $n = shift;
+    add1 $n => sub {
+        my $n = shift;
+        add1 $n => sub {
+            my $n = shift;
+            add1 $n => sub {
+                my $n = shift;
+                add1 $n => sub {
+                    my $n = shift;
+                    print $n, "\n";
+                    $cv->send;
+                };
+            };
+        };
+    };
+};
+$cv->recv;
+||<
+
+Data::Monad::CondVar をuseすると、AnyEvent::CondVar に様々な便利メソッドが生えます。これらをうまく使うことでネストをなくせます。まず、add1 をコールバック渡しの代わりに、AnyEvent::CondVar を返すように変更しましょう。コールバックに$n + 1 を渡す代わりに、内部で$cvを作ってそこに$n + 1 を渡すようにするだけです。
+
+>|perl|
+use AnyEvent;
+
+sub add1($) {
+    my $n = shift;
+
+    my $cv = AE::cv;
+    my $t; $t = AE::timer 1, 0, sub {
+        $cv->send($n + 1);
+        undef $t;
+    };
+    return $cv;
+}
+||<
+
+次にネストを書き換えましょう。cv_unit に初期値を渡し、新たにAnyEvent::CondVar を生成します。Data::Monad::CondVar によって生やされたflat_map メソッドへAnyEvent::CondVar を返すような関数を渡すと、直前の関数の戻り値を受け取るようにうまく繋いでくれます。これを使うと以下のように書き換えられます。
+
+>|perl|
+use Data::Monad::CondVar;
+
+print cv_unit(0)->flat_map(\&add1)
+                ->flat_map(\&add1)
+                ->flat_map(\&add1)
+                ->flat_map(\&add1)
+                ->flat_map(\&add1)->recv, "\n";
+||<
+
+AnyEvent::CondVar を返さない、普通の関数を繋げたい場合はmapを使います。
+
+>|perl|
+print cv_unit(0)->flat_map(\&add1)
+                ->flat_map(\&add1)
+                ->map(sub { $_[0] + 1 })
+                ->flat_map(\&add1)
+                ->flat_map(\&add1)->recv, "\n";
+||<
+
+並列処理したい場合にはAnyEvent::CondVar->all を使うとよいです。
+
+>|perl|
+AnyEvent::CondVar->all(
+    cv_unit(4)->flat_map(\&add1),
+    cv_unit(6)->flat_map(\&add1),
+    cv_unit(8)->flat_map(\&add1),
+)->map(sub {
+    my @results = @_;
+    print $_->[0], "\n" for @results;
+})->recv;
+||<
+
+例外を処理したい場合は、cv_failやcatchを使えます。
+
+>||
+print cv_unit(4, 0)
+    ->flat_map(sub {
+        my ($n1, $n2) = @_;
+        return $n2 == 0 ? cv_fail('division by zero') : cv_unit($n1 / $n2);
+    })
+    ->catch(sub {
+        my $e = shift;
+        return cv_unit(0) if $e =~ /division by zero/;
+        return cv_fail($e);
+    })->recv, "\n";
+||<
+
+flat_mapやmapに渡した関数内で発生したエラーも、catchで捕まえることができるようになっていますので、以下のように書いても大丈夫です。
+
+>|perl|
+print cv_unit(4, 0)
+    ->map(sub {
+        my ($n1, $n2) = @_;
+        return $n1 / $n2;
+    })
+    ->catch(sub {
+        my $e = shift;
+        return cv_unit(0) if $e =~ /division by zero/;
+        return cv_fail($e);
+    })->recv, "\n";
+||<
+
+タイムアウトの指定もできます。処理中にタイムアウトが発生すると、undefが渡ってきます。
+
+>|perl|
+print cv_unit(0)
+    ->flat_map(\&add1)
+    ->flat_map(\&add1)
+    ->flat_map(\&add1)
+    ->flat_map(\&add1)
+    ->flat_map(\&add1)
+    ->timeout(4.5)
+    ->map(sub {
+        my $answer = shift;
+        die "timeout" unless defined $answer;
+        return $answer;
+    })->recv, "\n";
+||<
+
+成功するまでリトライをし続けるするにはretryを使います。以下の例では、croakせずに正しい値をrecvできるようになるまで、連続して最大で10回までflat_mapし続けます。
+
+>|perl|
+print cv_unit->retry(10, 0, sub {
+    rand > .1 ? cv_fail("fail") : cv_unit("success");
+})->recv, "\n";
+||<
+
+以上、Data::Monad::CondVar の便利機能をざっくり紹介してみました。元々YAPCでのトークのために<del>でっちあげた</del>モジュールなので、命名などまだ洗練されてないところが多いと思います。使いたいという人が増えたら、本家のJSDeferred を元にAPIを整理しようかなあと思っています。
+
+ところで、このエントリは15日に書いているのですが14日分のエントリですので、今日はもう1記事、どなたかが仕上げる15日分のエントリを読めることになります。なんだか得した気分ですね！
