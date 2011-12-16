@@ -1,0 +1,79 @@
+ちょっと他言語に行ったら例えば RSpec にハマった人のために
+meta-author: ikasam_a
+meta-tags: perl, testing
+
+** はじめに
+こんにちは。ikasam_a です。
+
+ちょっと3年ほど Ruby でプロダクトコード書いてて RSpec に体がすっかり慣れたのが私です。今日は、そんな人が例えば 「Perl でテストを書くときにも、同じような書き方とかしたい！」みたいな中毒が出る場合に、どういうアプローチを取れるかという話をします。
+
+** Perl で宣言的テスト
+RSpec といえば DSL によって宣言的に仕様を書くようにテストが書ける、というのがウリなわけですが、Perl で宣言的にテストを書くにはどういう手段があるか、ちょっと調べてみました。
+
+*** <a href="https://metacpan.org/module/Test::More::Behaviours">Test::More::Behaviours</a>
+こんな感じに書けますが、Test::More に subtest がある今となっては不要ですね。
+>|perl|
+test 'Foo cleation' => sub {
+    ok Foo->new;
+};
+||<
+
+*** <a href="https://metacpan.org/module/Test::Behaviour::Spec">Test::Behaviour::Spec</a>
+describe, it でのコメントを記憶しておき spec で読んでアサーションのメッセージにするわけですが、Test::More::note で十分です。
+>|perl|
+describe 'Foo';
+it 'should create an instance';
+ok Foo->new, spec;
+||<
+
+*** <a href="https://metacpan.org/module/Test::More::Behaviour">Test::More::Behaviour</a>
+SYNOPSIS を見ると RSpec-1.x の完コピに見えますが、そもそもモジュールがちゃんとパッケージングされておらず、use するだけで die するという奇跡な感じ。
+
+*** <a href="https://metacpan.org/module/Test::Declare">Test::Declare</a>
+個人的には init と cleanup があるのでほぼ RSpec-1.x 互換で結構好きですが、作者が<del>キモいアイコン</del>Test::More に subtest が出来たんでもう更新しないよ、と言っていたので残念です。
+
+>|perl|
+describe 'Foo' => run {
+    init { ... };
+    test 'should create an instance' => run {
+        ok Foo->new;
+    };
+    cleanup { ... };
+};
+||<
+
+*** <a href="https://metacpan.org/module/Test::Spec">Test::Spec</a>
+RSpec-1.x の完コピで、rspec-mocks に相当する独自のモック機構まで持つというフルスペックぶりを発揮。さすがに 2.x には追随してないけど Test::More を使わない本気っぷりで、重厚かもしれないけど一番よさげ。
+>|perl|
+describe 'Foo' => sub {
+    it 'should create an instance' => sub {
+        ok Foo->new;
+    };
+};
+||<
+
+** カジュアルに気分だけ味わう
+ここまで各種モジュールを簡単に紹介してきましたが、describe とか context とか it とか書きたいだけの感じであれば、こんな方法でカジュアルに使えます。
+
+>|perl|
+use Test::More;
+
+BEGIN {
+    *describe = *context = *it = \&Test::More::subtest;
+}
+
+describe 'Foo' => sub {
+    it 'should create an instance' => sub {
+        ok Foo->new;
+    };
+};
+
+done_testing;
+||<
+
+ポイントは BEGIN で全部 Test::More::subtest にエイリアシングしちゃうとこ？でも気分的にはこれで十分なケースが多そうですね！
+
+** おわりに
+Perl で宣言的テストを書くために、既存の同様なモジュールを紹介しました。また、クイックハックで宣言的に DSL を埋め込む方法も紹介しました。
+
+宣言的テストもいいですけど、あまりにも DSL が全面に出てくるのは、ほどほどにしたほうがいいかもしれませんね！
