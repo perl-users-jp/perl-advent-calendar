@@ -1,0 +1,136 @@
+Term::UI - サクッと対話的に入力を求める
+meta-author: dameninngenn
+meta-tags: perl, cpan
+
+こんにちは、コンビニに行くたびに店員さんから舌打ちされるdameninngennです。サックリと書きます！
+
+** Term::UI
+対話的に処理を進めるスクリプト書いたりしますよね！あの[yes/no]とか聞かれて入力するやつです！！
+例えばrsyncで--dry-runオプション付きで一旦実行して、そこから[yes/no]を聞いて本当にsyncするかどうかみたいな感じのやつです！！！
+
+まず、標準入力から受け取るだけであれば、
+
+>|perl|
+my $str = <STDIN>;
+chomp $str;
+# do something
+# ...
+||<
+
+こんな感じに受け取ったりするかと思いますが、本当に[yes/no]が入力されたのか判定したりそうじゃなかったらもう一回入力求めたりとか書くのめんどくさいですよね。
+
+そこらへんのめんどくささとかを解消してくれるTerm::UIというモジュールがあります。
+誤解を招くかもしれませんがTerm::UIモジュール自体は本当の本体ではなくTerm::ReadLineというモジュールのサポートさんです。Term::UIモジュールをuseすることによってTerm::ReadLineがパワーアップするイメージですね。イメージです。
+
+早速[yes/no]を聞いてみましょう。もしもーし
+
+>|perl|
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Term::UI;
+use Term::ReadLine;
+
+my $term = Term::ReadLine->new('BizarreAdventure');
+my $bool = $term->ask_yn(
+    print_me => 'WRYYYYYYYYYYYYYYY!!',
+    prompt   => 'Will you give up to live as a human?',
+    default  => 'y',
+);
+||<
+
+ask_ynメソッドはyesかnoかを聞いてその結果yesであれば1をnoであれば0を返します。引数にprint_meとpromptを指定すると表示されるメッセージを指定できます。
+これを実行すると、
+
+>||
+WRYYYYYYYYYYYYYYY!!
+Will you give up to live as a human? [Y/n]: 
+||<
+
+となり入力待ちになります。Yが大文字になっているのはdefaultで指定しているためです。何も入力せずエンターのみ押すとdefaultで指定したものが適用されます。
+ここで'y'と入力しても'yes'と入力しても'YES'と入力してもちゃんと判断して$boolには1が入ります。nの場合は0です。
+
+'yes'や'no'以外の文字を入力した場合は下記のように再度入力待ちになってくれます。
+
+>||
+Will you give up to live as a human? [Y/n]: hoge
+Invalid selection, please try again: [Y/n] 
+||<
+
+また、[yes/no]だけではなくリストから選んで番号を入力してもらうにはget_replyメソッドを使います。
+
+>|perl|
+my $choice_reply = $term->get_reply(
+    prompt  => 'right fist or left fist?',
+    choices => [qw|right left both|],
+    default => 'both',
+);
+||<
+
+これを実行すると、
+
+>||
+  1> right
+  2> left
+  3> both
+
+right fist or left fist? [3]: 
+||<
+
+と表示されます。先ほどと異なるのは引数にchoicesを渡しています。この場合数字を選んで入力してもらうことになりますが$choice_replyには数字に対応する文字列が入ります。上記の例で3を選択すると'both'の文字列が入ります。
+
+選択を1つのみでなく複数選択してもらうことも可能です。引数にmulti=>1を指定すると配列で値が返ってきます。
+
+>|perl|
+my @multi_reply = $term->get_reply(
+    prompt  => 'Which part do you like?',
+    choices => [qw|Part1 Part2 Part3 Part4 Part5 Part6 Part7 Part8|],
+    multi   => 1,
+);
+||<
+
+実行すると、
+
+>||
+  1> Part1
+  2> Part2
+  3> Part3
+  4> Part4
+  5> Part5
+  6> Part6
+  7> Part7
+  8> Part8
+
+Which part do you like?
+||<
+
+となり、スペース区切りで番号を入力すると選択した番号に対応する文字列が配列で返ってきます。
+
+>||
+Which part do you like?4 3 5 2
+
+$VAR1 = 'Part4';
+$VAR2 = 'Part3';
+$VAR3 = 'Part5';
+$VAR4 = 'Part2';
+||<
+
+最後になりますが、もちろん文字列を入力してそのまま渡すことも可能です。その際に引数にallowを指定すると受け取りたい文字列を制限することができます。
+
+>|perl|
+my $reply = $term->get_reply(
+    prompt => "Joske's nickname?",
+    allow  => qr/^(jo){2}$/i,
+);
+||<
+
+上記ではallowに正規表現を指定していますが他にも色々できるようです。Params::Checkのallowメソッドを使っているようですので詳しくはそちらをご覧下さい。
+
+** まとめ
+対話的処理を含むスクリプトを書くのに便利なTerm::UIを紹介しました。
+私はカジュアルすぎてあまりCPANモジュールに明るくはないので、「Term::UI使うよりこっち使ったほうがいいよ！」とかあれば是非教えて下さいm(_ _)m
+
+次は、dukkiedukkieさんです！
+
+
