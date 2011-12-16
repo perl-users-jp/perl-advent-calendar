@@ -1,0 +1,130 @@
+DBIx::*ユーザのためのDBD::SQLite
+meta-author: c6r
+meta-tags: perl, dbix
+
+今日はDBIx::モジュールのテストなどでときおり見受けられるDBD::SQLiteのハマリどころとその対策を紹介します。
+
+** 後片づけ編
+
+(オブジェクトではなく)クラス内部でコネクションを張りっぱなしにしてしまうDBIx系モジュールでありがちなことですが、テストの後始末をするときに、DBD::SQLiteで開いておいたデータベースを閉じずに削除しようとすると、Windows環境などではパーミッションの問題でエラーになります。
+
+>|perl|
+my $dbh = DBI->connect('dbi:SQLite:foo.db');
+
+...
+
+unlink 'foo.db';
+||<
+
+明示的にデータベースを閉じてからデータベースを削除するのが王道ですが、
+
+>|perl|
+my $dbh = DBI->connect('dbi:SQLite:foo.db');
+
+...
+undef $dbh;
+unlink 'foo.db';
+||<
+
+並列処理を行う場合のようにどうしても実ファイルを用意する必要がある場合を除いては、メモリ専用のデータベース(:memory:)を利用すると、ファイルの後始末自体、不要になります。
+
+>|perl|
+my $dbh = DBI->connect('dbi:SQLite::memory:');
+||<
+
+なお、DBD::SQLite 1.27以降、データベース名を空にしておくと実ファイルを利用した一時データベースが作成されます。後始末不要という点ではこちらも便利ですが、この場合はMakefile.PLなどで依存モジュールのバージョンを明示的に指定しておかないと、古いDBD::SQLiteが入っている環境で思いがけないエラーに出くわすことになるので要注意です。
+
+** 型の扱い
+
+SQLiteはよく型がないと言われますが、実際には内部でよいように型変換してくれているだけで、型の概念自体はあります。いちばん顕著なのがinteger primary keyの扱いで、以下のスクリプトの場合、前者はintegerのカラムにfooという文字列を入れても何も起こらずふつうにfooが保存されますが、後者はinsertの時点でエラーになります。
+
+>|perl|
+use strict;
+use warnings;
+use DBI;
+
+{ # ok (that's sqlite)
+  my $dbh = DBI->connect('dbi:SQLite::memory:');
+  $dbh->do('create table foo (v integer)');
+  $dbh->do('insert into foo values (?)', undef, 'foo');
+}
+
+{ # error (that's also sqlite)
+  my $dbh = DBI->connect('dbi:SQLite::memory:');
+  $dbh->do('create table foo (v integer primary key)');
+  $dbh->do('insert into foo values (?)', undef, 'foo');
+}
+||<
+
+また、伝統的にDBD::SQLiteはすべての値を文字列として保存していましたので、プレースホルダを通していない生の数値とプレースホルダ経由の値を比較しようとすると問題を起こすことがありました。コードだけではちょっとわかりづらいかもしれませんが、ここでは(最初は文字列として保存されていた)vカラムの値を2で割ることによって数値化したものと、プレースホルダを経由することで文字列化されてしまった"2"を比較しようとしておかしなことになっています。
+
+>|perl|
+use strict;
+use warnings;
+use DBI;
+
+my $dbh = DBI->connect('dbi:SQLite::memory:');
+$dbh->do('create table foo (v integer)');
+my $sth = $dbh->prepare('insert into foo values (?)');
+$sth->execute($_) for 1..10;
+my $sql = 'select * from foo where (v/2) > ?';
+my $rows = $dbh->selectall_arrayref($sql, undef, 2);
+print scalar @$rows;
+||<
+
+この解決策はいくつかありますが、新規データベースでない場合はプレースホルダで取り込んだ値に0を足すなどして数値化してから比較するのが手軽な対策。
+
+>|perl|
+my $sql = 'select * from foo where (v/2) > (?+0)';
+||<
+
+O/Rマッパを使っている場合などでクエリの構築部分に手を出しづらい場合は、DBD::SQLite 1.32で導入したsqlite_se_if_its_a_numberというデータベースハンドルアトリビュートを使うと、プレースホルダに値をバインドする際に数値に見える値はすべて数値コンテキストで処理するようになります。
+
+>|perl|
+local $dbh->{sqlite_see_if_its_a_number} = 1;
+my $rows = $dbh->selectall_arrayref($sql, undef, 2);
+||<
+
+もちろんこのアトリビュートはデータベース接続時に指定してもかまいませんが、既存のデータベースを扱う際には思わぬ副作用が出る可能性もあるので、新規データベースの場合以外は限定的に使うことをおすすめします。
+
+なお、DBD::SQLite 1.35からは明示的に型を指定した場合に限り、型チェックをより厳密にして、数値カラムに文字列を入れようとした場合にはエラーを返すようになりました。ふつうに使っている分にはあまり気にしなくてもかまいませんが、DBIx::Classのようにこの機構をフル活用しているO/Rマッパを使っている場合、従来は暗黙のうちに文字列として保存されていた桁あふれの整数値などがエラーを引き起こすことがあります。
+
+>|perl|
+use strict;
+use warnings;
+use DBI ':sql_types';
+
+my $dbh = DBI->connect('dbi:SQLite::memory:');
+$dbh->do('create table foo (v integer)');
+my $sth = $dbh->prepare('insert into foo values (?)');
+$sth->bind_param(1, '98765432109876543210');
+$sth->execute; # ok
+
+$sth->bind_param(1, '98765432109876543210', SQL_INTEGER);
+$sth->execute; # error
+||<
+
+** トランザクションとデッドロック
+
+SQLiteは伝統的にトランザクションを開始しても本当に必要になるまでロックは先送りするようになっているため、並列処理を行っている場合など、読み書きが交錯する状況ではデッドロックを引き起こすことがありました。この問題はDBD::SQLite 1.31で導入したsqlite_use_immediate_transactionというデータベースハンドルアトリビュートをセットすることで回避できます(ロックを先送りしないようになります)。激しい使い方をするときはぜひ指定しておいてください（そのうちデフォルトで有効にする予定です）。
+
+** ALTER TABLEの制約
+
+これはDBD::SQLiteではなくSQLite側の制約ですが、SQLiteのFAQにもあるようにSQLiteのALTER TABLEはいまのところカラムの追加とテーブルのリネームしかサポートしていません。カラムの削除やインデックスの張り直し等々には使えませんので、必要な場合はテンポラリテーブルにデータを退避してから、以下のような手順でテーブルを作り直してください。
+
+>||
+BEGIN TRANSACTION;
+CREATE TEMPORARY TABLE t1_backup(a,b);
+INSERT INTO t1_backup SELECT a,b FROM t1;
+DROP TABLE t1;
+CREATE TABLE t1(a,b);
+INSERT INTO t1 SELECT a,b FROM t1_backup;
+DROP TABLE t1_backup;
+COMMIT;
+||<
+
+** 何かあったらテストやパッチを
+
+以上、ほかにも何かあったような気がしますが、ぱっと思いつくハマリどころを紹介しました。DBD::SQLiteはみなさんからのパッチが頼りですので、ここがイケてない等々ありましたらぜひテストやパッチをお寄せください。
+
+明日はsfujiwaraさんです。
