@@ -56,7 +56,7 @@ $aa->close;
 **実行結果
 [http://blog.yappo.jp/yappo/archives/000764.html:title]の画像を AAにしてみました. でかい画像だったのでフォントを小さく設定して全体を表示するようにしています. それらしいですね(??).
 
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-15/image01.png" alt="yappo_onegai" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-15/image01.png" alt="yappo_onegai" width="80%" />
 
 
 **まとめ
