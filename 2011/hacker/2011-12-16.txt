@@ -27,7 +27,7 @@ close $fh;
 
 次のような画像が吐き出されてしまいます。
 
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-16/c.png" alt="with_ansi_color" width="90%" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-16/c.png" alt="piano:C" />
 
 赤い印のついたところを押さえれば、C が弾けますね！ ド、ミ、ソ！！
 
@@ -39,7 +39,7 @@ my $im = GD::Chord::Piano->new;
 $im->generate('Bb/A', qw/9 14 17 22/)->png;
 ||<
 
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-16/b-_on_a.png" alt="with_ansi_color" width="90%" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-16/b-_on_a.png" alt="piano:Bb/A" />
 
 簡単ですね！
 
@@ -63,6 +63,7 @@ print $p->chord('C');
 以下のようなコード表が出力されます。
 
 >||
+
 |  | | | |  |  | | | | | |  |  | | | |  |  | | | | | |  |
 |  | | | |  |  | | | | | |  |  | | | |  |  | | | | | |  |
 |  | | | |  |  | | | | | |  |  | | | |  |  | | | | | |  |
@@ -71,6 +72,7 @@ print $p->chord('C');
 | * |   | * |   | * |   |   |   |   |   |   |   |   |   |
 |___|___|___|___|___|___|___|___|___|___|___|___|___|___|
 C
+
 ||<
 
 これはとっても便利ですね！
@@ -82,7 +84,7 @@ C
 
 ** inspired from
 
-さて、GD::Chord::Piano というモジュールには、実は元ネタがありまして、nipotan さんの <a href="https://metacpan.org/module/GD::Tab::Guitar" title="GD::Tab::Guitar">GD::Tab::Guitar</a> を元にしています。
+さて、GD::Chord::Piano というモジュールには、実は元ネタがありまして、nipotan さんの <a href="https://metacpan.org/module/GD::Tab::Guitar" title="GD::Tab::Guitar">GD::Tab::Guitar</a> をベースにしています。
 
 ギターかっこいい！おれもなんか書きたい！そんな感じでピアノを書きました。
 
