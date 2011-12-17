@@ -1,0 +1,78 @@
+Net::eBayで自分が好きなアーティスト作品の出品情報を常時取得する
+meta-author: dukkiedukkie <dukkiedukkie@yahoo.co.jp>
+meta-tags: perl, ebay, music
+
+こんにちは！dukkiedukkieです。年の瀬も押し迫ったいい週末ですね。
+掲題からして「フツーにB2CサイトのAPIを利用してセコイことやる話なんじゃね？」と精彩に欠けるお題になっておりますが、本日はその程度のお話です。日曜日ですしね、まったりと。
+かつ、自作モジュールというわけでもなく人様のモジュール。[http://search.cpan.org/~ichudov/Net-eBay-0.55/lib/Net/eBay.pm]、イゴールさんとお呼びすればよろしいでしょうか。
+
+** ネットでお買いもの
+いきなり私事になって恐縮なのですが、オッサンPerlerのわたくしはしばしば「筋金入り」のOTAKU系の人物と他人様から認知される機会が多くございます(^^)。自分では至ってフツーだと思っておりますし、「ホンモノのその道の人」と出会う機会もございましたため、その道の人から見れば大したレベルではないと思っているのですが、「ダイコーン3の試写会に中学生のころ（1980年台）に行った」「ジョナス・メカスなどニューヨークの実験映画をたくさん見た」とか、「中学で生まれて初めて行ったコンサートがアラン・ホールズワース」などの話をする度に「筋金入り」とリアクションを戴く機会が多いです。
+
+さて私は、かれこれ30年ほど中古レコード店にてレコードをジャケ買いし続けているレコード・ジャンキーでもあるわけですが、いやあ、インターネットが拡がって本当に「レコード買い」のスタイルは変わりましたね。。昔は大阪なら吉村レコードやらBIG PINKやらのレコード店を休日や試験明けの日にかけずり回って、”足で”名盤・貴重盤を収集していたのですが、1995年ごろ以降、完全にインターネット上での売買にシフトしてしまいました。普通の在庫を抱えるお店では、不良在庫化してしまうことが恐れ多くて入荷できないようなマイナーな歌姫（女性ボーカルものが大好きで、ロック、ジャズ、クラッシック問わず買い漁るのが私の基本スタイル＝人生です！）の”ひっそりと清楚に佇む”名盤にお目にかかる機会が、本当にインターネットの発展で体感できたのです！！
+
+** 本当に好きなアーティストの作品を適正価格で入手するために
+中古レコードですと、海外の店舗の集合体であるGEMM[http://www.gemm.com/]を利用する機会が多いですが、eBayも利用します。個人出品などのほうがレア系が豊富だったりしますからね。しかしチンタラと検索窓に好きなアーティスト名をミススペルしたりしながら入力してプライベートを過ごすのも（それはそれで楽しい時間ですが）ちょっとおっくう。なんたって継続運用が厳しい。。。
+
+で、このモジュールを使ったりするわけです。イゴールさんのサイトには、サンプルスクリプトも転がってる[http://www.net-ebay.org/]ので、「まあ、使えるものは使ってちょこちょこカスタマイズしたらいい」ってノリで。 eBayが自動入札を認めていないので、その点は公に何ともしがたいのですが（笑）、なかなか出会う機会がないレアな歌姫の作品の出品情報取得の継続的な取得のために、上記サンプルスクリプトを利用して、以下のような処理を作ってます。
+
+** お気に入りアーティストの出品情報を随時取得
+>|perl|
+#-----------------------------------------------
+# mail ebay item information of favorite artists
+#-----------------------------------------------
+use strict;
+use warnings;
+use utf8;
+use Email::Sender::Simple qw(sendmail);
+use Email::Simple;
+use Email::Simple::Creator;
+use Data::Recursive::Encode;
+use Encode;
+
+my $search_cmd = './ebay-search.pl'; #- Igorさんのスクリプト
+#- 探しているアーティストと検索条件（特に金額）を記入
+my $favorite_artists = {
+	#artist		command_opts
+	'ann odell' => '--maxprice 19.99',	# rock female vocal
+	'julia guther' => '--maxprice 9.99',
+	'liza strike' => '--maxprice 39.99',
+	'sue glover' => '--maxprice 39.99',
+	'sunny leslie' => '--maxprice 39.99',
+	'rosetta hightower' => '--minprice 30.00 --maxprice 199.99',
+	'dorothy carless' => '--maxprice 49.99',# jazz female vocal
+	'patty mcgovern' => '--maxprice 39.99',
+	'norma winstone' => '--minprice 20.00 --maxprice 99.99',
+	'barbara moore' => '--minprice 50.00 --maxprice 99.99',
+	'janet baker' => '--minprice 200.00',	# classic female vocal
+	'kathleen ferrier' => '--minprice 100.00',
+};
+my $body = '';
+for my $favorite ( keys %$favorite_artists ) {
+	my $res = `$search_cmd $favorite_artists->{$favorite} $favorite`;
+	$body .=  "**$favorite**\n";
+	$body .= "$res\n";
+}
+
+my $email = Email::Simple->create(
+	header => Data::Recursive::Encode->encode(
+		'MIME-Header-ISO_2022_JP' => [
+			To => 'dukkiedukkie@******',
+			From => 'dukkiedukkie@:****',
+			Subject => 'eBayの最新出品情報（女性ボーカル）',
+		]
+	),
+	body => encode('iso-2022-jp', $body ),
+	attributes => {
+		content_type => 'text/plain',
+		charset => 'ISO-2022-JP',
+		encoding => '7bit',
+	},
+);
+sendmail($email);
+||<
+お粗末ですが、こんな感じのを書いて、cronで一時間おきに回しておくと。
+別にアーティストでなくても、好きな作家だとか、商品だとかを検索ワードに使用すればそのまま様々な出品情報取得に使えると思います。
+
+って、これを書いているあいだにもまた2、3品、買ってしまったのですが(^^ゞ。無駄遣いが続いているdukkiedukkieでした！
+
