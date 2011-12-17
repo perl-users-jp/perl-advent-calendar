@@ -1,0 +1,65 @@
+Text::AAlib - すべての画像を AAに
+meta-author: syohex
+meta-tags: perl
+
+**前置き
+
+こんにちは. [http://twitter.com/#!/syohex:title=syohex]です. みなさん意識は高まっていますか ? 私は, 上々です. 今回は拙作の [https://github.com/syohex/p5-Text-AAlib:title=Text::AAlib]というモジュールを紹介します.
+これは Perlバインディングを書く練習のために書いているモジュールです. 最近は [https://github.com/syohex/emacs-quickrun:title=quickrun.el]の開発に時間を取られて, ちょこちょことしか開発できないんですが, 主要な部分はできつつあります.
+
+Text::AAlibは [http://aa-project.sourceforge.net/aalib/:title=aalib]の Perlバインディングです. それなりに小さくかつ Perlバインディングが存在しないものを探した結果見つけたものです. aalibはその名の通り, AsciiArtを作成するためのライブラリです. 単体でも利用できるのですが, Perlであれば [http://search.cpan.org/~tonyc/Imager-0.86/Imager.pm:Imager]モジュールと併用することで画像の AA化を簡単に行うことができます.
+
+
+**実装にあたり
+いろいろ Cで aalibのサンプル書いてみて試したところ, やたらと SEGVが発生しました. あまりユーザフレンドリーなライブラリではないという印象で, 使う側が注意しないといけないことが結構多いです. 初めはただ Perlから使えればいいやって思ったんですけど, Perl側でそのあたりの問題も極力回避できた方がいいかなって思って, そのようにしています. エラーチェックは増えていますが, プログラム自体が落ちてしまうということは減っていると思います.
+
+あとは使いやすくというところを意識して, 開発を行っています.
+
+
+**サンプルコード
+flush, closeは呼ばない場合 オブジェクト破棄時(DESTROY)で呼ぶことになっているので, 不要といえば不要です. レンダリングのパラメタを細かく設定したい場合は renderメソッドが使えます. 実装済みですが, どのパラメータがどう働くかがまだ理解できていないのです. とりあえず使いたいのであれば, fastrenderメソッドでよいかと思います.
+>|perl|
+#!perl
+use strict;
+use warnings;
+
+use Imager;
+use Text::AAlib qw(:all);
+
+my $file = shift or die "Usage: $0 image_file";
+my $img = Imager->new(file => $file);
+
+my ($width, $height) = ($img->getwidth, $img->getheight);
+
+my $aa = Text::AAlib->new(
+    file   => 'a.txt',
+    width  => $width,
+    height => $height,
+);
+
+for my $i (0..($width-1)) {
+    for my $j (0..($height-1)) {
+        my $color = $img->getpixel(x => $i, y => $j);
+        my $value = ($color->hsv)[2];
+        $aa->putpixel(
+            x => $i, y => $j, color => (255 * $value),
+        );
+    }
+}
+
+$aa->fastrender();
+$aa->flush;
+$aa->close;
+||<
+
+
+**実行結果
+[http://blog.yappo.jp/yappo/archives/000764.html:title]の画像を AAにしてみました. でかい画像だったのでフォントを小さく設定して全体を表示するようにしています. それらしいですね(??).
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-15/image01.png" alt="yappo_onegai" />
+
+
+**まとめ
+Text::AAlibという aalibの Perlバインディングについて紹介しました. 現在開発中ですので, ご意見, 問題が見つかった等ございましたら, githubの issueトラッカまでお願いします.
+
+以前なんかの雑誌で, Rubyのバインディングの書き方が載っていて, Perlもこんな感じで書けたらなぁって思ったことがありましたが, 実際書いてみると別にあんまり変わらないなって思いました. 最近出てくるライブラリって Pythonや Rubyはあるけど, Perlはないってこともあるので, 皆さんも 「Perlからも使いてぇ」ってライブラリがあったらチャレンジしてみるのはいかがでしょうか.
