@@ -1,0 +1,62 @@
+DBIx::Class で FORCE INDEX する方法
+meta-author: fujiwara
+meta-tags: perl, dbix, dbic, mysql
+
+カジュアル！(挨拶)……もとい、DBIx track でしたね。こんにちは、[http://twitter.com/fujiwara:fujiwara] です。
+
+* DBIC って…
+
+最近なにかと dis られることの多い [http://search.cpan.org/perldoc?DBIx::Class:title=DBIx::Class] (DBIC) ですね。
+
+曰く「重い」「複雑すぎる」「コードが読めない」……まあそれはそうかもしれませんが、数年前の DBIC 全盛期に作られて今まで生き残っているシステムを、そう簡単に他の ORM や生 DBI に置き換えられるものでもありません。
+
+自分の管理しているとあるシステムは DBIC + MySQL で動いていますが、最初はデータも多くなく、DBIC が生成する SQL で何ら問題はなかったのです。
+
+が、データが増えて行くにつれて、 MySQL が適切な index を使用してくれないとパフォーマンス的に厳しい、FORCE INDEX 句を付けたい！という状況に出くわしました。そこで試行錯誤して見つけた、FORCE INDEX を指定する方法をご紹介します。
+
+* どうやって?
+
+たとえば以下のように、foo というテーブルに foo_idx というインデックスがあり、それを FORCE INDEX したい場合。
+
+>|sql|
+CREATE TABLE `foo` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `hoge` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `foo_idx` (`hoge`)
+);
+||<
+
+search メソッドの attributes で from を指定し、「空文字列の key に対して FROM 句を value にした hashref」を渡します。いやはや、BK のニオイがプンプンしますね。
+
+>|perl|
+my $schema = MySchema->connect(...);
+my $rs = $schema->resultset("Foo");
+
+@foo = $rs->search(
+    { hoge => $hoge },
+    {
+        from => [
+            { "" => "foo me FORCE INDEX(`foo_idx`)" }
+        ],
+    }
+)->all;
+||<
+
+これで、以下のような SQL が発行されます。
+
+>|sql|
+SELECT me.id, me.hoge, me.fuga FROM foo me FORCE INDEX(`foo_idx`)  WHERE ( hoge = ? )
+||<
+
+やった！
+
+* ご利用は計画的に
+
+先ほど [http://search.cpan.org/~arodland/DBIx-Class-0.08196/lib/DBIx/Class/ResultSet.pm#ATTRIBUTES:title=DBIx::Class::ResultSet のドキュメント]を読んだところ、attributes に from、というのはどこにも書いてありません。自分もどうやってこれを見つけ出したのか、すっかり忘れてしまいました。
+
+手元で確認した限りでは VERSION 0.08124, 0.08196 ではこの通り動くようですが、将来動かなくなったりしても文句は言えなさそうです。
+
+使用時はくれぐれもご注意くださいませ。
+
+明日は ktat さんです！
