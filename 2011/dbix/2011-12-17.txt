@@ -2,11 +2,11 @@ DBIx::Class で FORCE INDEX する方法
 meta-author: fujiwara
 meta-tags: perl, dbix, dbic, mysql
 
-カジュアル！(挨拶)……もとい、DBIx track でしたね。こんにちは、[http://twitter.com/fujiwara:fujiwara] です。
+カジュアル！(挨拶)……もとい、DBIx track でしたね。こんにちは、[http://twitter.com/fujiwara:title=fujiwara] です。
 
 * DBIC って…
 
-最近なにかと dis られることの多い [http://search.cpan.org/perldoc?DBIx::Class:title=DBIx::Class] (DBIC) ですね。
+最近なにかと dis られることの多い [http://search.cpan.org/perldoc?DBIx%3A%3AClass:title=DBIx::Class] (DBIC) ですね。
 
 曰く「重い」「複雑すぎる」「コードが読めない」……まあそれはそうかもしれませんが、数年前の DBIC 全盛期に作られて今まで生き残っているシステムを、そう簡単に他の ORM や生 DBI に置き換えられるものでもありません。
 
@@ -46,7 +46,9 @@ my $rs = $schema->resultset("Foo");
 これで、以下のような SQL が発行されます。
 
 >|sql|
-SELECT me.id, me.hoge, me.fuga FROM foo me FORCE INDEX(`foo_idx`)  WHERE ( hoge = ? )
+SELECT me.id, me.hoge, me.fuga
+  FROM foo me FORCE INDEX(`foo_idx`)
+  WHERE ( hoge = ? )
 ||<
 
 やった！
