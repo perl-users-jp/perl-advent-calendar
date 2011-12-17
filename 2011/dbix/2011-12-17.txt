@@ -46,7 +46,7 @@ my $rs = $schema->resultset("Foo");
 これで、以下のような SQL が発行されます。
 
 >|sql|
-SELECT me.id, me.hoge, me.fuga
+SELECT me.id, me.hoge
   FROM foo me FORCE INDEX(`foo_idx`)
   WHERE ( hoge = ? )
 ||<
