@@ -1,0 +1,98 @@
+GD::Chord::Piano - ピアノのコード表を画像出力する
+meta-author: bayashi
+meta-tags: perl, music, piano, chord, gd
+
+** 前置き
+
+こんにちは。[http://twitter.com/bayashi:title=bayashi] です。みなさん、意識は高まっていますか？ 僕は上々です。今回は拙作の [https://metacpan.org/release/GD-Chord-Piano:title=GD-Chord-Piano] というモジュールを紹介いたします。
+
+
+** 何をするモジュール？
+
+GD::Chord::Piano は、名前の通り、ピアノのコード表を画像出力するモジュールです。
+
+
+** play it
+
+おもむろに以下のコードを実行してみます。
+
+>|perl|
+use GD::Chord::Piano;
+
+my $im = GD::Chord::Piano->new;
+open my $fh, ">", "c.png" or die $!;
+print $fh $im->chord('C')->png;
+close $fh;
+||<
+
+次のような画像が吐き出されてしまいます。
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-16/c.png" alt="with_ansi_color" width="90%" />
+
+赤い印のついたところを押さえれば、C が弾けますね！ ド、ミ、ソ！！
+
+generate メソッドを使えば、おれおれコードを描画することもできてしまいます。これはびっくり。
+
+>|perl|
+my $im = GD::Chord::Piano->new;
+
+$im->generate('Bb/A', qw/9 14 17 22/)->png;
+||<
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/hacker/2011-12-16/b-_on_a.png" alt="with_ansi_color" width="90%" />
+
+簡単ですね！
+
+
+** テキストもあるよ
+
+画像出力じゃなくて、ターミナルにテキストで出したいんですけど！！！
+
+そんな要望もよくありますね！！！
+
+そんなときは、兄弟モジュールの <a href="https://metacpan.org/module/Text::Chord::Piano" title="Text::Chord::Piano">Text::Chord::Piano</a> を使えばOK
+
+>|perl|
+use Text::Chord::Piano;
+
+my $p = Text::Chord::Piano->new;
+
+print $p->chord('C');
+||<
+
+以下のようなコード表が出力されます。
+
+>||
+|  | | | |  |  | | | | | |  |  | | | |  |  | | | | | |  |
+|  | | | |  |  | | | | | |  |  | | | |  |  | | | | | |  |
+|  | | | |  |  | | | | | |  |  | | | |  |  | | | | | |  |
+|  |_| |_|  |  |_| |_| |_|  |  |_| |_|  |  |_| |_| |_|  |
+|   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+| * |   | * |   | * |   |   |   |   |   |   |   |   |   |
+|___|___|___|___|___|___|___|___|___|___|___|___|___|___|
+C
+||<
+
+これはとっても便利ですね！
+
+開発中にピアノの和音が思い出せないとき、即座に確認することができますね！ 捗りそう！
+
+なお、わたくしはピアノを一切弾くことができません。
+
+
+** inspired from
+
+さて、GD::Chord::Piano というモジュールには、実は元ネタがありまして、nipotan さんの <a href="https://metacpan.org/module/GD::Tab::Guitar" title="GD::Tab::Guitar">GD::Tab::Guitar</a> を元にしています。
+
+ギターかっこいい！おれもなんか書きたい！そんな感じでピアノを書きました。
+
+そして、GD::Tab::Guitar の元ネタも実はあるそうで、<a href="https://metacpan.org/module/GD::Tab::Ukulele" title="GD::Tab::Ukulele">GD::Tab::Ukulele</a> がそれです。これは はてな さんのウクレレ記法で有名ですね！！
+
+次は、リズム譜あたりに誰か挑戦してみませんか？！
+
+
+** まとめ
+
+というわけで、今回は [https://metacpan.org/release/GD-Chord-Piano:title=GD-Chord-Piano] をご紹介させていただきました。
+
+No Music, No Hack!
