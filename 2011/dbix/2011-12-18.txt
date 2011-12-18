@@ -1,0 +1,149 @@
+ビットを使って複雑な条件を簡単にする
+meta-author: ktat
+meta-tags: DB
+
+こんにちは!
+nekokakさんに誘われて、引き受けたものの、DBIxとか特に知らない [http://d.hatena.ne.jp/ktat/:title=ktat] です。
+そんなわけで、あんまりPerlに関係ない、DB関係のトピックでも書いてみることにしました。
+そんなの常識だよねーっていう人はスルーしちゃって下さいね!
+
+* フラグじゃなくてビットを使う
+
+とあるサービスのユーザー情報を格納するテーブルを設計するとします。
+そのサービスでは、ユーザーが開発言語に何を使うかを登録していて、使う言語の組み合わせで検索することが多いとします。
+
+そんな時に、
+>||
+ use_c
+ use_c_plus_plus
+ use_java
+ use_php
+ use_perl
+ use_python
+ ...
+||<
+のように延々とフラグを作ってしまうと、これらをAND/OR条件で検索しようと思うと、
+>|sql|
+use_c = 1 AND use_c_plus_plus = 1 
+use_c = 1 AND (use_java = 1 OR use_c_plus_plus = 1)
+||<
+みたいなことになりますが、これが30言語くらいあったら、割と大変な事になりそうです。
+また、フラグを追加したいと思ったら、ALTER TABLEしないといけません。レコード数が多いと厳しいですね。
+
+そんな時に、ビットを使ってみると良いかも知れません。例えば次のようなフィールドを作ります。
+>||
+use_language
+||<
+ここに入る値は以下の値をビットORしたものです。
+>||
+1 ... C
+2 ... C++
+4 ... JAVA
+8 ... C#
+16 ... PHP
+32... Perl
+64 ... Python
+128 ... Ruby
+...
+||<
+つまり、
+>||
+use_language が 3 であれば、C、C++を使える人(1 | 2 = 3)
+use_language が 33 であれば、 C、Perlを使える人(1 | 32 = 33)
+||<
+といった具合です。
+
+* ビットを使って条件を作る
+
+このようなフィールドの場合、次のような条件で検索したい時に簡単に書けます。
+
+C と C++ を使える人
+>|sql|
+use_language & 3 == 3
+||<
+Perl または、Pythonを使える人
+>|sql|
+use_language & 96
+||<
+C と、Java または C++が使える人
+>|sql|
+use_language & 1 AND used_language & 6
+||<
+PHP以外を使える人
+>|sql|
+use_language & ~ 16
+||<
+といった感じです。
+
+Webのformを書く時でも、
+>|html|
+<input type="checkbox" name="use_language" value="1">C
+<input type="checkbox" name="use_language" value="2">C++
+<input type="checkbox" name="use_language" value="4">JAVA
+<input type="checkbox" name="use_language" value="8">C#
+...
+||<
+みたいにして、
+>|perl|
+ my $use_langulage = 0;
+ foreach my $bit ($q->param('use_language')) {
+     $use_language |= $bit;
+ }
+||<
+とかすれば、条件に渡すビットが出来上がります。
+
+* 値から文字への変換
+
+値から文字列を表示する場合のためには、以下のようなコンスタントを作ります。
+>|perl|
+ use constant BIT2LANGUAGE => {
+    1      => 'C',
+    1 << 1 => 'C++',
+    1 << 2 => 'JAVA',
+    1 << 3 => 'C#',
+    1 << 4 => 'PHP',
+    1 << 5 => 'Perl',
+    1 << 6 => 'Python',
+    1 << 7 => 'Ruby',
+ };
+||<
+次のようにすれば、使える言語の文字列が取得できます。
+>|perl|
+ my $bit2lang = BIT2LANGUAGE;
+ my @lang;
+ my $use_language = $row->use_language;
+ foreach my $bit (keys %$bit2lang) {
+   push @lang, $bit2lang->{$bit} if $bit & $use_language
+ }
+||<
+
+* Template内で ビットAND/OR したい場合
+
+TTならプラグインやフィルタ、Text::Xslateなら関数を作ればいいんじゃないかと思います。
+Text::Xslateなら、コンストラクタに次のように渡せば良いでしょう。
+>|perl|
+  Text::Xslate->new(
+    {functions => {
+       bit_and => sub { ($_[0] + 0) & $_[1] },
+    }},
+  )
+||<
+※文字同士のビットANDになってしまうと希望と違う結果になってしまうので、片方に + 0 をしています。
+テンプレート内では以下のように。
+>||
+ [% IF bit_and(use_language, 32); 'Perl使い'; END %]
+||<
+
+* デメリット
+
+- ビットなので integerの場合、31個の条件しか使えません(bigintやunsigned int 使えば、もっと使えますが)
+- MySQLはビットAND/ORの演算ができますが、出来ないデータベースもあります
+- 可読性が低いです。値を見て、32だからPerlだなぁとか、161だから、C、Perl、Rubyだなぁ、とか。ぱっと見わかりません
+
+* まとめ
+
+というわけで、ビットを条件で組むと便利かも知れませんよっていう話でした。
+
+明日は walf443さんです！
+
+
