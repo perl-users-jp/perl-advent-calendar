@@ -67,7 +67,7 @@ use_language & 96
 ||<
 C と、Java または C++が使える人
 >|sql|
-use_language & 1 AND used_language & 6
+use_language & 1 AND use_language & 6
 ||<
 PHP以外を使える人
 >|sql|
