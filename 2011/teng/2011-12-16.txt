@@ -1,0 +1,46 @@
+#16 transaction
+
+Tengではトランザクションの仕組みをDBIx::TransactionManagerに一任しています。
+ですので、基本的にはDBIx::TransactionManagerでのトランザクションのかけ方が
+Tengでのトランザクションのかけ方とほぼイコールです。
+TengではDBIx::TransactionManagerに処理をデリゲーションしています。
+
+DBIx::TransactionManagerはDBIx::SkinnyやDBIx::Handlerなど私が作ったDB周りの
+他のモジュールでも使われているのを始め、他のDB関連モジュールなどでも
+多く利用されるようになってきました。
+
+Tengでトランザクションをかけるには以下のように行います。
+
+>||
+$teng->txn_begin;
+my $row = $teng->insert('user', +{id => 1, name => 'nekokak'});
+$teng->txn_commit;
+||<
+
+txn_beginからtxn_commitまでの間がトランザクションとして処理されます。
+
+このようなトランザクションのかけかただけでなく、RAIIなトランザクションのかけ方も出来ます
+いわゆるguardオブジェクトを利用したトランザクションのかけ方です。
+RAIIについては http://ja.wikipedia.org/wiki/RAII を参考にしてください。
+
+>||
+my $txn = $teng->txn_scope
+my $row = $teng->insert('user', +{id => 1, name => 'nekokak'});
+$txn->commit;
+||<
+
+
+この例の場合はtxn_scopeで取得した$txnオブジェクトが存在し、明示的に$txn->commitを実行するまでの間がトランザクションとして
+とりあつかわれます。
+
+commitを実行する前に$txnオブジェクトが消えてしまうと今までトランザクションとして処理していたものは
+すべてrollbackされます。
+
+
+なお、例えばMySQLのMyISAMなどのトランザクションをサポートしないdatabaseを使っていて、
+トランザクションがうまくできないよーとならないようにしましょう。
+たまにはまります。
+
+明日はエラーハンドリングについて紹介したいと思います
+
+
