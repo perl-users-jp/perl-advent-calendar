@@ -1,0 +1,121 @@
+dotcloudで複数サーバーが必要なシステムを立ち上げたりした話 2011年12月版
+meta-author: lestrrat
+meta-tags: perl, dotcloud
+
+どうも、<a href="http://perl-users.jp/articles/advent-calendar/2011/test/18">最近あまりコード書いてない</a>と思ってたけど、よく考えたら今回ネタにしているアプリに関して*だけ*はコード書いてるlestrratです
+
+皆さんは<a href="http://dotcloud.com">dotcloud</a>使ってますか？僕は基本的にはdotcloudにほれこんでいて、料金とかの問題がGAEとかみたいに表面化しなければしばらくは使っていきたいと考えています。
+
+ちなみに僕はありがたいことにβユーザーなんですね。なんでもしかしたら一部非βユーザーの方には使えない機能とかの話があるかもしれません。まぁその辺りは適当に読み進めてやってください。
+
+** 本題
+
+さて、ここのところ一番時間をかけてるのはJenkinsと<a href="http://stf-storage.github.com">STF</a>というアプリケーションです。なんでこれに色々手を入れているかというと、まぁ日々のメンテナンスもあるのですが、もうちょっとしたら正式にオープンソース化をするからです。今は僕の先走り的な感じでちょこちょこ情報が漏れてる状態ですね。
+
+で、まぁ本年注には多分完全にオープンなものとしてリリースされますが、すでに師走で浮き足立っている皆さんはその時にはもうプレスリリースなんて読まないだろうし、ってことでここでも先走りしてみました。
+
+ともあれ、公開準備しているときに「これ、dotcloudでさくっと動いたら素敵だよね」ということで早速一発でdotcloudで動かすにはどうすればいいかなぁと思って、<a href="https://github.com/stf-storage/stf-on-dotcloud">stf-on-dotcloud</a>ってのを作ってみました。
+
+シンプルな構成のわりに細々と色々考える必要があったのでなんとなくの流れを説明してみます
+
+** stf-on-dotcloud
+
+基本的なアプローチは以下の通りです： STFではディスパッチャー、ストレージ、ワーカー、そしてデータベースとキューがあれば動きます。ディスパッチャーとストレージはPSGIアプリ、ワーカーはただのPerlワーカーなので、dotcloudの基本的なサービスでまかなえます。
+
+まず最初の問題はキューでした。もともとハイパフォーマンスな環境を想定しているのでQ4M一択で設計したのですが、Q4Mがどうしてもdotcloudで入らない！customサービスという虎の子まで使ったのですが、どうしてもうまくできません。
+
+そこで三日ほど悩んだ末、Q4Mは諦めて、TheSchwartzに対応しました。まぁループを選択できるようにしただけなのでほとんど変わりません。こんなこともあろうかと、<a href="https://github.com/stf-storage/stf/tree/master/lib/STF/Worker/Loop">Loopは抽象化してありましたよ</a>。まぁ選択する部分でちょっと無理矢理なことしてますが・・・
+
+というわけで、TheSchwartzなら普通のmysqldで動くので、dotcloudで提供されているmysqldサービスにメインのDBもキューも同居させることができるようになります。
+
+** dotcloud.yml
+
+dotcloud.ymlは将来的に変わるかもしれないけど、これをユーザーに書かせると多分誰も使ってくれないので、setup.shスクリプトで自動生成するようにしました。
+
+以下全部一つのファイルに入ってるのですが、ここでは各セクションを紹介します。 まずわかりやすいmysql:
+
+>|yaml|
+db:
+    type: mysql
+||<
+
+ディスパッチャーとストレージ：
+
+>|yaml|
+dispatcher101:
+    approot: dispatcher
+    type: perl
+    requirements:
+        - TheSchwartz
+    environment:
+        DEPLOY_HOME: /home/dotcloud/current
+        STF_HOST_ID: 101
+        STF_QUEUE_TYPE: Schwartz
+        STF_NGINX_STYLE_REPROXY: 1
+storage101:
+    approot: storage
+    type: perl
+    environment:
+        DEPLOY_HOME: /home/dotcloud/current
+        STF_BACKEND_ROOT: /home/dotcloud/stf
+||<
+
+ここでrequirementsというのがでてきますが、これはMakefile.PLにrequiresと書いておくのと同等です。ただ、STFの場合TheSchwartzはあくまで任意のモジュールなため、Makefile.PLには入っていません。そこでこのrequirementsの出番です。yum的なパッケージ名か、Perl関連のサービスの場合はモジュール名を入れておけば勝手にcpanmしてくれます。また、STFにSchwartを使えと伝えるのにSTF_QUEUE_TYPEという環境変数に値を入れています。
+
+あと、実際のSTFはApacheで動かしているのですが、dotcloudではnginxで動いているのでそこも変更が必要でした。STF_NGINX_STYLE_REPROXYというのがその設定で、<a href="https://github.com/stf-storage/stf/blob/master/lib/STF/Dispatcher.pm#L417">X-Reproxy-URLを使用するときに若干変更が必要だったのです</a>。
+
+またこの設定をnginx側にわかってもらうためにもnginx.confを指定してやる必要があります。こんな感じのものですね。これはほぼ定型です
+
+>||
+location = /reproxy {
+    resolver 64.27.57.11;
+    internal;
+    set $reproxy $upstream_http_x_reproxy_url;
+    proxy_pass $reproxy;
+    proxy_hide_header Content-Type;
+}
+||<
+
+はまったのは"resolver"の指定です。nginxさんはこれがないとホスト名を解決してくれないよ！
+
+ストレージのほうはただ単純にどこにデータをいれるかという指定だけしてあります。あとはただのPSGIアプリです。
+
+ワーカーも基本的にはただのperl-workerサービスです
+
+>|yaml|
+worker101:
+    approot: worker
+    type: perl-worker
+    requirements:
+        - TheSchwartz
+    environment:
+        DEPLOY_HOME: /home/dotcloud/current
+        STF_QUEUE_TYPE: Schwartz
+||<
+
+ワーカーのほうはsupervisordから立ち上がりますので、その設定をしてやる必要があります
+
+>|yaml|
+[program:stf-worker]
+command = perl -I/home/dotcloud/current/lib /home/dotcloud/current/bin/stf-worker
+stderr_logfile = /var/log/supervisor/stf-worker.error.log
+stdout_logfile = /var/log/supervisor/stf-worker.log
+||<
+
+ちょっと -I入れる必要があったのが残念ですが、まぁこの程度はご愛敬。
+
+さて、このdotcloud.ymlでデプロイするのですが、この中で environment:に指定した環境変数の数々。これらは environment.yamlとenvironment.jsonというファイルに格納されているのですが、自動的に読み込まれているわけではありません・・・！！！
+
+最初はちょっと驚愕だったんですが、まぁ理由もわからないのでとりあえずそれに対応することにします。若干面倒なのですが、それぞれのスクリプトの一番最初に環境によって環境変数を読み込むようにしてしまいました。それが<a href="https://github.com/stf-storage/stf/blob/master/lib/STF/Environment.pm">STF::Environment</a>です<a href="https://github.com/stf-storage/stf/blob/master/lib/STF/Environment.pm#L35">/home/dotcloud/environment.ymlが存在すれば</a>それを読み込んで、%ENVに突っ込みます。
+
+これで自分で定義したもの以外にもDOTCLOUD_*系の環境変数も全部使えますね。データベースの接続先などはこれを使って環境変数から色々ごにょってます。
+
+** あとは自動化
+
+あとはこれらを作成したり、ディレクトリの構成を作ったりするものをシェルスクリプトにまとめて<a href="https://github.com/stf-storage/stf-on-dotcloud/blob/master/setup.sh">setup.sh</a>にぶっこみました。
+
+あとは<a href="https://github.com/stf-storage/stf-on-dotcloud/blob/master/README.mkd">README.mkd</a>を読んでもらえれば基本的にそのままdotcloudにSTFをデプロイできるはず！
+
+そんなわけであんまりPerl関係なかったけど、STF on dotcloudでした。
+
+
