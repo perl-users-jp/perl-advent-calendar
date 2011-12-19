@@ -1,0 +1,58 @@
+Calendar::Japanese::Holiday - 日本の祝日を求める
+meta-author: sakurako_s
+meta-tags: perl
+
+こんにちはこんにちは、sakurako_sです。
+日本の祝日を求めるのに便利な<a href="http://search.cpan.org/~kztomita/Calendar-Japanese-Holiday-0.03/lib/Calendar/Japanese/Holiday.pm">Calendar::Japanese::Holiday</a>をゆるふわっと紹介します。
+
+このモジュールには2つの関数があります。
+-isHoliday() - 指定日が祝日なら祝日名を返す
+-getHolidays() - 指定月の祝日とその名前のハッシュリファレンスを返す
+
+コードを見てみましょう。
+>|perl|
+use strict;
+use Calendar::Japanese::Holiday;
+use YAML qw/Dump/;
+use Perl6::Say;
+binmode STDOUT, ':utf8';
+
+# 祝日の名前
+say isHoliday(2012, 1, 9);
+
+# 指定月の祝日
+say Dump getHolidays(2012, 1);
+||<
+
+実行結果は次の通り。
+>||
+成人の日
+---
+1: 元日
+9: 成人の日
+||<
+
+
+振替休日も求めたい場合は、引数を最後に1つ加えます。（真値であれば '1'以外でも大丈夫です）
+>|perl|
+# 祝日の名前
+say isHoliday(2012, 1, 2, 1);
+
+# 指定月の祝日
+say Dump getHolidays(2012, 1, 1);
+||<
+
+実行結果。
+>||
+振替
+---
+1: 元日
+2: 振替
+9: 成人の日
+||<
+お手軽ですね！
+
+興味がある方は、<a href="http://cpansearch.perl.org/src/KZTOMITA/Calendar-Japanese-Holiday-0.03/lib/Calendar/Japanese/Holiday.pm">ソースコード</a>を覗いてみてください。日本の祝日の変遷っぷりが分かりやすくて楽しいですよ。んがんぐ。
+
+
+明日はtorii.yさんです。お楽しみに。
