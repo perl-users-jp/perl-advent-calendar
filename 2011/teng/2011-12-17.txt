@@ -1,0 +1,65 @@
+#17 error handling
+
+Tengではエラーハンドリングを利用者が独自に定義することが可能です。
+
+たとえばデフォルトの挙動として
+
+>||
+$teng->search_by_sql('* FROM user WHERE id = ?', [1]);
+||<
+
+このように誤ったSQLを実行してしまった時などは
+
+>||
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@ Teng 's Exception @@@@@
+Reason  : DBD::SQLite::db prepare failed: near "*": syntax error at ....
+
+SQL     : * FROM user WHERE id = ?
+BIND    : $VAR1 = [
+          1
+        ];
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+ at ....
+||<
+
+といったエラーメッセージがcroakされます。
+
+この処理はTeng#handle_errorメソッドでおこなっているので、
+Tengを継承しているクラスでオーバーライドすることが可能です。
+
+
+たとえばTengで表示されるエラーメッセージがうるさい場合なんかは
+
+>||
+package Proj::DB;
+use strict;
+use warnings;
+use parent 'Teng';
+
+sub handle_error {
+    my ($self, $stmt, $bind, $reason) = @_;
+    $reason =~ s/\r?\n//;
+    require Data::Dumper;
+    local $Data::Dumper::Indent = 0;
+    local $Data::Dumper::Terse  = 1;
+    local $Data::Dumper::Useqq  = 1;
+    local $Data::Dumper::Pair   = '=>';
+    Carp::croak sprintf '%s %s %s', $reason, $stmt, Data::Dumper::Dumper($bind);
+}
+
+1;
+||<
+
+このようにすることで
+
+>||
+DBD::SQLite::db prepare failed: near "*": syntax error at /Users/kobayashi.atsushi/perl5/perlbrew/perls/perl-5.12.1/lib/site_perl/5.12.1/Teng.pm line 206. * FROM user WHERE id = ? [1] at ...
+||<
+
+と、１行で収めることも可能です。
+
+明日はPluginについて紹介したいと思います
+
+
