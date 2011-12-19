@@ -1,0 +1,393 @@
+Smart::Matchで快適スマートマッチ
+meta-author: taiju <higashi@taiju.info>
+meta-tags: perl, perl6, smartmatch 
+
+こんにちは。Perlで遊ぶと言うより、 未だ、Perlに遊ばれているtaiju ([http://d.hatena.ne.jp/jdg/:title=id:jdg]) です。
+
+YAPC::Asia TOKYO2011に参加したので、爪あとを残すべく、Perl Advent Calendar 2011に参加することにしました。
+
+さて、Perl5.10から導入されたスマートマッチですが、これをより快適に使えるモジュールがないか、CPANで探してみたところ、Smart::Matchというモジュールが見つかりましたので、ご紹介したいと思います。
+
+Smart::Matchはスマートマッチを快適に使うためのユーティリティをたくさん提供しているモジュールのようで、デフォルトで比較演算子でスマートマッチが採用される、switch文などで便利に使えそうなユーティリティがたくさん導入されています。
+
+** junctive
+Perl6のJunctionのような動作をするユーティリティ群です。
+
+any, all, none, oneが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+Smart::Match qw/:junctive :number positive negative/;
+
+# any
+given (1) {
+  say 'matched!' when any(1,2,3);
+}
+
+# all
+given (1) {
+  say 'matched!' when all(1, number, positive);
+}
+
+# none
+given (1) {
+  say 'matched!' when none('a', 2, []);
+}
+
+# one
+given (1) {
+  say 'matched!' when one(odd, even, negative);
+}
+||<
+
+Junctionのように、スマートマッチ演算子以外で使うことは想定されていないので、その点は注意です。
+スマートマット演算子以外でも使いたい場合は、Perl6::Junctionが使えます。
+
+** definite
+必ずマッチするか、必ずマッチしない比較関数を提供するユーティリティ群です。
+
+always, neverが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+Smart::Match qw/:definite/;
+
+# always
+given (1) {
+  say 'matched!' when always;
+}
+given (undef) {
+  say 'matched!' when always;
+}
+
+# never
+given (1) {
+  say 'not matched!' when not never;
+}
+given (undef) {
+  say 'not matched!' when not never;
+}
+||<
+
+** boolean
+真偽値になるかどうかを判定する時に使えるユーティリティ群です。
+
+true, falseが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+Smart::Match qw/:boolean/;
+
+# true
+given (1) {
+  say 'matched!' when true;
+}
+given ('foo') {
+  say 'matched!' when true;
+}
+
+# false
+given (0) {
+  say 'not matched!' when false;
+}
+given ('') {
+  say 'not matched!' when false;
+}
+||<
+
+** numeric
+数に関する判定に使えるユーティリティ群です。
+
+number, integer, even, odd, more_than, less_than, at_least, at_mostが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+Smart::Match qw/:numeric all/;
+
+# number
+given (1) {
+  say 'matched!' when number;
+}
+
+# integer
+given (1) {
+  say 'matched!' when number;
+}
+given (1.5) {
+  say 'not matched!' when number;
+}
+
+# even
+given (2) {
+  say 'matched!' when even;
+}
+
+# odd
+given (1) {
+  say 'matched!' when odd;
+}
+
+# more_than
+given (1) {
+  say 'matched!' when more_than(0);
+}
+
+# less_than
+given (-1) {
+  say 'matched!' when less_than(0);
+}
+
+# at_least
+given (1) {
+  say 'matched!' when all(at_least(0), at_least(1));
+}
+
+# at_most
+given (-1) {
+  say 'matched!' when all(at_least(0), at_least(-1));
+}
+||<
+
+** compare
+値の比較に使えるユーティリティ群です。
+
+numwise, stringwise, hashwiseが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+Smart::Match qw/:compare/;
+
+# numwise
+given (1) {
+  say 'matched!' when numwise(1);
+}
+
+# stringwise
+given ('foo') {
+  say 'matched!' when stringwise('foo');
+}
+
+# hashwise
+given ({ foo => 1, bar => 2}) {
+  say 'matched!' when hashwise({ foo => 1, bar => 2});
+}
+||<
+
+** meta
+Smart::Match自身を拡張するユーティリティ群です。
+
+match, delegateが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+use Smart::Match qw/:meta integer odd always/;
+
+# match
+use constant fizz => match { scalar integer and $_ % 3 == 0 };
+use constant buzz => match { scalar integer and $_ % 5 == 0 };
+use constant fizzbuzz => match { scalar integer and $_ % 15 == 0 };
+
+sub say_fizzbuzz {
+  for (1..100) {
+    given ($_) {
+      say "fizzbuzz" when fizzbuzz;
+      say "fizz" when fizz;
+      say "buzz" when buzz;
+      say $_ when always;
+    }
+  }
+}
+say_fizzbuzz;
+
+# delegate
+use constant nabe => delegate { $_ =~ /3/ ? 3 : $_ } fizz;
+sub say_nabeatsu {
+  for (1..40) {
+    given ($_) {
+      say "aho!" when nabe;
+      say  $_ when always
+    }   
+  }
+}
+say_nabeatsu;
+||<
+
+** string
+文字列に関するユーティリティ群です。
+
+string, string_lengthが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+use Smart::Match qw/:string/;
+
+# string
+given ('foo') {
+  say 'matched!' when string;
+}
+
+# string_length
+given ('foo') {
+  say 'matched!' when string_length(3);
+}
+||<
+
+** refs
+オブジェクトの比較に使えるユーティリティ群です。
+
+object, instance_of, ref_typeが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+use Smart::Match qw/:refs/;
+
+# object
+given (bless([], 'main')) {
+  say 'matched!' when object;
+}
+
+# instance_of
+given (bless([], 'main')) {
+  say 'matched!' when instance_of('main');
+}
+
+# ref_type
+given ([]) {
+  say 'matched!' when ref_type('ARRAY');
+}
+||<
+
+** arrays
+配列に関するユーティリティ群です。
+
+array, array_length, tuple, head, sequence, contains, sortedが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+use Smart::Match qw/:arrays positive negative/;
+
+# array
+given ([]) {
+  say 'matched!' when array;
+}
+
+# array_length
+given ([1,2,3]) {
+  say 'matched!' when array_length(3);
+}
+
+# tuple
+given ([1,-1,1]) {
+  say 'matched!' when tuple(positive, negative, positive);
+}
+
+# head
+given ([1,2,3]) {
+  say 'matched!' when head(1,2);
+}
+
+# sequence
+given ([1,2,-1]) {
+  say 'not matched!' when not sequence(positive);
+}
+
+# contains
+given ([1,2,3]) {
+  say 'not matched!' when not contains(1,2,4);
+}
+
+# sorted
+given ([1,3,2]) {
+  say 'matched!' when sorted([1,2,3]);
+}
+||<
+
+** hashes
+ハッシュに関するユーティリティ群です。
+
+hash, hash_keys, hash_values, sub_hashが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+use Smart::Match qw/:hashes contains/;
+
+# hash
+given ({}) {
+  say 'matched!' when hash;
+}
+
+# hash_keys
+given ({ foo => 1, bar => 2 }) {
+  say 'matched!' when hash_keys(contains('foo'));
+}
+
+# hash_values
+given ({ foo => 1, bar => 2 }) {
+  say 'matched!' when hash_values(contains(1));
+}
+
+# sub_hash
+given ({ foo => 1, bar => 2 }) {
+  say 'matched!' when sub_hash({ foo => 1 });
+}
+||<
+
+** direct
+値の比較とポインタの比較の関数を持ったユーティリティ群です。
+
+address, valueが該当します。
+
+>|perl|
+use 5.010;
+use strict;
+use warnings;
+use Smart::Match qw/:direct/;
+
+# address
+my $sub = sub {};
+given ($sub) {
+  say 'not matched!' when not address(sub {});
+}
+
+# value
+given ([1,2,3]) {
+  say 'matched!' when value([1,2,3]);
+}
+given ({ foo => 1, bar => 2 }) {
+  say 'matched!' when value({ foo => 1, bar => 2 });
+}
+given (1) {
+  say 'matched!' when value(1);
+}
+given ($sub) {
+  say 'not matched!' when not value(sub {});
+}
+||<
+
+** その他
+他にも、positive, negative, rangeというユーティリティ関数があります。これらはグループにまとめられていません。作者のミスなのかもしれませんが。
+
+** まとめ
+ちょっと不安定な部分もある感じですが、Perl5.10以降が使える案件で、switch文を簡潔に書きたい際に、利用してもいいかなと思いました。
+
+次は、sakurako_sさんです。
