@@ -1,0 +1,54 @@
+#18 Plugin
+
+TengにはPlugin機構があります。
+
+TengでPluginを書く為にはPlugin側でour @EXPORTを定義し、
+そこにpluginとして提供したいメソッド名を書きます。
+
+>||
+package Your::Plugin::Hello;
+use strict;
+use warnings;
+our @EXPORT = qw/say_hello/;
+
+sub say_hello {
+    print "hello\n";
+}
+1;
+||<
+
+これだけでTengのPluginが完成です。
+
+このPluginをつかうには以下のようにloadします。
+
+>||
+package Proj::DB;
+use strict;
+use warnings;
+use parent 'Teng';
+
+__PACKAGE__->load_plugin('+Your::Plugin::Hello');
+
+1;
+||<
+
+すると
+
+>||
+$teng->say_hello; # print hello
+||<
+
+となります。簡単ですね。
+
+なお、今回はYour::Pluginというnamespaceに新しくPluginを定義したので、load_pluginするときに
+package名の先頭に+をつけました。
+package名の先頭に+をつけると、+をとりのぞいたpackage名をそのまま利用しようとします。
++がないと、load_pluginに渡されたpackage名にTeng::Plugin::を補完して利用しようとします。
+
+なお、現在の所Teng.pmにメソッドを追加する程度のことしかできません。
+
+またload_pluginではpluginを読み込んだ後に一度だけPluginクラスに定義されているinitメソッドを実行しますので、
+Pluginの初期設定などを行いたい場合はinitに仕込むようにするとよいでしょう。
+
+明日はTengで提供されているPluginの紹介をしたいと思います
+
