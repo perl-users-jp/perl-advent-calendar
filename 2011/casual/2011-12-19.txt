@@ -119,10 +119,10 @@ given (1) {
 
 # integer
 given (1) {
-  say 'matched!' when number;
+  say 'matched!' when integer;
 }
 given (1.5) {
-  say 'not matched!' when number;
+  say 'not matched!' when not integer;
 }
 
 # even
