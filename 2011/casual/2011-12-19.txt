@@ -6,7 +6,7 @@ meta-tags: perl, perl6, smartmatch
 
 YAPC::Asia TOKYO2011に参加したので、爪あとを残すべく、Perl Advent Calendar 2011に参加することにしました。
 
-さて、Perl5.10から導入されたスマートマッチですが、これをより快適に使えるモジュールがないか、CPANで探してみたところ、[https://metacpan.org/module/Smart::Match:title=Smart::Match]というモジュールが見つかりましたので、ご紹介したいと思います。
+さて、Perl5.10から導入されたスマートマッチですが、これをより快適に使えるモジュールがないか、CPANで探してみたところ、<a href="https://metacpan.org/module/Smart::Match">Smart::Match</a>というモジュールが見つかりましたので、ご紹介したいと思います。
 
 Smart::Matchはスマートマッチを快適に使うためのユーティリティをたくさん提供しているモジュールのようで、デフォルトで比較演算子でスマートマッチが採用される、switch文などで便利に使えそうなユーティリティがたくさん導入されています。
 
@@ -43,7 +43,7 @@ given (1) {
 ||<
 
 Junctionのように、スマートマッチ演算子以外で使うことは想定されていないので、その点は注意です。
-スマートマット演算子以外でも使いたい場合は、[https://metacpan.org/module/Perl6::Junction:title=Perl6::Junction]が使えます。
+スマートマット演算子以外でも使いたい場合は、<a href="https://metacpan.org/module/Perl6::Junction">Perl6::Junction</a>が使えます。
 
 ** definite
 必ずマッチするか、必ずマッチしない比較関数を提供するユーティリティ群です。
