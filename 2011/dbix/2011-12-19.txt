@@ -1,0 +1,85 @@
+migrationライブラリの紹介
+meta-author: walf443
+meta-tags: DB
+
+こんにちは! 子供のころは、誕生日がクリスマスと一日違いだったために誕生日プレゼントとクリスマスプレゼントがよく一緒にされてました。walf443です。
+
+* Migrationとは?
+
+複数人でプロジェクトを開発していると、途中でDBのschemaが変更になったりすると、schemaの変更方法が記述されてないと、手元で気軽にテストしたりしづらくて、困ります。
+schemaの管理方法は、プロジェクトによって色々あるかと思いますが、別のbranchの担当者に「あれっ、ここ替えたんでよいんでしたっけ?」と聞いたり、DBのschemaを丸ごとされているファイルをチェックして、diffをチェックしてからALTER TABLE文を考えて適用、とかになったりしてしまいます。
+
+Ruby on Railsとかだと、Migrationという仕組みをサポートしていて、(開発者がちゃんと書いていれば)様々なバージョンの開発環境を簡単に作ったりすることができて、MogileFSみたいなミドルウェアやcartonで依存関係などを満たしてユーザー向けに使ってもらうようなアプリケーションなどでは、こういう仕組みをサポートしておくと、あまり中身に関して詳しくない状態でもとりあえず動く環境を構築できるので、よいんじゃないかなと思う今日このごろです。(今さら感もありますが)
+
+本番へ適用するときも、そのまま実行するのは怖いケースもあったりしますが、実行できる手順書が整備されていると、それを見つつ適用したり、運用担当者の人に作業をお願いしたりしやすいのではないかと思います。
+
+あんまりperlつかっているところでmigrationばりばり使ってるよー、って聞いたりしないので、前まえからぼんやり使いたいなー、と思いつつ、どうなんだろ?ということでせかくの機会なので調べてみました。
+
+cpanをMigrationで検索してみると、様々なライブラリが見つかります。
+
+- DBIx::Migration
+- DBIx::Migration::Directories
+
+* DBIx::Migration
+
+検索すると、名前がまさにそれなので、まずこれをみんな試すんじゃないかなと思います。
+
+>|perl|
+use strict;
+use warnings;
+use DBIx::Migration;
+
+my $m = DBIx::Migration->new({
+    dsn => 'dbi:SQLite:migration.db',
+    dir => 'migration/',
+});
+
+$m->migrate();
+||<
+
+>|sh|
+$ touch migration.db
+$ mkdir migration/
+$  cat migration/schema_1_up.sql                                                                                                                   [ ~/project/perl/migrate  ]
+create table user (
+    int unsigned not null primary key
+);
+
+$ perl migration.pl
+||<
+
+こんな感じでプログラムを実行してやると、最新バージョンにupdateします
+
+>|sh|
+$ sqlite3 migration.db
+sqlite> .tables
+dbix_migration  user 
+sqlite> select * from dbix_migration;
+version|1
+||<
+
+といった感じで、dbix_migrationディレクトリができて、現在のバージョンが記録されます。
+
+ディレクトリの下に置くファイル名は、命名規則があって、schema_$VERSION_(up|down).sqlを置いておくと、順番に適用してくれるようです。
+
+* DBIx::Migration::Directories
+
+DBIx::Migration::Directoriesはとりあえず使ってみようとごにょごにょしてみましたが、わりとしっかりドキュメント読んでからじゃないと使い方がよくわからないなーと印象を受けました。
+
+DBIx::Migrationは、SQLite3では動かず、PgおよびMySQLだと動くようです(BUGSにMySQLのエラー処理が微妙に違って拾いきれていないかも、みたいに書かれていますが)
+
+SYNOPSISのDBI->connectのとこは、DBIx::Transaction->connectと読みかえてやらないといけないようです。
+
+現在のバージョンのみなし方は、パッケージを作成し、その$VERSIONを元に判別する、という方式になっているようで、アプリケーションのプロジェクトとかだと、ついついバージョンをあげわすれてしまいそうだなと思いました。
+
+* まとめ
+
+ほんとはもっと色々さわったりしてみる予定でしたが、意外とすんなり動かずあんまり紹介できませんでした。触ってみた中では結局DBIx::Migrationが一番とっつきやすかったです。
+
+migrationライブラリはアプリケーションなので、わりと大きなものになりがちで、使い始めて慣れるまでの敷居は高いようです。
+チーム導入にあたっては、使い方をガイドしたり布教活動をわりとがんばる必要があるでしょう。
+
+基本的には、DBIx::Migrationでよいのかなーと思いつつ、色んなユーザーを想定するアプリケーションとかだと、色々なDBサポートをする必要がでてくると、他の選択肢を使ってみる、という感じなのかなと思います。
+もっとシンプルに使えて、dbhの使い方を覚えていればなんでもできる(Tengでマスターデータ入れたり...)、みたいなやつを年末の時間をつかって作ってみようかなーと思う今日このごろです。
+
+次はkamipoさんです!!
