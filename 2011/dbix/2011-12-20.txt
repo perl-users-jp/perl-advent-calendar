@@ -6,10 +6,10 @@ meta-tags: perl, dbix
 
 ** DBIx::QueryLog で EXPLAIN の結果もロギングしたい
 
-xaicron さんの9日目のエントリ、[http://perl-users.jp/articles/advent-calendar/2011/dbix/9 DBIx::QueryLog で DBI で実行された SQL を丸見えにする！]でおなじみの神モジュール DBIx::QueryLog 便利ですよね！？
+xaicron さんの9日目のエントリ、[http://perl-users.jp/articles/advent-calendar/2011/dbix/9:title=DBIx::QueryLog で DBI で実行された SQL を丸見えにする！]でおなじみの神モジュール DBIx::QueryLog 便利ですよね！？
 でもEXPLAINの結果もロギングできたらもっと便利だと思いませんか？僕は思いました！！
 
-そこで、EXPLAIN の結果もロギングできる[https://github.com/xaicron/p5-DBIx-QueryLog/pull/3 パッチ]を取り込んでもらったので、新しいのが出たら使えるようになると思います！(いまはまだMySQLだけですが…)
+そこで、EXPLAIN の結果もロギングできる[https://github.com/xaicron/p5-DBIx-QueryLog/pull/3:title=パッチ]を取り込んでもらったので、新しいのが出たら使えるようになると思います！(いまはまだMySQLだけですが…)
 
 ** つかいかた
 
