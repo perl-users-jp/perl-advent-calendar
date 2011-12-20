@@ -11,14 +11,13 @@ Tengとかすごい魅力的なんですが、ゆるふわ過ぎてついつい�
 
 とは言え、こんなコードを書いてしまうと色々と残念な感じです(注：2年前くらいの僕)。
 
->||
-my @line = `mysql -N -uuser -ppass hoge -e "select * from hoge"`;
+<pre class="code">my @line = `mysql -N -uuser -ppass hoge -e "select * from hoge"`;
 for my $row (@line) {
     chomp $row;
     my @data = split(/[\s\t]+/, $row);
     ...
 }
-||<
+</pre>
 
 いくら管理用のスクリプトでももうちょっとマシなものにしたいですね。生SQLを使いたいならやっぱり生DBIが気持ちいい様です。
 
@@ -71,7 +70,7 @@ for my $row (@$rows) {
 
 というか、そもそもfetchrow_hogehoge()とかselectall_hogehoge()とか覚えられないから毎回ググッててダメすぎます。ORMを使うというのは1つのやり方なんですが、クエリは生がいい。。。
 
-そんな感じで悶々としながらDBIx Trackを読んでいたら、tomi-ruさんが「[http://perl-users.jp/articles/advent-calendar/2011/dbix/8:title=DBIx::Simple ふたたび - Perl Advent Calendar Japan 2011 Dbix Track]」というエントリを書かれていました。恥ずかしながらこれ知りませんでしたが、僕みたいなゆるふわにはとっても便利そうです。そして、よくドキュメントを読んでると、なんと[http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple/Examples.pod#EXAMPLES_WITH_SQL::Interp:title=SQL::Interpにも対応したメソッド]が生えているではありませんか！試しにnekokakさんの[http://perl-users.jp/articles/advent-calendar/2011/dbix/1:title=DBIx::Handler]と組み合わせてみましょう！
+そんな感じで悶々としながらDBIx Trackを読んでいたら、tomi-ruさんが「[http://perl-users.jp/articles/advent-calendar/2011/dbix/8:title=DBIx::Simple ふたたび - Perl Advent Calendar Japan 2011 Dbix Track]」というエントリを書かれていました。恥ずかしながらこれ知りませんでしたが、僕みたいなゆるふわにはとっても便利そうです。そして、よくドキュメントを読んでると、なんと<a href="http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple/Examples.pod#EXAMPLES_WITH_SQL::Interp">:SQL::Interpにも対応したメソッド</a>が生えているではありませんか！試しにnekokakさんの[http://perl-users.jp/articles/advent-calendar/2011/dbix/1:title=DBIx::Handler]と組み合わせてみましょう！
 
 >||
 use DBIx::Handler;
