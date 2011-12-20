@@ -64,7 +64,7 @@ meta-tags: perl, test, jenkins, coverage
 
 >||
     cover -report clover
-||M
+||<
 
 もちろん、Devel::Coverの元々のHTMLがいらないのであればhtmlの方を消してもいいのですが、後述の理由によりhtmlも生成するのをおすすめします。
 
