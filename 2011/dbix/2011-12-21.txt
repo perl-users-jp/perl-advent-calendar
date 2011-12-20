@@ -1,0 +1,177 @@
+SQL::Interpで生がお好きなあなたも満足
+meta-author: riywo <riywo.jp@gmail.com>
+meta-tags: perl, sql
+
+Perl AdventCalendar初投稿でドキドキしているriywoです。目指せhirose31ということで「コードも書けるインフラエンジニア」を所望していますが、正直、DBI使ってゴリゴリアプリとか作ってない。。。限りなくひとりDBIx::Casual Trackではありますが、そんな僕だからこそ書けるゆるふわなエントリをどうぞ！
+
+
+* 情弱なんで生SQLがいいんです。。。
+
+Tengとかすごい魅力的なんですが、ゆるふわ過ぎてついつい生でSQLを書きたくなります。ORMのメソッド覚える努力をしないだけ情弱なんですが、特にインフラはいつも慣れ親しんでいるSQLをそのままアプリでも使いたくなっちゃいます。
+
+とは言え、こんなコードを書いてしまうと色々と残念な感じです(注：2年前くらいの僕)。
+
+>|| 
+my @line = `mysql -N -uuser -ppass hoge -e "select * from hoge"`;
+for my $row (@line) {
+    chomp $row;
+    my @data = split(/[\s\t]+/, $row);
+    ...
+}
+||<
+
+いくら管理用のスクリプトでももうちょっとマシなものにしたいですね。生SQLを使いたいならやっぱり生DBIが気持ちいい様です。
+
+>||
+use DBI;
+
+my $dbh = DBI->connect("dbi:mysql:database=hoge", 'user', 'pass');
+
+my $where = { key1 => 'aaa', key2 => 'bbb' };
+my $sql = "select * from hoge where ";
+$sql .= join(" and ", map { "$_ = '$where->{$_}'" } keys %$where);
+
+my $rows = $dbh->selectall_arrayref($sql, { Slice => {} });
+for my $row (@$rows){
+    ...
+}
+||<
+
+でも、いくら生がいいと言ってもちょっとプログラム的に組み立てようとするとすさまじく汚くなりますよね。上の例みたいに文字列組み立てちゃうのでもまぁしょぼいアプリならいいんですが、そういうクセがつくとあんまりよろしくないと思うんですよね。プレースホルダー使おうとすると尚更めんどくさくなるので、なんかこの辺いい感じに面倒みてくれるモジュールないかなーと思ってた時に、tokuhiromさんがAmon2::DBIで[http://search.cpan.org/dist/SQL-Interp/lib/SQL/Interp.pm:title=SQL::Interp]というのを使っているのを知りました。これ生派で一人でコソコソアプリ作るにはには結構使い勝手がいいなぁと思いましたので紹介します。
+
+
+* SQL::Interpの簡単な使い方
+
+最初POD読んでもあんまり意味わからなかったのですが、実際に使っている例を見るとイメージが湧くと思います。たとえばさっきの例はこんな感じで直感的に書けます。
+
+>||
+use DBI;
+use SQL::Interp qw/sql_interp/;
+
+my $dbh = DBI->connect("dbi:mysql:database=hoge", 'user', 'pass');
+
+my $where = { key1 => 'aaa', key2 => 'bbb' };
+my ($sql, @bind) = sql_interp "select * from hoge where", $where;
+
+my $rows = $dbh->selectall_arrayref($sql, { Slice => {} }, @bind);
+for my $row (@$rows) {
+    ...
+}
+||<
+
+他にも例を書こうと思ったら、我らがzigorou先生がエントリ書いてくださっているので、こちらをご覧あれ！
+
+[http://d.hatena.ne.jp/ZIGOROu/20090731/1249052854:title=SQL::Interp - Yet Another Hackadelic]
+
+いい感じですね！それっぽくwhere句のハッシュリファレンスとかin句のリストリファレンスとかを組み立てたら、あとは生っぽくSQLが作れて、しかもプレースホルダーまでできちゃいます。もちろんselectだけじゃなくてinsertでもupdateでもなんとなくよしなに作ってくれます。
+
+* でも、やっぱりDBIってメンドクサイ
+
+これでクエリはいい感じに組み立てられる様になったのですが、いくつか問題があります。上で見て分かる様に、sql_interp()関数は($sql, @bind)という返り値の形なので、selectall_hogehoge()に渡すにはattributeのハッシュリファレンス分だけ引数が一致しないので、一度変数で受け取ってから渡す必要があります。コードを書きたいけど最低限の時間しかないインフラエンジニアにとってはこうした時間が命取りです(嘘)。
+
+というか、そもそもfetchrow_hogehoge()とかselectall_hogehoge()とか覚えられないから毎回ググッててダメすぎます。ORMを使うというのは1つのやり方なんですが、クエリは生がいい。。。
+
+そんな感じで悶々としながらDBIx Trackを読んでいたら、tomi-ruさんが「[http://perl-users.jp/articles/advent-calendar/2011/dbix/8:title=DBIx::Simple ふたたび - Perl Advent Calendar Japan 2011 Dbix Track]」というエントリを書かれていました。恥ずかしながらこれ知りませんでしたが、僕みたいなゆるふわにはとっても便利そうです。そして、よくドキュメントを読んでると、なんと[http://search.cpan.org/~juerd/DBIx-Simple-1.35/lib/DBIx/Simple/Examples.pod#EXAMPLES_WITH_SQL::Interp:title=SQL::Interpにも対応したメソッド]が生えているではありませんか！試しにnekokakさんの[http://perl-users.jp/articles/advent-calendar/2011/dbix/1:title=DBIx::Handler]と組み合わせてみましょう！
+
+>||
+use DBIx::Handler;
+
+my $handler = DBIx::Handler->new(
+    "dbi:mysql:database=hoge", 'user', 'pass',
+    {
+        RootClass => 'DBIx::Simple::Inject',
+    },
+);
+
+my $where = { key1 => 'aaa', key2 => 'bbb' };
+
+my $rows = $handler->dbh->iquery("select * from hoge where", $where)->hashes;
+for my $row (@$rows) {
+    ...
+}
+
+# or
+
+my $rows = $handler->dbh->iquery("select * from hoge where", $where);
+while (my $row = $rows->hash) {
+    ... #イテレータな感じもできる
+}
+||<
+
+うおー鼻血でそうなくらい簡単で、イメージに近い使い方ができます。僕みたいな三流プログラマが作るアプリはパフォーマンスとかどうでもいいクソアプリばかりなので、使いやすいし覚えることも少ないDBIx::Simple+SQL::Interpという組み合わせはとても幸せな感じです！
+
+
+* Amon2でも使いたいよね
+
+ところで、最近CLIのアプリ書く時は将来WEB UIを付けるだろうという想定で、Amon2を使って最初から作ることが多いんですが、tomi-ruさんのDBIx::Simple::Injectを使えばAmon2::DBIにもDBIx::Simpleのメソッドを生やすことができるので、もうこれだけあれば僕は満足です！！！
+
+ここでは、Lite Flavorで作ったapp.psgiに手を入れてみます。と言っても、DBI pluginを有効にしてちょっとconfigを入れるだけです。
+
+>||
+use Plack::Builder;
+use Amon2::Lite;
+
+__PACKAGE__->load_plugins(
+    'DBI',
+);
+
+sub config {
+    +{
+        DBI => [
+            "dbi:mysql:database=hoge",
+            'user',
+            'pass',
+            {
+                RootClass => 'DBIx::Simple::Inject',
+            },
+        ],
+        'Text::Xslate' => {
+            'syntax'   => 'Kolon',
+        },
+    }
+}
+
+get '/' => sub {
+    my $c = shift;
+    my $where = { key1 => 'aaa', key2 => 'bbb' };
+    return $c->render('index.tt', {
+        result => [ $c->dbh->iquery("select * from hoge", $where)->hashes ],
+    });
+};
+
+builder {
+    __PACKAGE__->to_app();
+};
+
+__DATA__
+
+@@ index.tt
+<!doctype html>
+<html>
+<head>
+    <met charst="utf-8">
+    <title>Advent2011</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    Advent2011
+<pre>
+: $result | dump
+</pre>
+</body>
+</html>
+||<
+
+これで、preタグの中にhashesの結果がDumperで出力されると思います。
+
+ちなみに、Amon2::DBIにはdo_i()という関数があってSQL::Interpを使えるんですが、これはDBI->do()を呼んでいるので、select系では使えないなーと思ってたところでした(認識間違ってたらすみません＞＜)。
+
+あと、最初はSQL::Interpの挙動が謎で一体どんなSQL投げてんだよ、って思うときがあると思いますが、そういう時はゆるふわ王子鈴木xaicronさんが[http://perl-users.jp/articles/advent-calendar/2011/dbix/9:title=DBIx::QueryLog]というすばらしいモジュールを公開してるので、これをuseしながらデバッグすると良いと思います。
+
+* おわりに
+
+というわけで、他の方に比べてたいそうゆるふわなエントリで申し訳ありませんでした。DBIx::Simple::Inject+SQL::Interpがあれば、いろんなDBIxでiquery()してhashes()できちゃうので僕はしばらくこれでコード書こうかなと思ってます。僕と同じ様に孤独なゆるふわ開発をやってる方で興味を持たれた方がいたら声かけてくだしあ＞＜
+
+というわけでこれで準備は整ったので、あとはアプリを書くだけですね！がんばれおれ！
+
+明日は我らがlestrratさんです！
