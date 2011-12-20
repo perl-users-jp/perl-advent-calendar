@@ -72,7 +72,7 @@ meta-tags: perl, test, jenkins, coverage
 
 これで準備完了です。このジョブを走らせるとカバレッジ情報が計測され、ジョブのサマリーページにカバレッジの推移情報が表示されるようになります。やったね！
 
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/test/2011-12-20/jenkins.png" width="600" height="377" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/test/2011-12-20/jenkins.png" width="400" height="244" />
 
 ** ついでにDevel::CoverのHTMLファイルも
 
