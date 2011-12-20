@@ -1,0 +1,74 @@
+Devel::CoverとJenkins
+meta-author: lestrrat
+meta-tags: perl, test, jenkins, coverage
+
+数日前に<a href="./15">カバレッジの話がありました</a>が、そんな事言ってたって自分でカバレッジなんてとらないでしょ？僕はそうそうとらないです。
+
+なのでそんなのJenkinsにやらせればいいんですよ。
+
+** 自動的にカバレッジを計測しましょう
+
+（Jenkinsじゃなくてもそうですが）Devel::Coverでカバレッジを計測するならPERL5OPTで渡すのが一番簡単ですね。
+
+    export PERL5OPT="-MDevel::Cover"
+
+ちなみにJenkinsでテストしてるときにはなるたけテストに使っているPerlから見えるところに余計な依存ライブラリを置きたくないので、Devel::Coverはそれだけ別の場所にいれてます。こうすればDevel::Coverを使う時以外はDevel::Coverをインストールしてあるディレクトリを有効化しないようにしてます。
+
+    cpanm -l/path/to/devel-cover Devel::Cover
+
+このように別パスに入れておいて、カバレッジ計測するジョブでだけPERL5OPTでこのパスを有効にしまうｓ：
+
+    export PERL5OPT="-Mlib=/path/to/devel-cover/lib/perl5 -MDevel::Cover"
+
+ちなみにDevel::Coverのオプションも有効にしたい場合はそれもここで指定すると良いです。自分の場合は プロジェクトの libディレクトリだけ計測対象にしたいので、以下のようにしています(っていうかytoriiさんに調べてもらいました！）：
+
+    export PERL5OPT="-Mlib=/path/to/devel-cover/lib/perl5 -MDevel::Cover=+ignore,.*,+select,^lib"
+
+
+そしてこの状態でテストを走らせます
+
+    make test
+    # もしくは prove ...
+
+こうすると cover_db/ ディレクトリ以下にDevel::Cover形式のカバレッジデータが作成されます。
+
+あとは
+
+    # XXX /path/to/devel-cover内にインストールしてるので、ここで
+    # ちゃんとパス指定しないとみつけてくれないッ
+    export PATH="/path/to/devel-cover/bin:$PATH"
+    cover -report html
+
+などとすればこれだけでもいつものDevel::Coverの出力は作成されます。
+
+** Cloverで可視化
+
+これで一応カバレッジはとれるわけですが、どうせJenkinsで動かすのだったらジョブのサマリーページでカバレッジの推移を見たいですよね。そこでJenkinsのプラグインから<a href="https://wiki.jenkins-ci.org/display/JENKINS/Clover+Plugin">Clover Plugin</a>を入れておきます。Clover自体はAtlassianのプロダクトで有償なのですが、プラグインは別にお金がかからないのでノープロブレムです。あとはこのプラグインが読み込める形のデータを用意しておけばよいだけです。
+
+このClover用のデータを用意するには Devel::Cover::Rerpot::Cloverというのを使います。最初のDevel::Coverと同じパスにインストールしておきましょう。
+
+    cpanm -l/path/to/devel-cover Devel::Cover::Report::Clover
+
+そしてあとは先ほどのcover -report htmlの後に以下のように呼び出すとcover_db ディレクトリにclover.xmlというファイルが生成されます
+
+    cover -report clover
+
+もちろん、Devel::Coverの元々のHTMLがいらないのであればhtmlの方を消してもいいのですが、後述の理由によりhtmlも生成するのをおすすめします。
+
+これで準備ができました。今度はJenkins側の設定をします。Clover Pluginをインストールしておくと、それ用の設定がジョブの設定ページに表示されますので "Clover カバレッジレポートを集計"にチェックを入れてください。現れる詳細設定で"Cloverレポート ディレクトリ"にcover_dbを設定してください。あとの設定はとりあえずそのままで大丈夫です。
+
+これで準備完了です。このジョブを走らせるとカバレッジ情報が計測され、ジョブのサマリーページにカバレッジの推移情報が表示されるようになります。やったね！
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/test/2011-12-20/jenkins.png" width="600" height="377" />
+
+** ついでにDevel::CoverのHTMLファイルも
+
+ちなみにこのようにカバレッジの推移とサマリーが簡単に見られるのは嬉しいのですが、このDevel::Cover::Report::CloverとCloverプラグイン残念ながらDevel::Coverの詳細なカバレッジの情報は出してくれません・・・。そこで個人的にはそれを補う方法としてジョブの成果物を残すという形で対応してみました。
+
+成果物を残す設定はJenkinsのジョブ設定から簡単にできますので、その際にcover_db/ ディレクトリを保存するようにします。ちなみにカバレッジデータなんで最後に成功したカバレッジのデータだけ残すような設定にすればいいでしょう。これで /job/&lt;job_name&gt;/lastSuccessfulBuild/artifact/cover_db/ などにアクセスすることでDevel::Coverの情報も見られるようになります。
+
+** まとめ
+
+カバレッジというものはあくまで指標のひとつでしかないのでこれを盲信してもいけないのですが、少なくともこれであまり意識をせずに常にカバレッジを計測できるようになりますね。
+
+YATTA!
