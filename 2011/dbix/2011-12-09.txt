@@ -100,7 +100,7 @@ DBIx::QueryLog->probability(100) とするか、$ENV{DBIX_QUERYLOG_PROBABILITY} 
 
 などなど、とっても簡単に実行されている SQL をログに出せますね！
 
-もちろん、同じようなことは kazeburo さんが[http://perl-users.jp/articles/advent-calendar/2011/dbix/6 6日目]にかいた Callbacks などでも実現できますが、
+もちろん、同じようなことは kazeburo さんが[http://perl-users.jp/articles/advent-calendar/2011/dbix/6:title=6日目]にかいた Callbacks などでも実現できますが、
 DBIx::QueryLog のメリットとしては
 
 - コードの書き換えが必要ない ((use するだけ))
