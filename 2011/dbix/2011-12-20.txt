@@ -1,0 +1,58 @@
+DBIx::QueryLog でクエリの実行計画も丸見えにする！
+meta-author: kamipo
+meta-tags: perl, dbix
+
+好きって言葉は最高さーー！！！！kamipoです！！今日はAKB48の紅白対抗歌合戦があるので急いでいきたいと思います！！
+
+** DBIx::QueryLog で EXPLAIN の結果もロギングしたい
+
+xaicron さんの9日目のエントリ、[http://perl-users.jp/articles/advent-calendar/2011/dbix/9 DBIx::QueryLog で DBI で実行された SQL を丸見えにする！]でおなじみの神モジュール DBIx::QueryLog 便利ですよね！？
+でもEXPLAINの結果もロギングできたらもっと便利だと思いませんか？僕は思いました！！
+
+そこで、EXPLAIN の結果もロギングできる[https://github.com/xaicron/p5-DBIx-QueryLog/pull/3 パッチ]を取り込んでもらったので、新しいのが出たら使えるようになると思います！(いまはまだMySQLだけですが…)
+
+** つかいかた
+
+とくにクエリに意味はないですが、こういうクエリを投げると
+
+>|perl|
+use strict;
+use warnings;
+use DBI;
+use DBIx::QueryLog;
+
+my $dbh = DBI->connect(
+    "DBI:mysql:dbname=test;host=localhost",
+    {
+        AutoCommit => 1,
+        RaiseError => 1,
+    },
+) or die $DBI::errstr;
+
+DBIx::QueryLog->explain(1);
+
+my $rows = $dbh->selectall_arrayref(
+    'SELECT * FROM akb48 a, akb48 k, akb48 b WHERE a.id = k.id AND k.id = b.id AND a.id = ?',
+    +{ Slice => +{} },
+    48,
+);
+||<
+
+>||
+[2011-12-20T17:01:10] [main] [0.000581] SELECT * FROM akb48 a, akb48 k, akb48 b WHERE a.id = k.id AND k.id = b.id AND a.id = '48' at akb48.pl line 18
+.---------------------------------------------------------------------------------------------.
+| id | select_type | table | type  | possible_keys | key     | key_len | ref   | rows | Extra |
++----+-------------+-------+-------+---------------+---------+---------+-------+------+-------+
+|  1 | SIMPLE      | a     | const | PRIMARY       | PRIMARY |       4 | const |    1 |       |
+|  1 | SIMPLE      | k     | const | PRIMARY       | PRIMARY |       4 | const |    1 |       |
+|  1 | SIMPLE      | b     | const | PRIMARY       | PRIMARY |       4 | const |    1 |       |
+'----+-------------+-------+-------+---------------+---------+---------+-------+------+-------'
+||<
+
+EXPLAIN がログに出ました！これで INDEX が効いてないクエリもすぐ見つけられて捗りますね！！
+
+これだけだとあれなので、僕が EXPLAIN でどこを見てよくないクエリを判断してるのかというと、まずは rows を見ればいいです。rows が十分に小さいクエリは大丈夫です。rows が大きいと重いクエリになりうるのでそういうときに possible_keys や key を見て自分が想定してる実行計画か、もっとよい実行計画にできるかを考えるのがよいと思います。
+
+それではそろそろ時間なのでこれにて。
+
+あ～〜！よっしゃいくぞーー！！！！
