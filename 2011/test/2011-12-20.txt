@@ -10,11 +10,15 @@ meta-tags: perl, test, jenkins, coverage
 
 （Jenkinsじゃなくてもそうですが）Devel::Coverでカバレッジを計測するならPERL5OPTで渡すのが一番簡単ですね。
 
+>||
     export PERL5OPT="-MDevel::Cover"
+||<
 
 ちなみにJenkinsでテストしてるときにはなるたけテストに使っているPerlから見えるところに余計な依存ライブラリを置きたくないので、Devel::Coverはそれだけ別の場所にいれてます。こうすればDevel::Coverを使う時以外はDevel::Coverをインストールしてあるディレクトリを有効化しないようにしてます。
 
+>||
     cpanm -l/path/to/devel-cover Devel::Cover
+||<
 
 このように別パスに入れておいて、カバレッジ計測するジョブでだけPERL5OPTでこのパスを有効にしまうｓ：
 
@@ -22,22 +26,27 @@ meta-tags: perl, test, jenkins, coverage
 
 ちなみにDevel::Coverのオプションも有効にしたい場合はそれもここで指定すると良いです。自分の場合は プロジェクトの libディレクトリだけ計測対象にしたいので、以下のようにしています(っていうかytoriiさんに調べてもらいました！）：
 
+>||
     export PERL5OPT="-Mlib=/path/to/devel-cover/lib/perl5 -MDevel::Cover=+ignore,.*,+select,^lib"
-
+||<
 
 そしてこの状態でテストを走らせます
 
+>||
     make test
     # もしくは prove ...
+||<
 
 こうすると cover_db/ ディレクトリ以下にDevel::Cover形式のカバレッジデータが作成されます。
 
 あとは
 
+>||
     # XXX /path/to/devel-cover内にインストールしてるので、ここで
     # ちゃんとパス指定しないとみつけてくれないッ
     export PATH="/path/to/devel-cover/bin:$PATH"
     cover -report html
+||<
 
 などとすればこれだけでもいつものDevel::Coverの出力は作成されます。
 
@@ -47,11 +56,15 @@ meta-tags: perl, test, jenkins, coverage
 
 このClover用のデータを用意するには Devel::Cover::Rerpot::Cloverというのを使います。最初のDevel::Coverと同じパスにインストールしておきましょう。
 
+>||
     cpanm -l/path/to/devel-cover Devel::Cover::Report::Clover
+||<
 
 そしてあとは先ほどのcover -report htmlの後に以下のように呼び出すとcover_db ディレクトリにclover.xmlというファイルが生成されます
 
+>||
     cover -report clover
+||M
 
 もちろん、Devel::Coverの元々のHTMLがいらないのであればhtmlの方を消してもいいのですが、後述の理由によりhtmlも生成するのをおすすめします。
 
