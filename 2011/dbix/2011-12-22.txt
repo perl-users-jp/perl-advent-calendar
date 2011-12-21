@@ -1,0 +1,148 @@
+敢えてDBIx::Connectorを紹介してやろうじゃないか
+meta-author: lestrrat
+meta-tags: perl, sql, dbix::connector
+
+わりと古くから<a href="https://metacpan.org/release/DBIx-Connector">DBIx::Connector</a>使ってるんで、DBIx::Handlerマンセーなこのadvent calendarでDBIx::Connectorをどう使ってるのかを軽く話したいと思います。
+
+** 使いどころ
+
+DBIx::ConnectorにしろDBIx::Handlerにしろ、DBIの面倒くさいところを簡単にしてくれるツールですよね。でも僕のスタンスとしては「どちらにしろ帯に短したすきに長しじゃねーの？」と思ってます。もちろん便利なんだけど、別に全てのかゆいところまで手が届くわけじゃないし・・・やってほしくないことをする事もあるし・・・というわけで本当に本当にコントロールが必要な部分では今でも自分で制御できるように自分で細かい所まで書く事にしています。
+
+じゃあDBIx::Connectorをどこで使ってるかというと、「DBへの接続が切れるかもしれないぐらい長く走るスクリプトで、気にせずにSQL発効したい」時に使ってます。まぁ具体的に言えばでっけぇバッチとかですよね。
+
+（最初に言っておきますが、mysqlならDBD::mysqlmysql_auto_reconnect使えばいいじゃん、は無しです。AutoCommitがオフだと動かないとかそういう条件覚えたくないので、「繋ぎ直して！」ってところだけ注目してます）
+
+以下のようなスクリプトがあったとしましょう。特定の条件の行のPKをとってきて、それのPKを使ってHTTP通信をして、その結果を使ってUPDATEをかける、と。こんな感じです。
+
+>|perl|
+    my $dbh = DBI->connect( ... );
+
+    my $lwp = LWP::UserAgent->new;
+    my $last_pk = 0;
+    while( 1 ) {
+        my $primary_keys = $dbh->selectall_arrayref(
+            "SELECT * FROM hoge WHERE id > ? AND ... LIMIT 100",
+            { Slice => {} },
+            $last_pk,
+        );
+        last unless @$primary_keys;
+        
+        $last_pk = $primary_keys->[-1]; 
+
+        foreach my $pk (@$primary_keys) {
+            my $res = $lwp->get( "http://myapp.com/hoge.json?id=$pk" );
+
+            $dbh->do(
+                "UPDATE fuga SET xxx = ? WHERE hoge_id = ?",
+                undef,
+                $res->content,
+                $pk
+            );
+        }
+    }
+||<
+
+まぁ数十万件くらいだったらわりとすぐおわるかもしれませんが、HTTP通信にそれなりに時間がかかって、なおかつ数千万件とかあるとそれなりに時間かかります。そうなってくるとまれにですが"mysql has gone away" とか言われたりしちゃいますよね。もう一回やりなおせばいいんですが、それはいかにも面倒くさいです。
+
+かといって、毎回
+
+>|perl|
+    if (! $dbh->ping) {
+        $dbh->disconnect;
+        $dbh = DBI->connect( ... );
+    }
+||<
+
+とかするのはいくらなんでもですよね。というわけでDBIx::Connectorつかっちゃいましょう、と。
+
+>|perl|
+    my $conn = DBIx::Connector->new( $dsn, $username, $password, \%attr );
+    $conn->mode('fixup');
+
+    my $lwp = LWP::UserAgent->new;
+    my $last_pk = 0;
+    while( 1 ) {
+        my $primary_keys = $conn->run( sub {
+            $_->selectall_arrayref(
+                "SELECT * FROM hoge WHERE id > ? AND ... LIMIT 100",
+                { Slice => {} },
+                $last_pk,
+            );
+        });
+        last unless @$primary_keys;
+        $last_pk = $primary_keys->[-1];
+
+        foreach my $pk (@$primary_keys) {
+            my $res = $lwp->get( "http://myapp.com/hoge.json?id=$pk" );
+
+            $conn->run(sub {
+                $dbh->do(
+                    "UPDATE fuga SET xxx = ? WHERE hoge_id = ?",
+                    undef,
+                    $res->content,
+                    $pk
+                );
+            });
+        }
+    }
+||<
+
+さて、賢明な皆様ならすでにperldox DBIx::Connectorしてドキュメントを読んでいるかもしれませんが、DBIx::Connectorは基本的にはDBへの接続を管理してくれるモジュールですね。みんなそこでトランザクション管理とかもできるんだ！って思いがちですけど、ここではあくまで再接続をハンドリングしてくれる、というところだけ使ってます。
+
+トランザクションの整合性なんてアプリケーションによって違うんだからわーかるわけないって！名前もDBIx::TransactionじゃなくてDBIx::Connectorだから接続ができてるかの管理だけしてもらいます。というわけで 各SQLの実行部分をそれぞれ>||$conn->run||<で囲んであげて、その部分でデータベースへの接続を気にしないで済むように使ってます。
+
+この際、DBIx::Connectorの特性を理解してやる必要があります。modeという概念があって、これはrun()を呼ぶ際にDBへの接続ができてるかどうかをどう確認するかを指定しています。'ping'であれば毎回pingを送り、'fixup'だと「ブロックの実行に失敗したらもう一回だけリトライする」という実装になってます。(no_pingもあるけど、これは使うなという雰囲気なので触れません)
+
+上記の場合だと、SELECTかUPDATEに失敗したらもう一回トライして、それも駄目だったら例外を投げて落ちる、という状態です。基本的に上記のSQLが接続が切れた、ということ以外で失敗するのはもう致命的な何かが起きた時なので、素直にfixupモードにしていざというときは2回やってもらいます。
+
+はい、というわけで長いバッチスクリプトとか書いてる時に限定的にこういうの使うといいですね、って話でした。ちなみにDBIx::Handlerと同様fork()した時もよきようにはからってくれますのでその辺りも便利ですね。
+
+** まとめ
+
+というわけでDBIx::Connectorを僕が使うときの話をさらっと書きました。
+
+別にDBIx::Handlerがいけてないわけではありません。
+
+ただ、こうやって使えるし、実際これで3億個くらいデータ動かしたりしてるし、それぞれの特徴とかあるんですよ、単純に「どっちを使ってもいいんだけど、○○さんがそう言ってるからそっち使おう」っていうんじゃなくて用途やTPOに合わせて<b>自分で考えて</b>柔軟にやっていくのが一番いいよ、ってことを言いたかっただけです。実際この記事もs/DBIx::Connector/DBIx::Handler/しても多分内容はほとんど変わりません。
+
+明日は誰だか知らないや！
+
+** 蛇足
+
+最後に蛇足。
+
+これがベストプラクティスかと聞かれると僕も自信がないのですが、本気でトランザクション管理したい場合はスマートに書こうなんて思わないで、トランザクションの明示的な指示はトップレベルでしかしない、という暗黙的なルールをつけてガリガリとベタ書きしてevalでくくってます。
+
+>|perl|
+    eval {
+        $dbh->do( ... );
+        ...
+        ... 他のコードたくさん ...
+        ...
+        $dbh->do( ... );
+        $dbh->commit;
+    };
+    if ($@) {
+        $dbh->rollback;
+    }
+||<
+
+でもevalでトラップって結構細かい事を気にしなきゃいけなかったりするので、最近はもうガードオブジェクトでお茶を濁してます
+
+>|perl|
+    use Scope::Guard qw(guard);
+
+    my $dbh = DBI->connect(...);
+    my $guard = guard { $dbh->rollback };
+    $dbh->do( ... );
+    ...
+    ... 他のコードたくさん ...
+    ...
+    $dbh->do( ... );
+    $dbh->commit;
+    $guard->dismiss;
+||<
+
+これだとうっかりが減るのでいいんじゃないかな、と。やってることはDBIx::TransactionManagerと一緒なんだけど、この記事の前半にも書いた通り、本気で必要な時は自分でトランザクション管理するので、こういうやり方してます、ってだけです。
+
+以上蛇足でした。
