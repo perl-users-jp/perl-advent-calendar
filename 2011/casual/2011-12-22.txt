@@ -67,7 +67,7 @@ wq($url)
 ||<
 やっていることは変わりませんが、とてもシンプルなコードになりました！
 **例2
-[http://d.hatena.ne.jp/gfx/20111221/1324466676:title]より
+[http://d.hatena.ne.jp/gfx/20111221/1324466676:title=古いPerl Advent Calendarも案外面白かったりするので - Islands in the byte stream]より
 >>
 しかし2009年以前はブクマ数が一覧から見えないのでどれが人気だったのかわかりませんね。
 <<
