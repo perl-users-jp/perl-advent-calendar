@@ -1,0 +1,84 @@
+Getopt::Longでコマンドラインのオプション指定をサクっと簡単に取得する
+meta-author: torii
+meta-tags: perl
+
+こんにちは、torii (@yoshi704)です。
+
+コマンドラインで完結するCUIアプリをサクっと作る前に楽をするための便利モジュール Getopt::Long を紹介します!
+
+** Getopt::Long
+普段良く使うコマンドで -l とか -u とか --help とか付けてよく使うと思います。
+自分でCUIアプリを作成して使う時にもこんな感じのコマンドラインオプションを簡単に使えると便利ですよね!
+コマンドライン引数はすべて@ARGVに入ることは知っていてもいざオプションを１つ１つ解析しようと思うと意外と面倒です。
+
+その時に使う便利モジュールが<a href="http://search.cpan.org/~jv/Getopt-Long-2.38/lib/Getopt/Long.pm">Getopt::Long</a>です。
+GetOptions()という関数で、コマンドラインオプションを定義してあげます。
+
+例えば、
+
+>||
+$ ./sample.pl --user=torii --env=dev --times=2 --verbose hoge.dat
+||<
+
+というようなオプションを取りたい場合は、
+
+>|perl|
+# sample.pl
+use Getopt::Long;
+
+my %opts;
+Getopt::Long::GetOptions(\%opts, qw( user=s env=s times=i verbose) );
+
+### result
+%opts => ( user => "torii", env => "dev", times => 2, verbose => 1 )
+@ARGV => ( 'hoge.dat' )
+||<
+
+としてあげると、%opts{user}に"torii"、%opts{env}に"dev"という文字列が入ります。
+GetOptions()には、第一引数にオプションを格納したいハッシュリファレンスを指定します。
+オプションは 「オプション名=TYPE」の形式で第２引数に定義します。
+
+この時、 %opts で使われたオプション以外のコマンドラインから指定されたものは @ARGS に残ります。
+
+もし、--timesや--verboseが指定されていなかった場合を考えてデフォルト値を指定しておきましょう。
+
+>|perl|
+# sample2.pl
+use Getopt::Long;
+
+my %opts = ( tag => "master", times => 1, verbose => 0);   # デフォルト値を指定
+GetOptions(\%opts, qw( user=s env=s tag=s times=i verbose) ) or exit 1;
+
+### 値をチェックする
+foreach my $field ( qw( user ) ){
+    if ( ! exists $opts{$field} ){
+        die "$field is required.";
+    }
+}
+
+||<
+
+このように %opts にあらかじめ値を入れておくことによってデフォルト値を指定できます。
+もちろん、デフォルト値はオプション指定があった場合には上書きされてしまいます。
+
+使用上で注意することは、定義されているオプションが指定されなかった場合と間違ったオプションが指定された場合についてです。
+オプションが指定されなかった場合でも値が未定義のまま進むので、大事な場面ではGetOptions()の後に値のチェックをしてあげる必要があります。
+また定義したオプションの型が合わない場合や、定義してないオプションを指定した場合には false を返してくれますが、警告を出すだけでプログラム自体は止まらずに先に進んでしまうかもしれないので or die や or exit してあげるといいと思います。
+
+
+短縮形のオプションの撮り方も以下のようにすると簡単にできちゃいます。
+例えば、 --userは -u でよく使いますよね。sample2.plの例の場合は、
+
+>||
+$ ./sample2.pl -u root --env=dev -v
+
+### result   (timesとtagはデフォルト値)
+%opts => ( user => "root", env => "dev", verbose => 1, times => 1, tag => "master" )
+||<
+
+こんな感じのオプションを取る場合は、オプションの頭文字がかぶらない限りよきにはからってくれます。
+
+@ARGVをいちいち解析しなくても簡単にオプションを使えるようになるの便利モジュール Getopt::Long を紹介しました!
+
+似たようなモジュールにApp::Optionsというモジュールがあります。
+こちらのモジュールは、コマンドライン引数だけではなく、環境変数や設定ファイルなども考慮してオプション設定を取得する事ができるすごいモジュールです。もし、より大きなアプリケーションで、複合的にオプション指定を取得する必要がある場合は<a href="http://search.cpan.org/~spadkins/App-Options-1.12/lib/App/Options.pm">App::Options</a>も参考にしてみてください!
