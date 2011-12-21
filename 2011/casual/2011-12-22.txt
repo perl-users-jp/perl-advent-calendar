@@ -5,8 +5,8 @@ meta-tags: perl
 みなさんこんにちは。[http://twitter.com/#!/akiym:title=akiym]です。
 今日はWebスクレイピングの話をします。
 **Webスクレイピングとは？
-例えば、[http://blog.livedoor.jp/chihhylove/archives/3573873.html:title]の猫の画像が欲しいときにどうすればいいでしょうか((とくに深い意味はありません。))。画像を1つずつ手作業で保存？面倒くさいですね。
-そんなときのためのWebスクレイピングです。まずはじめは、[https://metacpan.org/module/Web::Scraper:title=Web::Scraper]というモジュールを使ってみましょう。
+例えば、[http://blog.livedoor.jp/chihhylove/archives/3573873.html:title=昇天するくらいかわいい猫画像ください : あじゃじゃしたー]の猫の画像が欲しいときにどうすればいいでしょうか((とくに深い意味はありません。))。画像を1つずつ手作業で保存？面倒くさいですね。
+そんなときのためのWebスクレイピングです。まずはじめは、<a href="https://metacpan.org/module/Web::Scraper">Web::Scraper</a>というモジュールを使ってみましょう。
 >|perl|
 use strict;
 use warnings;
@@ -38,7 +38,7 @@ for my $image_url (@{$res->{images}}) {
 応用すれば、猫の画像以外でも簡単にダウンロードができます。悪用厳禁ですね :)
 **もっと簡単に
 上の例では、Web::Scraperを使ってみましたが使い方が少し複雑で難しいですね。もっと簡単に扱えるモジュールはないのでしょうか？
-そんなときには、[https://metacpan.org/module/Web::Query:title=Web::Query]がおすすめです。jQuery風にWebスクレイピングできるとても便利なモジュールです。
+そんなときには、<a href="https://metacpan.org/module/Web::Query">Web::Query</a>がおすすめです。jQuery風にWebスクレイピングできるとても便利なモジュールです。
 先ほどの例をWeb::Queryを使って書きなおしてみましょう。
 >|perl|
 use strict;
