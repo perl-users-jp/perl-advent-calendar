@@ -1,0 +1,173 @@
+Data::Section::Simpleで__DATA__をカジュアルに使おう！
+meta-author: nqounet
+meta-tags: perl
+
+初めまして、<a href="https://twitter.com/nqounet">@nqounet</a>です。
+2011年はYAPC::ASIAデビュー（参加という意味で）したので、アドベントカレンダーもデビューしたいと思います。
+
+そんな新人の私でもカジュアルに使えそうな Data::Section::Simple を紹介します。
+
+** __DATA__
+
+「ヒアドキュメント」って知ってますよね？
+
+>|perl|
+my $html = <<"EOM";
+<html>
+<head><title>タイトル</title></head>
+<body>ボディ</body>
+</html>
+EOM
+||<
+
+こんなヤツです。
+古いCGIファイルを見るとよくありますよね？
+
+でも、ヒアドキュメントを使っているコードが見難いと思ったことはありませんか？
+思いますよね。
+そんな時には「__DATA__」を使うと簡単にコードが見やすくなります。
+
+>|perl|
+#!/usr/local/bin/perl
+use utf8;
+use 5.008001;
+use strict;
+use warnings;
+use CGI::Simple;
+use Encode;
+
+my $q = CGI::Simple->new;
+my $html = do { local $/; <DATA> };
+
+print $q->header(
+  -type    => 'text/html',
+  -charset => 'utf8',
+);
+print encode_utf8( $html );
+
+__DATA__
+<html>
+<head><title>タイトル</title></head>
+<body>ボディ</body>
+</html>
+||<
+
+カジュアルにPerlを使うときの基本は、スクリプトはutf8で書いて、ファイルの2行目くらいに「use utf8;」を書いておきましょう。
+もちろんですが、「use strict;」や「use warnings;」も忘れずに。
+出力する時は「encode_utf8」が必要ですよ。
+
+ヒアドキュメントを沢山使っている場合はどうするか、ですって？
+ご安心ください。
+そんな時にはカジュアルに<a href="http://search.cpan.org">CPAN</a>を使って探しましょう。
+
+** Data::Section::Simple
+
+Data::Section::Simple を使うと、ヒアドキュメントを沢山使っている場合でも「__DATA__」を使ってコードを見やすく出来ます。
+
+>|perl|
+#!/usr/local/bin/perl
+use utf8;
+use 5.008001;
+use strict;
+use warnings;
+use CGI::Simple;
+use Data::Section::Simple qw(get_data_section);
+use Encode;
+
+my $q = CGI::Simple->new;
+my $header = get_data_section('header.html');
+my $body   = 'ボディ';
+my $footer = get_data_section('footer.html');
+my $html = join "", $header, $body, $footer;
+
+print $q->header(
+  -type    => 'text/html',
+  -charset => 'utf8',
+);
+print encode_utf8( $html );
+
+__DATA__
+@@ header.html
+<html>
+<head><title>タイトル</title></head>
+<body>
+
+@@ footer.html
+</body>
+</html>
+||<
+
+いやー、便利ですよね。
+
+え？
+ヒアドキュメントの中に変数を使っているから動かせない、ですって？
+ご安心ください。
+そんな時でもカジュアルに<a href="http://search.cpan.org">CPAN</a>を使って探しましょう。
+
+** Text::MicroTemplate::DataSection
+
+Text::MicroTemplate::DataSection を使うと、さらにカジュアルに「__DATA__」を使えます。
+
+>|perl|
+#!/usr/local/bin/perl
+use utf8;
+use 5.008001;
+use strict;
+use warnings;
+use CGI::Simple;
+use Text::MicroTemplate::DataSection qw(render_mt);
+use Encode;
+
+my $q = CGI::Simple->new;
+my $html = render_mt('index.mt', {
+  title => 'タイトル',
+  body  => 'ボディ',
+});
+
+print $q->header(
+  -type    => 'text/html',
+  -charset => 'utf8',
+);
+print encode_utf8( $html );
+
+__DATA__
+@@ index.mt
+<html>
+<head><title><?= $_[0]->{title} ?></title></head>
+<body><?= $_[0]->{body} ?></body>
+</html>
+||<
+
+いやー、カジュアルですねー。
+は？
+使うモジュールがたくさんあって面倒、ですって？
+ご安心ください。
+そんな時こそカジュアルに<a href="http://search.cpan.org">CPAN</a>を使って探しましょう。
+
+** フレームワーク
+
+Mojolicious::Liteのようなフレームワークを使うと、useするモジュールの数が劇的に減って、かつ「__DATA__」も一層カジュアルに使えます。
+
+>|perl|
+#!/usr/local/bin/perl
+use utf8;
+use Mojolicious::Lite;
+
+get '/' => sub {
+  $_[0]->render(
+    template => 'index',
+    title    => 'タイトル',
+    body     => 'ボディ',
+  );
+};
+
+app->start;
+
+__DATA__
+@@ index.html.ep
+<html>
+<head><title><%= $title %></title></head>
+<body><%= $body %></body>
+</html>
+||<
+
