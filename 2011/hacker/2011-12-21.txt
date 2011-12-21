@@ -1,0 +1,43 @@
+Perl::Metrics::Lite - プラガブルなメトリクス測定モジュール
+meta-author: dann
+meta-tags: perl, metrics
+
+こんにちは。dann です。みなさん、意識は高まっていますか？ 僕は上々です。
+今回は拙作の Perl::Metrics::Lite というモジュールを紹介させて頂きます。
+
+** 開発した動機
+Perl::MetricsやPerl::Metrics::Simpleなど、PerlのコードのMetricsを測定するツールがあるのですが、どれも使い勝手の点でいまいちです。
+
+Perl::Metricsは測定項目をプラガブルに追加可能なのですが、APIがプリミティブすぎてMetricsを測定するには使いずらいです。
+
+一方、Perl::Metrics::Simpleは、Perl::MetricsをよりユーザーフレンドリなAPIにして、名前の通りシンプルに使えるように作られているのですが、今度は測定項目が拡張可能になっておらず、特定のメトリックしか測定できませんでした。
+
+** Perl::Metrics::Lite - プラガブルなメトリクス測定モジュール
+従来のモジュールの問題点を解決するために、Perl::Metrics::SimpleとPerl::Metricsのいいとこどりをして、測定項目をプラガブルに追加できるPerl::Metrics::Simpleのような使い勝手のいいモジュールを作ってみました。
+http://github.com/dann/p5-perl-metrics-lite
+
+使い方はPerl::Metrics::Simpleと殆ど同じで、以下のように使います。
+
+>|perl|
+use Perl::Metrics::Lite;
+my $analzyer   = Perl::Metrics::Lite->new;
+my $analysis   = $analzyer->analyze_files(@ARGV);
+my $file_stats = $analysis->file_stats;
+my $sub_stats = $analysis->sub_stats;
+||<
+
+egディレクトリに実行可能な簡単なサンプルをいれてあるので、
+是非実行して確認してみてください。
+https://github.com/dann/p5-perl-metrics-lite/blob/master/eg/measureperl
+
+** 測定項目の拡張方法
+以下に幾つかFileとSubroutineのMetricsの測定のPluginのサンプルをいれています。
+initとmeasureメソッドを実装する必要があります。measureメソッドのfileまたはsubroutineのPPI::Documentを操作して、必要なMetricsの計算を行います。
+
+- https://github.com/dann/p5-perl-metrics-lite/tree/master/lib/Perl/Metrics/Lite/Analysis/File/Plugin
+- https://github.com/dann/p5-perl-metrics-lite/tree/master/lib/Perl/Metrics/Lite/Analysis/Sub/Plugin
+
+** まとめ 
+Perl::Metrics::Liteにより、簡単にFileとSubroutineのMetricsを拡張して、測定項目を追加していくことが可能になりました。是非色々なMetricsの測定をしてみてください。
+
+Enjoy measuring!
