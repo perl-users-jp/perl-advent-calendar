@@ -1,0 +1,106 @@
+Webスクレイピング入門
+meta-author: akiym
+meta-tags: perl
+
+みなさんこんにちは。[http://twitter.com/#!/akiym:title=akiym]です。
+今日はWebスクレイピングの話をします。
+**Webスクレイピングとは？
+例えば、[http://blog.livedoor.jp/chihhylove/archives/3573873.html:title]の猫の画像が欲しいときにどうすればいいでしょうか((とくに深い意味はありません。))。画像を1つずつ手作業で保存？面倒くさいですね。
+そんなときのためのWebスクレイピングです。まずはじめは、[https://metacpan.org/module/Web::Scraper:title=Web::Scraper]というモジュールを使ってみましょう。
+>|perl|
+use strict;
+use warnings;
+use autodie;
+use File::Basename;
+use File::Spec;
+use LWP::UserAgent;
+use URI;
+use Web::Scraper;
+
+my $url = 'http://blog.livedoor.jp/chihhylove/archives/3573873.html';
+my $scraper = scraper {
+    process '.main img.pict, .mainmore img.pict', 'images[]' => '@src';
+};
+my $res = $scraper->scrape(URI->new($url));
+
+my $dir = 'cats';
+mkdir $dir unless -d $dir;
+
+my $ua = LWP::UserAgent->new;
+for my $image_url (@{$res->{images}}) {
+    my $filename = File::Spec->catfile($dir, basename($image_url));
+    print "Downloading: $image_url\n";
+    my $res = $ua->get($image_url, ':content_file' => $filename);
+    die unless $res->is_success;
+}
+||<
+基本的にはこのような感じです。Web::Scraperで猫の画像のURLを取得してきて、LWP::UserAgentで画像を保存しています。
+応用すれば、猫の画像以外でも簡単にダウンロードができます。悪用厳禁ですね :)
+**もっと簡単に
+上の例では、Web::Scraperを使ってみましたが使い方が少し複雑で難しいですね。もっと簡単に扱えるモジュールはないのでしょうか？
+そんなときには、[https://metacpan.org/module/Web::Query:title=Web::Query]がおすすめです。jQuery風にWebスクレイピングできるとても便利なモジュールです。
+先ほどの例をWeb::Queryを使って書きなおしてみましょう。
+>|perl|
+use strict;
+use warnings;
+use autodie;
+use File::Basename;
+use File::Spec;
+use LWP::UserAgent;
+use Web::Query;
+
+my $dir = 'cats';
+mkdir $dir unless -d $dir;
+
+my $ua = LWP::UserAgent->new;
+
+my $url = 'http://blog.livedoor.jp/chihhylove/archives/3573873.html';
+wq($url)
+    ->find('.main img.pict, .mainmore img.pict')
+    ->each(sub {
+        my $image_url = $_->attr('src');
+        my $filename = File::Spec->catfile($dir, basename($image_url));
+        print "Downloading: $image_url\n";
+        my $res = $ua->get($image_url, ':content_file' => $filename);
+        die $res->status_line unless $res->is_success;
+    });
+||<
+やっていることは変わりませんが、とてもシンプルなコードになりました！
+**例2
+[http://d.hatena.ne.jp/gfx/20111221/1324466676:title]より
+>>
+しかし2009年以前はブクマ数が一覧から見えないのでどれが人気だったのかわかりませんね。
+<<
+ここで、Webスクレピングを使ってみます。ページの一覧を取ってきて、そこからブックマーク数を取得してみましょう。ブックマーク数を取得するには[http://developer.hatena.ne.jp/ja/documents/bookmark/apis/getcount:title=はてなブックマーク件数取得API]を使います。
+>|perl|
+use strict;
+use warnings;
+use Encode;
+use LWP::UserAgent;
+use URI::Escape;
+use Web::Query;
+
+my $ua = LWP::UserAgent->new;
+
+my $url = 'http://perl-users.jp/articles/advent-calendar/2009/';
+my @tracks = wq($url)->find('#alpha-inner h3 a')->attr('href');
+for my $track (@tracks) {
+    $track =~ s!^\./!!;
+    $track = $url . $track;
+    print "=> $track\n";
+    wq($track)->find('#alpha-inner ul li a')->each(sub {
+        my $title = decode_utf8($_->text);
+        my $escaped_url = uri_escape($track . $_->attr('href'));
+        # APIを使ってブックマーク数を取得する
+        my $res = $ua->get("http://api.b.st-hatena.com/entry.count?url=$escaped_url");
+        die $res->status_line unless $res->is_success;
+        my $count = $res->content || 0;
+        printf "%s: %d\n", encode_utf8($title), $count;
+    });
+}
+||<
+**まとめ
+Web::QueryでラクラクWebスクレイピング！
+Web::Scraperというモジュールも紹介しましたが、個人的にはWeb::Queryのほうがカジュアルでかっこいいんじゃないかな、と思います。
+みなさんもじゃんじゃんWebスクレピングしまくってみてください！ただし悪用厳禁で :)
+次はotsuneさんです。
