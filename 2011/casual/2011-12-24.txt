@@ -58,7 +58,7 @@ __DATA__
 
 ヒアドキュメントを沢山使っている場合はどうするか、ですって？
 ご安心ください。
-そんな時にはカジュアルに<a href="http://search.cpan.org">CPAN</a>を使って探しましょう。
+そんな時に便利なモジュールが「Data::Section::Simple」です。
 
 ** Data::Section::Simple
 
@@ -97,16 +97,17 @@ __DATA__
 </html>
 ||<
 
-いやー、便利ですよね。
+いやー、便利ですよね〜。
 
 え？
 ヒアドキュメントの中に変数を使っているから動かせない、ですって？
 ご安心ください。
-そんな時でもカジュアルに<a href="http://search.cpan.org">CPAN</a>を使って探しましょう。
+そんな時はカジュアルに<a href="http://search.cpan.org">CPAN</a>を使って探しましょう。
 
 ** Text::MicroTemplate::DataSection
 
-Text::MicroTemplate::DataSection を使うと、さらにカジュアルに「__DATA__」を使えます。
+Text::MicroTemplate::DataSection を使うと、さらにカジュアルに「__DATA__」を使える感じです。
+このモジュールは、テンプレート機能（Text::MicroTemplate）とData::Section::Simpleを組み合わせて、簡単に使えるようにしたモジュールです。
 
 >|perl|
 #!/usr/local/bin/perl
@@ -138,15 +139,16 @@ __DATA__
 </html>
 ||<
 
-いやー、カジュアルですねー。
+いやー、簡単ですよね〜。
+
 は？
 使うモジュールがたくさんあって面倒、ですって？
 ご安心ください。
 そんな時こそカジュアルに<a href="http://search.cpan.org">CPAN</a>を使って探しましょう。
 
-** フレームワーク
+** ウェブ・アプリケーション・フレームワーク
 
-Mojolicious::Liteのようなフレームワークを使うと、useするモジュールの数が劇的に減って、かつ「__DATA__」も一層カジュアルに使えます。
+本格的なウェブ・アプリケーション・フレームワークでなくても、例えばMojolicious::Liteのような小さなフレームワークを使うと、useするモジュールの数が劇的に減って、かつ「__DATA__」も一層カジュアルに使えます。
 
 >|perl|
 #!/usr/local/bin/perl
@@ -171,3 +173,8 @@ __DATA__
 </html>
 ||<
 
+いやー、シンプルですね〜。
+
+気がつけば、ものすごくカジュアルにPerlが使えるようになりました。
+カジュアルですが、流行りのフレームワークは自動的にstrictな環境になりますので、見た目以上にフォーマルですよ。
+こんな感じで、どんどんカジュアルにPerlを使いましょう。
