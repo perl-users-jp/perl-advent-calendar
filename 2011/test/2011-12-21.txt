@@ -78,7 +78,7 @@ $ cat .proverc
 
 ただし、こういう書き方してるといまいち動かないケースもあるらしいですね。
 
-.proverc とかを駆使して良い感じにテストする方法については、lestrarrt さんが [http://perl-users.jp/articles/advent-calendar/2011/test/18:title=テストのためにデーモンを自動的に起動するやりかた2011年版] で詳しく書いているので、そちらを御覧くださいまし。
+.proverc とかを駆使して良い感じにテストする方法については、lestrrat さんが [http://perl-users.jp/articles/advent-calendar/2011/test/18:title=テストのためにデーモンを自動的に起動するやりかた2011年版] で詳しく書いているので、そちらを御覧くださいまし。
 
 ** 出力形式を変更する
 
