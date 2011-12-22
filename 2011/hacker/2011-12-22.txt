@@ -4,7 +4,7 @@ meta-tags: perl, stf, psgi
 
 lestrratです。本日めでたく正式にSTFがオープンソースとして<a href="http://labs.edge.jp/">livedoor ラボ EDGE</a>上で<a href="http://labs.edge.jp/stf">リリースされました</a>！
 
-<a href="http://blog.livedoor.jp/ld_pr/archives/51908418.html">プレスリリースはこちら</a>。
+<a href="http://corp.livedoor.com/press/2011/1222613">プレスリリースはこちら</a>。
 
 いままでちょこちょこと先出し先出しで情報をだしていましたが、これで本当に本当の正式公開です。一応上記のサイト以外に<a href="http://stf-storage.github.com">「公式」サイト的なものも用意しました</a>。<a href="https://github.com/stf-storage/">ソースコードはgithub上に公開されています</a>。ということで使って欲しいので紹介記事です。
 
@@ -16,7 +16,7 @@ STFは元々ApacheモジュールといくつかのPerlワーカーで書かれ�
 
 結果、アプリ部分はPerlになり拡張・修正しやすくなり、それ以外はApache(or nginx)、MySQL、Q4M (or TheSchwartz)、Memcached等のミドルウェアを駆使して動作する現在の形になりました。
 
-この改良版は2011年中盤くらいに本番適用され、ロケタッチやライブドアブログ宇の画像アップロード等に使われています。2011年末の時点でオブジェクト数4億個、13億エンティティ、70GB程度のデータを管理しています。データ転送量もピーク時に400Mbpsを特になんの問題なくさばいています。
+この改良版は2011年中盤くらいに本番適用され、ロケタッチやライブドアブログ宇の画像アップロード等に使われています。2011年末の時点でオブジェクト数4億個、13億エンティティ、70TB程度のデータを管理しています。データ転送量もピーク時に400Mbpsを特になんの問題なくさばいています。
 
 なお、PSGI移行以前のSTFについては<a href="http://blog.livedoor.jp/techblog/techsemi/techsemi20100306_01_stf_ikebe.pdf">こちらの資料が詳しいです</a>。実装が変わっていますが、やっていることはかわりません。
 
