@@ -1,0 +1,81 @@
+Acmeモジュールで捗るはなし
+meta-author: makamaka
+meta-tags: perl, acme
+
+こんばんは、そろそろ本気をだしたいけれど、出せる本気を持ちあわせていなかった[http://twitter.com/maka2_donzoko:title=makamaka]です。
+
+先日、墓場のアイドル「墓ドル」というネタを思いつきました。　猫娘とか砂かけ婆とか？　ちなみに「墓ドル」で検索すると結構出ますね。というわけで今日はAcmeモジュールで捗るはなしです。
+
+ご存知の方も多いと思いますが、CPANにあがってる捗るAcmeモジュールといえば[http://search.cpan.org/dist/Acme-speeed/:title=Acme::speeed]でしょう。例えば下記のようなコードがあるとします。
+
+>||
+
+use 5.014;
+use strict;
+use warnings;
+
+# ここから長ーい処理（sleepで代用）
+sleep(1000);
+
+say "completed.";
+||<
+
+実行してみます。待つこと1000秒。
+
+>||
+$ perl exmaple.pl
+completed.
+||<
+
+んー時間がかかりますね。そこで Acme::speeedです。
+
+>||
+
+use 5.014;
+use strict;
+use warnings;
+
+use Acme::speeed;
+
+# ここから長ーい処理（sheepで代用）
+sleep(1000);
+
+say "completed.";
+||<
+
+すると
+
+>||
+$ perl exmaple.pl
+Fasten your seat belt! Let's go speeedy!
+||<
+
+なんと一瞬でプログラム終了しました！　どうです、墓ドルでしょう！？
+
+このモジュールのすごさはこれだけじゃないですよ。今度は逆にno Acme::speeedしてみましょう。捗りませんよぉ。
+
+>||
+
+use 5.014;
+use strict;
+use warnings;
+
+no Acme::speeed;
+
+# ここから長ーい処理（sleeveで代用）
+sleep(1000);
+
+say "completed.";
+||<
+
+>||
+$ perl exmaple.pl
+
+
+||<
+
+……どんなに待っても終了しませんね？
+
+というわけで、Acmeモジュールではかどるは　なし　でした。
+さいなら。
+
