@@ -1,0 +1,55 @@
+SQL::MakerのAcme的利用について
+meta-author: makamaka
+meta-tags: perl, acme
+
+[http://twitter.com/maka2_donzoko:title=makamaka]です。まずは[http://twitter.com/ktat:title=ktat]さんの[http://d.hatena.ne.jp/ktat/20111205/1323023021:title=SQLを組み立てるもの]をご覧ください。Teng + SQL::Maker便利だけど、ちょっと複雑なSQLをつくるときは面倒かな、という話が出てきます。
+
+私も似たようなことを思ってて普段SQL::Abstract互換のデータをうけとれるSQL::Makerのラッパーを使っているので、それを紹介します。
+
+[https://github.com/makamaka/SQL-Maker-DBICLike:title=SQL::Maker::DBICLike]という名前ですが、この名前でいいのか自分でもよくわかりません。昔はSQL::Maker::compatAbstractという名前にしてたのですが、別にメソッドに互換性があるわけでないのと、DBIx::Class::ResultSetのattributesを取れるようにしているので、現在はこういう名前になってます。また変わるかもしれません。テストもドキュメントも全然揃ってません。
+
+>||
+use 5.014;
+use strict;
+use warnings;
+use SQL::Maker::DBICLike;
+
+my $maker  = SQL::Maker::DBICLike->new( driver => 'SQLite' );
+my $where = {
+    -and => [a => 1, b => 2],
+    -or  => [c => 3, d => 4],
+     e   => [-or => {like => 'foo%'}, {like => '%bar'} ]
+};
+my $attr = {
+    '+columns' => [qw/z/],
+};
+my ($sql, @binds) = $maker->select('foo',['id'], $where, $attr);
+say $sql;
+||<
+
+実行すると
+
+>||
+SELECT "id", "z"
+FROM "foo"
+WHERE ((("e" LIKE ?) OR ("e" LIKE ?)) AND (("c" = ?) OR ("d" = ?))) AND (("a" = ?) AND ("b" = ?))
+||<
+
+簡単でしょ？　上記の例ではSQL::Abstractと違って-likeではなくlikeにしなければならないなど、微妙にSQL::Abstractと違うところがありますが、基本的に-andと-orを使って如何様にでも複雑にできます。
+
+このモジュールをTengと一緒に利用するには例えばこんな感じで
+
+>||
+my $teng = Teng::Schema::Loader->load(
+    namespace => 'MyDB',
+    dbh       => $dbh,
+    sql_builder => SQL::Maker::DBICLike->new(driver => $dbh->{Driver}->{Name}),
+);
+||<
+
+これでDBIx::Class::ResultSet風にsearchができるという寸法です。
+
+というわけで、SQL::Maker::DBICLikeの紹介でした。　ん？　Acme関係ない？　いえいえ、こんなモジュールつくるぐらいならSQL::Abstract使えよってことで本末転倒なのでAcmeチックでしょう？
+
+明日はクリスマスイブなので（この記事23日に書いてます）私がこの春につくったTeng用の素敵モジュールの紹介でも……
+
