@@ -1,0 +1,172 @@
+CPAN::Mini::DevelとCPAN::Reporter::Smokerで簡単スモーキング
+meta-author: c6r
+meta-tags: perl, test, smoker, cpan
+
+みなさん燻製はお好きですか？　専用の道具なんてなくても、使い古した中華鍋に茶葉とか米とかザラメとかみかんの皮とか入れて、網を乗せて具を乗せて蓋をかぶせて弱火で数分。待ってる間に好きな本と、ウイスキーでも用意して。いいですね。さっそく今晩にでもしたくなってきました。
+
+なんでも揃うことで有名なCPANには、もちろんスモーカーもいくつかあります。今日はその中から、CPAN::Mini::DevelとCPAN::Reporter::Smokerを組み合わせた簡単スモーキングのやり方を紹介します。
+
+** 用意するもの
+
+- 最悪壊れても困らない環境
+- perl
+
+環境については、VMを用意するのが簡単ですが、専用のマシンを用意できるならそれにこしたことはありません。スモーカーはさまざまなモジュールを試すことになるだけにどのような問題にぶち当たるかわかりませんので、日常的に使っている環境は避けるのが無難です。
+
+perlについては、日常用としてはなるべく新しいものの方が好ましいのですが、スモーカーの場合は実際に仕事の現場で使っているバージョンにあわせておいた方がよいでしょう。また、仕事でデータベースをはじめとする外部のライブラリやサービスを利用している場合は、それらに関連したモジュールのテストもできるように、あらかじめ必要なライブラリなどをインストールしておいてください。
+
+** 下ごしらえ
+
+さて、環境が用意できたら、まずは標準添付のCPANインストーラを最新版にしましょう。コマンドラインからCPAN.pmのシェルを立ち上げて以下のコマンドを実行してください。もちろんおなじみのcpanmを使ってインストールしてもかまいません。
+
+>||
+$ cpan  (または perl -MCPAN -e shell)
+cpan> install Bundle::CPAN
+cpan> reload cpan
+||<
+
+続いて、Task::CPAN::ReporterとCPAN::Mini::Devel、CPAN::Reporter::Smokerをインストールします。
+
+>||
+cpan> install Task::CPAN::Reporter
+cpan> install CPAN::Reporter::Smoker
+cpan> install CPAN::Mini::Devel
+||<
+
+** CPAN.pmの設定
+
+ここまでできたら、CPAN.pmの設定をスモーカー用に変えておきましょう。最初のおすすめはauto_commitです。質問にyesと答えておくと、以降、変更をいちいち自分でコミットしなくても自動的に設定ファイルに書き込んでくれるようになります。
+
+>||
+cpan> o conf init auto_commit
+||<
+
+cpanmに慣れた人なら、次はCPAN.pmをもう少し静かにしたくなることでしょう。個人的には情報量が多い方が好きなのですが、スモーカーの場合は読み切れませんので目一杯静かにしておいても問題ないと思います。
+
+>||
+cpan> o conf init /verbosity/
+||<
+
+続いて、スモーキングに使うCPANミラーの設定をします。今回はCPAN::Mini::Develを使ってローカルにCPANミラーを用意するつもりですので、そのパスを指定しておきます。以下はWindowsの設定例ですが、もちろんお使いの環境にあわせて変えてください。
+
+>||
+cpan> o conf urllist unshift file://c:/home/minicpan
+||<
+
+レポート作成に使うCPAN::Reporterの設定もしておきましょう。
+
+>||
+cpan> o conf init test_report
+||<
+
+いろいろ質問されますが、基本的にはデフォルトの設定を使っておけば大丈夫（メールアドレスなどは自分のものに変えてください）。
+
+スモークしたいモジュールがある程度決まっている場合はCPAN.pmのdistroprefsの設定をしておくと便利です（これはスモークに失敗するのがわかっているディストリビューションをスモークの対象から外すのにも役に立ちます）。
+
+まずはCPAN.pmの設定でdistroprefsの情報を保存するディレクトリを指定します。
+
+>||
+cpan> o conf init prefs_dir
+||<
+
+続いて、いま指定したディレクトリに個々のディストリビューションに対する設定ファイルを用意します。いろいろな設定ができますので詳細はCPAN.pmのPODを確認してください。いろいろ考えたくない場合は、githubにはdagoldenことDavid Golden氏のdistroprefsが公開されていますので、それを丸ごとcloneしてしまってもよいでしょう。
+
+https://github.com/dagolden/distroprefs
+
+その他、キャッシュサイズやディレクトリの再利用、タイムアウトなどに関するオプションを設定すると、さらに使い勝手がよくなります。CPAN.pmのPODのほか、CPAN::Reporter::SmokerのPODにおすすめの設定がいくつか紹介されていますので、参考にしてみてください。
+
+** ローカルにCPANミラーを用意する
+
+CPAN.pmの用意ができたら、続いてスモークするCPANミラーの用意をしましょう。外部のCPANミラーを使ってもよいのですが、ここではあとから拡張することを前提にCPAN::Mini::Develを使ってローカル環境にCPANミラーを用意します。
+
+まずは設定ファイルを用意しましょう。エディタで以下のような内容のファイルを作成して、ホームディレクトリに.minicpanrcという名前で保存します。
+
+>||
+local: c:/home/minicpan
+remote: http://cpan.charsbar.org/mirror/
+exact_mirror: 1
+||<
+
+それが済んだら、コマンドラインから以下のようなコマンドを実行してください。
+
+>||
+$ minicpan -c CPAN::Mini::Devel
+||<
+
+これで通常のCPAN::Miniがダウンロードしてくるファイルに加えて、スモーキングに必要なインデックスなどもミラーしてくれるようになります。crontabなどにタスクを登録して、いつでも最新の状態に保てるようにしておいてください。
+
+** スモーカーを起動する
+
+ここまでできたら、あとはスモーカーを起動してやれば、最近登録されたモジュールのスモークテストが始まります。簡単ですね。
+
+>||
+$ perl -MCPAN::Reporter::Smoker -e start
+||<
+
+** DarkPANをスモークする
+
+世界中に公開されているCPANのスモークも味があって大変よろしいものですが、場合によっては自分だけの味付けをしたくなることもあるかもしれません。
+
+CPAN::Mini::Injectを使うと、ローカルのCPANミラーに非公開のファイルを入れることもできます。
+
+次は、このような非公開ディストリビューションを含む場合のスモークについて見ていきましょう。
+
+** CPANの設定を変える
+
+CPANミラーに非公開ディストリビューションを追加する場合、そのレポートまで外部のサーバに送信されてしまっては困りますので、まずはCPAN.pmの設定を変えることにしましょう。先ほどと同じようにCPAN.pmのシェルを立ち上げ、test_reportの設定を初期化します。
+
+>||
+$ cpan (またはperl -MCPAN -e shell)
+cpan> o conf init test_report
+||<
+
+途中までは先ほどと同じように進めればよいのですが、最後にtransportについての質問が出てきます。デフォルトでは外部サーバに送信するMetabase用の設定を行うようになっていますので、ここをローカルのディレクトリにレポートをため込むように変えてしまいましょう（ここで指定したディレクトリは自動生成されませんので、あらかじめ自分で用意しておいてください）。
+
+>||
+(Recommended: 'Metabase uri https://metabase.cpantesters.org/api/v1/ id_file metabase_id.json')
+transport? [...] File c:/home/test_reports
+||<
+
+** CPAN::Mini::Injectの設定
+
+続いて、CPANからCPAN::Mini::Injectをインストールします。いままで通りCPAN.pmを使ってインストールしてもよいのですが、スモーカー用の設定になっているのが気になる人はcpanmを使ってインストールしてください。
+
+>||
+$ cpanm CPAN::Mini::Inject
+||<
+
+インストールが済んだら、CPAN::Mini::Inject用の設定をします。デフォルトではホームディレクトリ直下の.mcpan/configに設定ファイルを置くようになっているのですが、実際にはCPAN::Miniの設定と重複する部分が多いので、先ほど用意した.minicpanrcにCPAN::Mini::Injectの設定も追記してしまいましょう。ここでは最低限CPANミラーに埋め込むディストリビューションをまとめて保管しておくためのローカルリポジトリの場所を指定しておきます（指定したディレクトリは自動作成されませんので、あらかじめ作成しておいてください）。
+
+>||
+repository: c:/home/.mcpani
+||<
+
+それから、環境変数MCPANI_CONFIGに.minicpanrcのパスを設定しておきます。
+
+** 実際にディストリビューションを追加してみる
+
+設定が済んだら、試しに何か適当なtarballをローカルのCPANミラーに埋め込んでみましょう。ここでは例としてまだgithubにしかないApp::ppmminusというディストリビューションを入れてみますが、もちろんこの部分はお手元にあるお好きなディストリビーションに読み替えてください。
+
+>||
+$ git clone git://github.com/charsbar/ppmminus
+$ cd ppmminus
+$ perl Makefile.PL
+$ dmake dist
+$ mcpani --add --module App::ppmminus --authorid ISHIGAKI --modversion 0.01 --file App-ppmminus-0.01.tar.gz
+$ mcpani --inject
+||<
+
+これで、CPANミラーの該当するディレクトリを覗いてみると、いま追加したディストリビーションが追加されているのが確認できます。
+
+>||
+$ ls c:/home/minicpan/authors/id/I/IS/ISHIGAKI
+||<
+
+きちんとテストできるか、テストレポートが生成されるかも見ておきましょう。
+
+>|perl|
+$ cpan -t App::ppmminus
+$ ls c:/home/test_reports
+||<
+
+CPAN::Mini::Injectで追加したディストリビューションは、残念ながらそのままではスモークの対象にはならず、ミラーリングの設定によってはCPAN::Miniの更新がかかった段階で追加したモジュールが削除されてしまうのですが、CPAN::Miniのミラーリングが終わった時点で再度mcpani --injectを実行し、CPAN::Mini::Develがとってくるindices/find-ls.gzというファイルを更新してやれば、スモークの対象に含めることもできるようになります。この辺、今回の記事には間に合いませんでしたが、整理してまたどこかでご紹介できればと思っています。
