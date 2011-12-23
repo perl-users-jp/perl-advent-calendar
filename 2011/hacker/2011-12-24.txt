@@ -5,14 +5,14 @@ meta-tags: perl, music, chord, chord progress
 ** はじめに
 
 Merry Christmas (EVE)!! dukkiedukkieです。 みなさん、意識は高まっていますか？私はぼちぼちです。寒いので(^^ゞ
-ハッペルベルのカノンが街でしとやかに奏でられるシーズン到来ですね。
+パッヘルベルのカノンが街でしとやかに奏でられるシーズン到来ですね。
 
 今日は最近作り始めている拙作のモジュール
 [https://github.com/dukkie/BokkaKumiai/blob/master/lib/BokkaKumiai.pm]
 BokkaKumiai について書かせて下さいm(_ _)m。
 
 
-** ハッペルベルのカノンと同じコード進行の曲
+** パッヘルベルのカノンと同じコード進行の曲
 
 私は「音楽の和声進行（コード進行、ChordProgression）」の解析を幼いころより趣味としておりまして、2005年ごろに「牧歌組合」というblogでCM音楽などなどのコード解析やギタータブフレーズ化を書いていたこともあります。
 [http://ameblo.jp/dukkiedukkie/]
