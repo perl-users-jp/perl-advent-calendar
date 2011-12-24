@@ -127,7 +127,7 @@ subtest 'save', sub {
 
     $util->execute_sp('SP_Save', $id); #SP を実行
 
-    $row = $util->select('SomeData, { id => $id });
+    $row = $util->select('SomeData', { id => $id });
     is( $row->{saved}, '1'); #フラグが変わった(これをテストしたい)
 };
 
