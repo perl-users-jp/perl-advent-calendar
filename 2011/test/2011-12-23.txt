@@ -1,0 +1,140 @@
+Perl 以外の何かをテストする
+meta-author: tsucchi
+meta-tags: perl, test, mysql
+
+** はじめに
+こんにちは、tsucchi です。書く人がいないみたいなので、再登場してみました。今回は Perl 以外の何かをテストする方法について書きます。
+
+** 「何か」って例えば何？
+- 自社内の Web API をテストしたい
+- SQL(とくにストアドルーチン)をテストしたい
+
+他にもいろいろありそうな気がしますが、とりあえず思いついたのはこんなところです。((僕が実際にやったことがあるのが、これらなのです))
+
+** 基本
+Perl 以外の何かをテストする場合は、そのサービスに対するクライアントを使ったテストになることが多いのではないか、と思います。クライアントがない場合は作ることになります。
+
+** 例1) 自社内の Web API をテストする
+Web API みたいなものを作っている場合、テストは HTTP クライアントを使ったものになります。8日めの記事 <a href="http://perl-users.jp/articles/advent-calendar/2011/test/8">HTTP通信を含むモジュールのテスト</a>を参考にどうぞ。
+
+基本的には、Web サービスに対応するクライアントを書いて、それを使ってテストをすることになります。
+
+MyProj::SuperCoolWebService の add というサービスが、引数を足し算した答えを返してくれるサービスだとしたら、こんな感じになります。(こんな感じでテストできるようにクライアントを書く、というほうが正確かもしれません)
+
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use MyProj::SuperCoolWebService::Client;
+use Test::More;
+
+subtest 'add', sub {
+    my $service = MyProj::SuperCoolWebService::Client->new();
+    is( $service->add(1, 2), 3, 'add(1, 2)');
+    # サービスがたくさんあるような場合は、クライアントの実装は下記のようになる
+    is( $service->execute('add', 1, 2), 3, 'add(1, 2)');
+};
+
+done_testing();
+||<
+
+*** クライアントの実装方法
+基本的には HTTP::Request なり Furl なりをつかって、HTTP を投げる実装をします。アプリサーバでテストコードを動かす場合は、アプリが使っているライブラリを直接使うような実装もできます。(アプリも Perl でかかれていることが前提です。モデルクラスとかサービスクラスを use してそのメソッドを呼ぶような実装になります)
+
+後者の方が高速なことが多いですが、細かな挙動の違いに悩まされることもあるので、環境変数などで切り替えができるようにしておくと良いでしょう。
+
+
+** 例2) ストアドルーチンをテストする
+ストアドルーチンの場合は、クライアントを書く必要はありませんが、ラッパーのようなものを容易しておくと楽にテストできます。((この例は MySQL を前提としています))また、このラッパーに SQL::Maker や SQL::Abstract をラップして、SQL を直接投げれるものを用意しておくと、データの準備やゴミデータの削除や値の照合などに使えて便利です。
+
+>|perl|
+package MyProj::SQLUtil;
+use strict;
+use warnings;
+use utf8;
+use SQL::Maker;
+
+sub new {
+    my ($class, $dbh) = @_;
+    my $self = {
+        dbh => $dbh,
+    };
+    bless $self, $class;
+}
+
+# ストアドファンクションを実行する
+sub execute_sf {
+    my ($self, $function_name, @args) = @_;
+    my $dbh = $self->{dbh};
+    my $sql = "SELECT $function_name( " . join(',', map{ '?' } @args) . ")";
+    my $row_aref = $dbh->selectrow_arrayref($function_name, undef, @args);
+    return $row_aref->[0];
+}
+
+# ストアドプロシージャを実行する
+sub execute_sp {
+    my ($self, $proc_name, @args) = @_;
+    my $dbh = $self->{dbh};
+    my $sql = "CALL $proc_name( " . join(',', map{ '?' } @args) . ")";
+    my $sth = $dbh->prepare($sql);
+    $sth->execute(@args)
+}
+
+# select。基本的には SQL::Maker に丸投げ
+sub select {
+    my ($self, $table, $condition, $option) = @_;
+    my $builder = SQL::Maker->new( driver => 'mysql' );
+    my ($sql, @bind) = $builder->select($table, $condition, $option);
+    my $dbh = $self->{dbh};
+    my @rows = @{ $dbh->selectall_arrayref($sql, { Slice => {} }, @bind) };
+    return @rows if ( wantarray() );
+    return $rows[0];
+}
+# 今回は不要だけど、insert/delete/update なんかも用意しておくと便利
+
+1;
+||<
+
+テストコード側はこんな感じになります。例はいつもの引数を足し算するストアドファンクションです。
+
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use Test::More;
+use MyProj::SQLUtil;
+
+subtest 'add', sub {
+    my $dbh  = prepare_dbh();
+    my $util = MyProj::SQLUtil->new($dbh);
+    is( $util->execute_sf('SF_Add', 1, 2), 3);
+};
+
+done_testing();
+||<
+
+ストアドプロシージャの場合だと、ストアド実行の副作用をテストしないといけないので、ちょっと面倒くさいです。「何かのデータを save するとフラグが変わる」というストアドとします。
+
+>|perl|
+subtest 'save', sub {
+    my $dbh  = prepare_dbh();
+    my $util = MyProj::SQLUtil->new($dbh);
+
+    my $id   = prepare_data($dbh); #何らかの手段でデータを準備しておく
+
+    my $row = $util->select('SomeData, { id => $id });
+    is( $row->{saved}, '0'); #precondition 本来はテストしなくてもいい。
+
+    $util->execute_sp('SP_Save', $id); #SP を実行
+
+    $row = $util->select('SomeData, { id => $id });
+    is( $row->{saved}, '1'); #フラグが変わった(これをテストしたい)
+};
+
+||<
+
+*** おまけ
+SQL で テストコードを書くようなやりかたもあるようです。<a href="http://d.hatena.ne.jp/ZIGOROu/20111210/1323527007">MyTAP + my_prove + MySQL::Sandbox で快適 SQL Unit Testing</a>
+
+** まとめ
+サービスに対応するクライアントを書くことで、Perl 以外のものをテストする方法を紹介しました。もうすぐクリスマスですね！
