@@ -1,6 +1,34 @@
+Acme::PrettyCure - プリキュアは永遠に不滅です
+meta-author: makamaka, kan
+meta-tags: perl, acme, precure
+
+こんにちは、アイドルマスターのアニメが最終回を迎えてしまい半分くらい魂が抜けているkanです。大遅刻申し訳ありません。makamakaさんの素敵なリリーフテキストは消すには偲びなかったので巻末に残しておきました! makamakaさんありがとうございます! そしてごめんなさい＞＜
+
+Acme::PrettyCureがどんなものかは[http://perl-users.jp/articles/advent-calendar/2010/acme/6:title=去年のエントリ]を読んで頂けると良いかと思います。
+
+プリキュアシリーズも無事に8年目を迎え(ありがたいことに9年目も確定しているようです)、Acme::PrettyCureも更新されています。
+
+>|perl|
+use Acme::PrettyCure;
+
+my ($hibi, $kana, $eren, $ako) = Acme::PrettyCure->girls('Suite');
+
+$hibi->transform($kana);
+||<
+
+今年はSplashStar以来の<s>百合</s>パートナーが居ないと変身できない仕様なので、当然モジュールの挙動も対応しています。
+
+>|perl|
+$hibi->transform;
+# => 奏がいないと変身できないニャ!
+||<
+
+プリキュアも遂に総勢23名、今後も継続的にモジュールをアップデート出来るよう、内部的にはMouse(Moose)のRoleの仕組みを使って実装を共通化して記述をコンパクトにしたりと無駄に最適化を続けています。来年は画像とかをFurlで取ってこられるようにしたいですね。
+
+今年はスイートプリキュアの全メンバーが正式に確定するまでモジュールのアップデートが遅れてしまいましたが、来年は放映初日に更新することをお約束してエントリを〆めさせて頂きます。
+
+>>
 プリキュアの力を信じる
-meta-author: makamaka
-meta-tags: perl, acme
 
 ここは[http://twitter.com/__kan:title=kan]さんがAcme::PrettyCureの紹介をする予定地です。きっともうすぐ書いてくれるはずです！
 
@@ -20,6 +48,7 @@ meta-tags: perl, acme
 
 
 以上で説明を終わりますが、Acme::PrettyCureは素晴らしいモジュールなのでkanさんによる紹介が待ち遠しいですね。というわけで、クリスマスにはプリキュアが来ると信じて待ってます！
+<<
 
 
 
