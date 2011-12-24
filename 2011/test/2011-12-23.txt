@@ -122,7 +122,7 @@ subtest 'save', sub {
 
     my $id   = prepare_data($dbh); #何らかの手段でデータを準備しておく
 
-    my $row = $util->select('SomeData, { id => $id });
+    my $row = $util->select('SomeData', { id => $id });
     is( $row->{saved}, '0'); #precondition 本来はテストしなくてもいい。
 
     $util->execute_sp('SP_Save', $id); #SP を実行
