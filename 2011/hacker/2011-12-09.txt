@@ -1,0 +1,76 @@
+App::Donburi - IRCを使い倒すアプリ
+meta-author: kan
+meta-tags: perl, irc
+
+** はじめに
+こんばんは。大遅刻に定評のあるふしはらかんです。……皆さんごめんなさい。
+App::Donburiは名前空間から分かるように、ライブラリではなくアプリケーションです。Donburiという名前は開発中に丼が食べたかったという理不尽な理由で付けられたものでアプリの機能とは全く関係なく、バッチ等からIRCへの通知を簡単にする、というのがdonburiの簡単な説明になります。
+
+** インストール & 起動
+App::DonburiはCPANにアップロード済みなので、cpan(cpanm)コマンドで簡単に導入できます。
+
+>|sh|
+cpanm App::Donburi
+||<
+
+インストールが済んだら、donburiコマンドを実行してみましょう。
+
+>|sh|
+% donburi
+donburi need 'config.yaml'. I write config.yaml sample at ./config.yaml . please edit it
+||<
+
+設定ファイルが無いのでサンプル置いたよ。とのことなので、config.yamlを開いてみます。
+
+>|yaml|
+---
+irc:
+  server: "irc.freenode.net"
+  port: 6667
+  nick: "donburi"
+  encoding: "utf-8"
+
+http:
+  server: "127.0.0.1"
+  port: 8080
+
+store: "./channel.yaml"
+||<
+
+大抵の場合、変える必要があるのはircのserverと、httpのportあたりですね。通知を行なうIRC serverのホスト名を指定したら、改めてdonburiコマンドを実行すると、今度は起動すると思います。config.yamlで指定したhttpのportにブラウザでアクセスしてみましょう。
+
+*設定する
+
+ブラウザでアクセスすると設定画面が開きます。channelの欄の「edit」をクリックすると、通知を行なうチャンネルの管理が出来ます。チャンネルを追加すると、donburiのbot(初期設定だとdonburiというnick)が、チャンネルにjoinしてくると思います。
+
+TOP画面に戻って、channelを選択してmessage欄に何か入力してpostしてみると
+
+>||
+22:19 donburi has joined (~donburi@KD113149019186.ppp-bb.dion.ne.jp)
+22:22 donburi: こんばんは!!!
+22:23 __kan: donburi: クリスマスイヴになにやってんだ……
+||<
+
+このようにIRCに通知されます。
+
+*スクリプトから利用する
+
+Web画面からのアクセスは確認用のようなもので、実際にはスクリプト等からAPIを叩いて利用することになります。donburiのAPIはJSON RPCなので投稿用のスクリプトは
+
+>|perl|
+use JSON::RPC::Client;
+
+my $uri = 'http://localhost:8080/';
+my $method = 'privmsg';
+my @params = ('#subtech', 'kan: 涙拭けよ……');
+
+my $client = JSON::RPC::Client->new;
+my $res = $client->call($uri, { method => $method, params => \@params }); 
+||<
+
+のように簡単に書くことが出来ます。ちなむと、APIの仕様はApp::Nakanobuという、perlで書かれた同じようなことが出来るアプリのものと共通のため、通知の処理を使い回すことが出来ます。
+
+* まとめ
+
+これを書いてる時点では社内コミュニケーションにバリバリIRCを使っている会社に勤めていたのですが、今はSkypeを使う会社に移ってしまったので自分で使う機会が無くなってしまいました……。とはいえ、個人的にはIRCを使い続けてますし、donburiの開発も継続していくつもりです。とりあえずダサいWeb画面をもうちょっとなんとかしたいところ……。ほぼ同じ時期に開発されたApp::Ikachanというツールがありますが、donburiはなるべく設定ファイルを使わずにWebからの設定のみで動かせるというコンセプトで頑張ります。
+
