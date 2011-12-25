@@ -1,0 +1,94 @@
+B::Xref で Perl のソースコードを読む
+meta-author: risou <risou.f@gmail.com>
+meta-tags: perl
+
+こんにちは。 [http://twitter.com/#!/risou:title=risou] です。
+とうとう最終日。
+今回は Perl のソースコードを読む時の補助に使える B::Xref についてちょっと書きます。
+
+** B::Xref とは
+Perl のソースコードにたいして、クロスリファレンスレポートを出力してくれるモジュールです。
+
+** 使い方
+
+使い方はとっても簡単。
+
+>|sh|
+perl -MO=Xref ***.pl
+||<
+
+これで対象の Perl のソースコードを解析した結果を出力してくれます。
+出力結果は以下のような感じになります(適当に加工しています)。
+
+>||
+File /opt/local/lib/perl5/site_perl/5.12.3/JSON.pm
+  Subroutine (definitions)
+    Package JSON
+      &from_json        s123
+      &import           s112
+      &jsonToObj        s124
+      &objToJson        s133
+      &to_json          s132
+  Subroutine (main)
+    Package (lexical)
+      $backend          i56, 58, 58, 397, 397, 397, 397, 397
+      @PPOnlyMethods    i37
+      @Properties       i30
+      @PublicMethods    i24
+  Subroutine JSON::from_json
+    Package (lexical)
+      $json             i162, 167, 171
+      $method           167, 167
+      $opt              i165, 166
+      %$opt             166, 167
+      %%$opt            167
+    Package (method)
+      ->$method         &167
+    Package main
+      @_                164, 171
+  Subroutine JSON::to_json
+    Package (lexical)
+      $json             i145, 150, 154
+      $method           150, 150
+      $opt              i148, 149
+      %$opt             149, 150
+      %%$opt            150
+    Package (method)
+      ->$method         &150
+    Package main
+      @_                139, 147, 154
+||<
+
+数字は行番号ですが、前に's'がついているものは関数定義、'&'がついていうものは関数呼び出しです。また前に'i'がついているものは変数が定義されている行を示します。
+
+これらの情報を得ることで、イケてない複雑なソースを読むときなどに役に立ちます。
+
+** -r オプション
+
+より本格的に使いたい場合は、 -r オプションをつけましょう。
+
+>|sh|
+perl -MO=Xref,-r ***.pl
+||<
+
+このオプションをつけることで出力形式が変わります。
+ファイルパス、パッケージ名、関数名、行番号、定義／使用している変数名などを機械的に処理しやすく出力してくれます。
+
+>||
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   139 main            @ _                used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   145 (lexical)       $ json             intro
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   147 main            @ _                used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   148 (lexical)       $ opt              intro
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   149 (lexical)       $ opt              used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   149 (lexical)      %$ opt              used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   150 (lexical)       $ json             used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   150 (lexical)      %$ opt              used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   150 (lexical)     %%$ opt              used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   150 (lexical)       $ method           used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   150 (lexical)       $ method           used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   150 (method)      ->$ method           subused
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   154 (lexical)       $ json             used
+/opt/local/lib/perl5/site_perl/5.12.3/JSON.pm JSON::to_json   154 main            @ _                used
+||<
+
+このオプションをつけた出力結果を解析するプログラムを書くことで、欲しい情報を欲しい形で手に入れることができます。
