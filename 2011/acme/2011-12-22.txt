@@ -12,7 +12,7 @@ CPANに新しい名前空間Okomeが加わるとか想像すると夢が広が�
 
 今朝電車に乗ってて思いつきました。
 
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/acme/2011-12-23/mokume.png" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/acme/2011-12-22/mokume.png" />
 
 こうですか？　わかりません＞＜
 
