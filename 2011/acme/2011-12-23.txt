@@ -1,0 +1,19 @@
+お米モジュールの衝撃と木目モジュールの慟哭
+meta-author: makamaka
+meta-tags: perl, acme
+
+タイトルはクリスマス釣りです。[http://twitter.com/maka2_donzoko:title=makamaka]です。
+ちょっとどうでもいい話をしますと、YAPC::Asia 2011 Tokyoの懇親会でNiigata.pmとSendai.pmの方々が集まっていまして、その時、「うちら米どころだから両方あわせてOkome.pmというのはどうか」という趣旨の話が出たそうなのです。で、AcmeモジュールじゃなくてOkomeモジュールとかかんとか。
+
+CPANに新しい名前空間Okomeが加わるとか想像すると夢が広がりますね！　なんだかよくわからないけど。
+
+
+第二話　木目モジュール
+
+今朝電車に乗ってて思いつきました。
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/acme/2011-12-23/mokume.png" />
+
+こうですか？　わかりません＞＜
+
+
