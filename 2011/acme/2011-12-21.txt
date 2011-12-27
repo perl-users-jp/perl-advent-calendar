@@ -56,7 +56,7 @@ meta-tags: perl, acme
 
 さて、19日に取り上げた[http://search.cpan.org/dist/Acme-Everything:title=Acme::Everything]に似て非なるモジュールに、[http://search.cpan.org/dist/Bundle-Everything:title=Bundle::Everything]というのがあります。Bundle::*という名前空間を持つモジュールは、単にいくつかのモジュール名が書かれたファイルなのですが、対応するCPANクライアントを使うと、記載されているモジュールを一括インストールしてくれます。
 
-というわけで、これを使えばあなたのお使いのマシンにCPANモジュール全部載せができますよ！　（まあ実際にはデータがどんどん古くなっちゃって追いつかないのですが）
+このBundle::Everything、Everytingというだけあって、全部のCPANディストリをリストアップしようとします。というわけで、これを使えばあなたのお使いのマシンにCPANモジュール全部載せができますよ！　（まあ実際にはデータがどんどん古くなっちゃって追いついていないのですが）
 
 レビューではAcmeにしろや！と酷評され☆一つの素敵モジュールBundle::Everythingでした。
 
