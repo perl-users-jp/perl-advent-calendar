@@ -1,0 +1,74 @@
+Acme何thing?　解答編
+meta-author: makamaka
+meta-tags: perl, acme
+
+[http://twitter.com/maka2_donzoko:title=makamaka]です。これは前日の続きですので、まずは19日分の記事に目を通してからお読みください。
+
+問題は次の通りでした。
+
+>||
+Acme::Anything
+Acme::Everything
+Acme::Nothing
+Acme::Something
+
+これらのうち、2011年12月19日現在CPANに存在していないモジュールはどれでしょう？
+||<
+
+昨日はそのうち一つのサンプルをみてみました。今日は残り２つをみます。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+下記のコードをご覧ください。useしてるモジュールは一つです。
+
+>||
+use 5.014;
+use Acme::Everything;
+
+say JSON->new->encode(['ok']);
+||<
+
+実行できますね？　でもJSONなんていつロードしたのかしら？　ロードしてないのに使えてる……　そう、このモジュールを一度useすれば、実行時にCPANからダウンロードしてくれるのです！　CPANPLUS使ってます。
+
+さあ、最後です。
+
+>||
+use 5.014;
+use Acme::Nothing;
+use Carp;
+use JSON;
+Carp::carp("><");
+||<
+
+ちゃんと動きませんね……。　Acme::Nothingはどんなモジュールをuseしてもロードしてくれなくなります。これもAcme::Anythingで使われてた@INCにサブルーチンリファレンスを仕込むテクニックを使ってます。
+
+
+はい、というわけでCPANに存在しないのは「Acme::Something」が正解になります。
+
+誰ぞAcme::Somethingに挑戦してみてはいかがでしょうか！？　ではでは。
+
