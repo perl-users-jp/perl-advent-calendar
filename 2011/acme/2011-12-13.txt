@@ -6,7 +6,7 @@ meta-tags: perl, acme
 
 ↑って書いたけど結局自分で書いてます！
 
-「の」なのでAcme::No。
+「の」なので[http://search.cpan.org/dist/Acme-No:title=Acme::No]。
 
 >||
 use Acme::No;
