@@ -1,0 +1,69 @@
+ラウンドロビンによる分散方法の一例
+meta-author: nekokak
+meta-tag: perl, dbi
+
+DBIx トラックの最終日となりました。
+当初もしかしたら一人で大方書くことになるのかガクブルしてたのですが、
+多くの方のご協力のもとここまでたどり着くことができ感謝感謝です。
+
+
+最後はちょっと大規模よりのお話になるかもしれませんが、
+アイデアとして知っておいて損はないので紹介させて頂きます。
+
+
+MySQLを使われている場合、master - slave構成で構築されていて、
+参照クエリをslaveに向けるなんてことよくやられていることかと思います。
+ただ単純に参照クエリをslaveに向けると
+http://d.hatena.ne.jp/sfujiwara/20110620/1308531677
+http://d.hatena.ne.jp/sfujiwara/20110621/1308625519
+このような問題があるので気をつけるのを前提として、
+master:slave = 1:3のような構成になり、参照を分散させる必要が出てきた場合のお話です。
+
+
+分散方法は色々あるとおもうのですが、今回はData::WeightedRoundRobinをつかった参照分散の方法です。
+Data::WeightedRoundRobinは最近人気のモジュールの一つですね。xaicron++
+
+サンプルコードはこのようになります
+
+>||
+#! perl
+use strict;
+use warnings;
+use DBI;
+use Data::WeightedRoundRobin;
+
+my $dwr = Data::WeightedRoundRobin->new(
+    [
+        { value => '/tmp/mysql_sandbox27774.sock', weight => 100 },
+        { value => '/tmp/mysql_sandbox27775.sock', weight => 100 },
+    ]
+);
+
+my $dsn = 'dbi:mysql:test;mysql_socket=SOCKET';
+
+for (1..10) {
+    my $socket = $dwr->next;
+    (my $connect_dsn = $dsn)  =~ s/SOCKET/$socket/;
+    my $dbh = DBI->connect($connect_dsn,'msandbox','msandbox');
+    my $rows = $dbh->selectall_arrayref('SELECT * FROM user');
+}
+||<
+
+今回は実験の便宜上、MySQL::Sandboxを利用してmaster : slave(2)構成をつくりました。
+MySQL::Sandboxについては
+http://d.hatena.ne.jp/ZIGOROu/20090607/1244367464
+http://d.hatena.ne.jp/ZIGOROu/20090608/1244470674
+こちらを参考のこと。
+
+
+このようにData::WeightedRoundRobinに接続に必要な情報を設定し、
+都度とりだしてdbに接続することで、参照を分散させます。
+Data::WeightedRoundRobinはWeightedとあるように重み付けができるので、
+スペックの差があるdbが存在する場合なんかに（普通ないと思うけど）参照数を調節できて大変便利ですね。
+MySQL::Sandboxもmater:slave環境を簡単につくることができるのでとてもステキなので
+是非利用することをおすすめしたいです。
+
+
+
+
+
