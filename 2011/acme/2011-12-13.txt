@@ -1,6 +1,25 @@
-の
+の　　　　　（Acme::No）
 meta-tags: perl, acme
 
 さあ、このページをご覧の貴方！　本日のAcmeな記事を書いてみませんか！？
 <a href="http://atnd.org/events/22670">いらっしゃい！</a>
+
+↑って書いたけど結局自分で書いてます！
+
+「の」なのでAcme::No。
+
+>||
+use Acme::No;
+no CGI 3.56;
+||<
+
+普通 no Module; で Module->unimport されるところを、指定したバージョン以上のモジュールを呼び出すとdieさせるようにするモジュールです。
+
+>||
+use Acme::No;
+use 5.014;
+no  6.0;
+||<
+
+Perlのバージョン指定もできますね。
 
