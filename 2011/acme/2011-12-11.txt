@@ -1,6 +1,61 @@
-餃
+餃　　　　　（Acme::Chef）
 meta-tags: perl, acme
 
 さあ、このページをご覧の貴方！　本日のAcmeな記事を書いてみませんか！？
 <a href="http://atnd.org/events/22670">いらっしゃい！</a>
+
+↑って書いてたんです。なぜかって？　昔某掲示板あたりで穴埋めに流行りませんでした？
+
+面食らってこの記事をクリックした人に向けてPRのつもりだったんですけどね。たけど結局泣きながら自分で書いてますよ！　しょうがないから、これからの5日間、なんか関連のありそうなモジュールの紹介します。あ、これ書いてるのはmakamakaです。
+
+ちなみに餃子関連でこの記事を一番最後に書いてます。「餃」に関連するモジュールなんて知らないよ！
+
+
+食べ物ってことで[http://search.cpan.org/dist/Acme-Chef:title=Acme::Chef]でいいですか？　プログラミング言語[http://www.dangermouse.net/esoteric/chef.html:title=Chef]を実行します。
+
+>||
+use 5.014;
+use Acme::Chef;
+
+my $compiled = Acme::Chef->compile(join('',<DATA>));
+say $compiled->execute();
+
+
+__DATA__
+Hello World Souffle.
+
+This recipe prints the immortal words "Hello world!", in a basically
+brute force way. It also makes a lot of food for one person.
+
+Ingredients.
+72 g haricot beans
+101 eggs
+108 g lard
+111 cups oil
+32 zucchinis
+119 ml water
+114 g red salmon
+100 g dijon mustard
+33 potatoes
+
+Method.
+Put potatoes into the mixing bowl. Put dijon mustard into the mixing bowl.
+Put lard into the mixing bowl. Put red salmon into the mixing bowl. Put oil
+into the mixing bowl. Put water into the mixing bowl. Put zucchinis into the
+mixing bowl. Put oil into the mixing bowl. Put lard into the mixing bowl. Put
+lard into the mixing bowl. Put eggs into the mixing bowl. Put haricot beans
+into the mixing bowl. Liquify contents of the mixing bowl. Pour contents of
+the mixing bowl into the baking dish.
+
+Serves 1.
+||<
+
+実行すると
+
+
+>||
+Hello world!
+||<
+
+はい。以上です。
 
