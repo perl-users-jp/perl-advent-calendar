@@ -1,6 +1,19 @@
-玉
+玉　　　　　（Acme::Magic8Ball）
 meta-tags: perl, acme
 
 さあ、このページをご覧の貴方！　本日のAcmeな記事を書いてみませんか！？
 <a href="http://atnd.org/events/22670">いらっしゃい！</a>
+
+↑って書いたけど結局自分で書いてます！
+
+「玉」なので[http://search.cpan.org/dist/Acme-Magic8Ball:title=Acme::Magic8Ball]。マジック８ボールのPerl実装です。そもそもマジック８ボールの実物みたことない……　ちなみに<a href="http://www.google.co.jp/search?client=ubuntu&channel=fs&q=%E3%83%9E%E3%82%B8%E3%83%83%E3%82%AF%E3%82%A8%E3%82%A4%E3%83%88%E3%83%9C%E3%83%BC%E3%83%AB&oe=utf-8&hl=ja&um=1&ie=UTF-8&tbm=isch&source=og&sa=N&tab=wi&ei=6vL6TtmXKdH3mAW54_mEAg&biw=879&bih=561&sei=9PL6TsHmMO-gmQXS0NWAAg">こんなの</a>ね。
+
+尋ねたいことを思い浮かべながらボール投げると20種類の答えから一つ返ってきます。
+
+>||
+use 5.014;
+use Acme::Magic8Ball qw(ask);
+say ask("");
+=> # Ask again later.
+||<
 
