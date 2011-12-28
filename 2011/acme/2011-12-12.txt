@@ -1,6 +1,29 @@
-子
+子　　　　　（Acme::Time::Baby）
 meta-tags: perl, acme
 
 さあ、このページをご覧の貴方！　本日のAcmeな記事を書いてみませんか！？
 <a href="http://atnd.org/events/22670">いらっしゃい！</a>
+
+↑って書いたけど結局自分で書いてます！
+
+「子」なので[http://search.cpan.org/dist/Acme-Time-Baby:title=Acme::Time::Baby]。
+
+>||
+$ perl -MAcme::Time::Baby -E"say babytime()"
+The big hand is on the nine and the little hand is on the eight
+||<
+
+はい、子供でもわかるように時間を教えてくれます。　わかりやすいか？
+
+
+
+あと多言語対応ですわ。
+
+>||
+$ perl -MAcme::Time::Baby=language,fr -E"say babytime()"
+La grande aiguille est sur le dix et la petite aiguille est sur le huit
+||<
+
+フランス語。他にもドイツ語、イタリア語、スペイン語などなどありますが日本語対応していません。誰かパッチ送ったら喜ばれるんじゃないですかね？
+
 
