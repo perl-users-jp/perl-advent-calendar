@@ -1,0 +1,111 @@
+Acme::KamenriderFourze - 仮面ライダーフォーゼに変身してみよう
+meta-author: toritori0318
+meta-tags: perl, acme
+
+こんにちは。
+Acme Track再登場のtoritori0318です。
+[http://perl-users.jp/articles/advent-calendar/2011/acme/7:title=前回]の最後に「フォーゼモジュール書くかも」といった話をしましたが、
+今回はそれを実装しましたー、というお話です。
+
+
+
+** 仮面ライダーフォーゼとは
+さて、仮面ライダーオーズも終了し９月から仮面ライダーフォーゼが始まりましたね。
+今回のライダーはギミック満載で楽しいですね！宇宙キター！
+
+しかしフォーゼの影響でうちの２歳児が「バッドボーイ」という言葉を覚えてしまいました。Oops!
+
+
+あ、仮面ライダーフォーゼについてあまりご存じない方は[http://ja.wikipedia.org/wiki/%E4%BB%AE%E9%9D%A2%E3%83%A9%E3%82%A4%E3%83%80%E3%83%BC%E3%83%95%E3%82%A9%E3%83%BC%E3%82%BC:title=こちら]を御覧ください。
+
+
+** 仮面ライダーフォーゼの変身について
+仮面ライダーといえば変身シーンですね。
+もちろん仮面ライダーフォーゼにも変身シーンがあります。
+フォーゼは以下のような流れで変身を行います。
+
++ フォーゼドライバー（ベルト）にスイッチを４つセットします
++ フォーゼドライバーの４つのトランスイッチをONします
++ フォーゼドライバーのエンターレバーを操作すると変身へのカウントダウンが始まります
++ 変身！宇宙キター！
+
+スイッチは全部で４０種類存在し、((2011/12/27時点では25個))
+スイッチの種類によって様々な装備を実装することができます。
+またスイッチによってはフォーゼの変身形態を変化させる
+「ステイツチェンジ」が発生するスイッチも存在します。
+
+
+** Perlでも変身したい
+さて、ここまでの説明で（ry
+今回もフォーゼに変身できるモジュール [https://github.com/toritori0318/p5-Acme-KamenriderFourze:title=Acme::KamenriderFourze] を書いてみました。早速変身してみましょう。
+>|perl|
+  use Acme::KamenriderFourze;
+
+  my $fourze = Acme::KamenriderFourze->new;
+
+  # フォーゼドライバーにスイッチをセット
+  $fourze->fourze_driver(1,2,3,4);
+  #### 将来的には「スイッチ名」でセットできるようにする
+
+  # スイッチオン！
+  $fourze->henshin_switch_on;
+
+  # スリー、ツー、ワン、変身！
+  # chinchinchin baooon
+
+||<
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/acme/2011-12-23/image01.png" alt="oneliner" />
+見事に変身できましたね！
+
+
+またスイッチの組み合わせによってはリミットブレイクが発生し、必殺技を繰り出すことが可能です。
+>|perl|
+  ...
+  $fourze->henshin_switch_on;
+
+  # ローケットー オン
+  $fourze->module_switch_on(pos => 'maru');
+  # ドリルー オン
+  $fourze->module_switch_on(pos => 'sankaku');
+  #### 以下のような指定も可能
+  #### $fourze->module_switch_on(switch_no=> 3);
+  #### $fourze->module_switch_on(switch_name => 'ドリル');
+
+  # リミットブレイク！
+  $fourze->limitbreak;
+||<
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2011/acme/2011-12-23/image02.png" alt="oneliner" />
+必殺技発動！
+
+
+
+** スイッチ情報／ステイツ情報／リミットブレイク情報
+スイッチ情報／ステイツ情報／リミットブレイク情報を引くことも可能です。
+勉強して友達に自慢しよう！
+>|perl|
+  # スイッチ一覧
+  my @switch = $fourze->select('switch');
+  my @switch = $fourze->select('switch', {no=>1});
+  my @switch = $fourze->select('switch', {name=>'ドリル'});
+
+  # ステイツ一覧
+  my @states = $fourze->select('states');
+
+  # リミットブレイク一覧
+  my @limitbreak = $fourze->select('limitbreak');
+
+||<
+
+
+
+
+** 放映中
+フォーゼはまだ現在放映中ということもあり、スイッチ情報はまだ全ては揃っていません。
+詳細は徐々に明らかになっていくことでしょう。
+それに合わせてモジュールも更新していく予定です。
+
+
+さて、AcmeTrackももうすぐ完走ですね。
+次回はどなたの記事になるのでしょうか？
+
