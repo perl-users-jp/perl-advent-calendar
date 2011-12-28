@@ -1,0 +1,140 @@
+アルパカとテストとAcmeモジュー
+meta-author: makamaka
+meta-tags: perl, acme
+
+パカテスとお略しください。色々タイトルが残念な[http://twitter.com/maka2_donzoko:title=makamaka]です。最後はテストの話です。
+
+実はAcme trackの（心の）隣人であるTest truckにエクスパイア、じゃなくてインスパイアされての内容です。
+
+本日の<a href="../test/25">test track</A>で登場したTest::Successfulは、Test::Builderのokメソッドを上書きして常にテストが通るようにするモジュールです。……それAcmeモジュールじゃん！　Acme trackへの挑戦ですよ！？
+
+
+てなわけで、迎え撃つはCPANモジュール[http://search.cpan.org/dist/Acme-Test:title=Acme::Test]です。指定したモジュールに対して必ずPASSするテストを自動的につくってくれます。
+
+
+
+>||
+# MyLovelyModule.pm
+package MyLovelyModule;
+
+use strict;
+
+our $VERSION = '1.00';
+
+sub new { bless {}, shift; }
+
+sub hello { print "Hello.\n"  }
+
+1;
+||<
+
+というモジュールがあるとして、あとはそれに対するテストファイルをつくります。
+
+>||
+# acme.t
+use Acme::Test qw(MyLovelyModule);
+||<
+
+実行すると。
+
+>||
+$ perl acme.t
+# Testing MyLovelyModule
+# [Public] Testing global scalar $MyLovelyModule::VERSION
+ok 1 -     $VERSION available
+ok 2 -     $VERSION initialized properly
+ok 3 -     $VERSION content OK
+# [Public] Testing subroutine MyLovelyModule::hello()
+ok 4 -     hello() passed expected parameters
+ok 5 -     hello() catches faulty input
+ok 6 -     hello() works as expected with no input
+ok 7 -     hello() return value OK
+# [Public] Testing subroutine MyLovelyModule::new()
+ok 8 -     new() passed expected parameters
+ok 9 -     new() catches faulty input
+ok 10 -     new() works as expected with no input
+ok 11 -     new() return value OK
+1..11
+||<
+
+どーです？　個人的にはTest::Successfultの方がいいなあ。
+
+あとねぇ、Acme系テストで好きだったのは[http://search.cpan.org/dist/Acme-Test-Weather:title=Acme::Test::Weather]ですね。マシンのIPアドレスから都市を判定して、天気をテストするという、素晴らしいモジュールです。残念ながら現在CPANにないモジュールに依存しているためインストールしにくいので、代わりに[http://search.cpan.org/dist/WWW-HostipInfo:title=WWWW::HostipInfo]を使ったパッチを後ろの方に掲載しておきます。
+
+>||
+use Test::More;
+use Acme::Test::Weather;
+
+is_sunny();
+
+done_testing;
+
+=> not ok 1 - it's partly cloudy in Tokyo, Japan
+||<
+
+この原稿を書いている今は曇りなので、is_sunnyは通りませんでした。気をとりなおしてちょっと書き換えます。
+
+>||
+use Test::More;
+use Acme::Test::Weather;
+
+is_cloudy();
+isnt_sunny();
+isnt_raining();
+isnt_snowing();
+
+done_testing;
+
+=> ok 1 - it's partly cloudy in Tokyo, Japan
+=> ok 2 - it's partly cloudy in Tokyo, Japan
+=> ok 3 - it's partly cloudy in Tokyo, Japan
+=> ok 4 - it's partly cloudy in Tokyo, Japan
+1..4
+||<
+
+通りますね！　他にも温度をチェックする eq_celsius() などなかなか楽しいですね！
+
+パッチはこちら。
+
+
+>||
+--- lib/Acme/Test/Weather.pm.bak        2003-02-22 04:25:34.000000000 +0900
++++ lib/Acme/Test/Weather.pm    2011-12-28 15:41:33.000000000 +0900
+@@ -64,7 +64,7 @@
+ use Sys::Hostname;
+ use Socket;
+
+-use CAIDA::NetGeoClient;
++use WWW::HostipInfo;
+ use Geography::Countries;
+ use Weather::Underground;
+
+@@ -73,10 +73,10 @@
+
+ my $test    = Test::Builder->new();
+
+-my $geo     = CAIDA::NetGeoClient->new();
+-my $record  = $geo->getRecord($ip);
++my $geo     = WWW::HostipInfo->new();
++my $record  = $geo->get_info($ip);
+
+-my $city    = ucfirst(lc($record->{CITY}));
++my $city    = ucfirst(lc($record->city));
+
+ # If city is in the States use the state as
+ # the region. Otherwise use Geography::Countries
+@@ -86,8 +86,8 @@
+ # Because things like 'Cambridge, US' cause
+ # wunderground.com to spazz out :-(
+
+-my $region  = ($record->{COUNTRY} eq "US") ?
+-  ucfirst(lc($record->{STATE})) : country($record->{COUNTRY});
++my $region  = ($record->country eq "US") ?
++  ucfirst(lc($record->region)) : country($record->country);
+
+ my $place   = "$city, $region";
+||<
+
+
+というわけで、25日間にわたるAcme cognacも無事完走する予定です！　じゃあ、またね！
+
