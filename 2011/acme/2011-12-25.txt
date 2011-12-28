@@ -57,7 +57,7 @@ ok 11 -     new() return value OK
 1..11
 ||<
 
-どーです？　個人的にはTest::Successfultの方がいいなあ。
+どーです？　個人的にはTest::Successfulの方がいいなあ。
 
 あとねぇ、Acme系テストで好きだったのは[http://search.cpan.org/dist/Acme-Test-Weather:title=Acme::Test::Weather]ですね。マシンのIPアドレスから都市を判定して、天気をテストするという、素晴らしいモジュールです。残念ながら現在CPANにないモジュールに依存しているためインストールしにくいので、代わりに[http://search.cpan.org/dist/WWW-HostipInfo:title=WWWW::HostipInfo]を使ったパッチを後ろの方に掲載しておきます。
 
@@ -136,5 +136,5 @@ done_testing;
 ||<
 
 
-というわけで、25日間にわたるAcme cognacも無事完走する予定です！　じゃあ、またね！
+というわけで、25日間にわたるAcme cognacも無事完走です！　じゃあ、またね！
 
