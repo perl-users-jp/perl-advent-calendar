@@ -4,7 +4,7 @@ meta-tags: perl, acme
 
 パカテスとお略しください。色々タイトルが残念な[http://twitter.com/maka2_donzoko:title=makamaka]です。最後はテストの話です。
 
-実はAcme trackの（心の）隣人であるTest truckにエクスパイア、じゃなくてインスパイアされての内容です。
+実はAcme truckの（心の）隣人であるTest trackにエクスパイア、じゃなくてインスパイアされての内容です。
 
 本日の<a href="../test/25">test track</A>で登場したTest::Successfulは、Test::Builderのokメソッドを上書きして常にテストが通るようにするモジュールです。……それAcmeモジュールじゃん！　Acme trackへの挑戦ですよ！？
 
