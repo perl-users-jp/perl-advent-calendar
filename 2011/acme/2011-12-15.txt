@@ -1,6 +1,26 @@
-将
+将　　　　　（Acme::Shorten::ZoffixsModuleNames）
 meta-tags: perl, acme
 
 さあ、このページをご覧の貴方！　本日のAcmeな記事を書いてみませんか！？
 <a href="http://atnd.org/events/22670">いらっしゃい！</a>
+
+↑って書いたけど結局泣きながら自分で書いてます！
+
+「将」なので[http://search.cpan.org/dist/Acme-Shorten-ZoffixsModuleNames:title=Acme::Shorten::ZoffixsModuleNames]。
+
+え？　わけがわからない？　わけがわからないのはこっちだよ！！
+
+CPAN Authorに[http://search.cpan.org/~zoffix/:title=Zoffix]さんってのがいるんですよ。この人のモジュール、名前が長いんです。なので省略して呼び出せるようにするモジュールです。
+
+
+>||
+use Acme::Shorten::ZoffixsModuleNames qw(PCWWB);
+# => POE::Component::WWW::WebDevout::BrowserSupportInfoがロードされる。
+#       以後PCWWBがエイリアスとして使える。
+||<
+
+最近更新されていないから最新のモジュールには対応していません。
+
+
+終わったー　餃子の玉将終わったー！　わけのわからないことはするもんじゃないですね！
 
