@@ -13,7 +13,7 @@ meta-tags: perl, acme
 >||
 use 5.014;
 use Acme::Magic8Ball qw(ask);
-say ask("");
+say ask("完走できるんですか？ このトラック……");
 => # Ask again later.
 ||<
 
