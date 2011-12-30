@@ -1,0 +1,47 @@
+#19 標準Plugin1
+
+Tengには標準で提供されているPlugin機構がいくつかあります。
+
+今日はそれらの紹介をします。が、回数かせぎのために2回にわけます。
+
+* Lookup
+
+lookupメソッドを提供します。lookupメソッドはsingleメソッドと同等の機能を提供しますが、SQL::Makerを使わないため機能に制限がある代わりに高速に動作します。
+
+* SingleBySQL
+
+searchに対するsearch_by_sqlと同様に、singleに対するsingle_by_sqlを提供すします。
+>||
+my $row = $teng->single_by_sql(q{select * from user where id = ?}, [1], 'user')
+||<
+
+尚、LookupやSingleBySQLに対するベンチマークを行う<a href="https://github.com/nekokak/p5-Teng/blob/master/bench/lookup_vs_single.pl">lookup_vs_single.pl</a>が開発レポジトリにあります。結果は下記のようになっています。lookupがsingleに対して二倍早いのが見どころですね。
+
+>||
+Benchmark: timing 10000 iterations of dbi, lookup, single, single_by_sql...
+       dbi: 0.543471 wallclock secs ( 0.50 usr  0.01 sys +  0.00 cusr  0.00 csys =  0.51 CPU) @ 19607.84/s (n=10000)
+    lookup: 0.808071 wallclock secs ( 0.78 usr  0.00 sys +  0.00 cusr  0.00 csys =  0.78 CPU) @ 12820.51/s (n=10000)
+    single: 1.67938 wallclock secs ( 1.57 usr  0.00 sys +  0.00 cusr  0.00 csys =  1.57 CPU) @ 6369.43/s (n=10000)
+single_by_sql: 0.769787 wallclock secs ( 0.74 usr  0.00 sys +  0.00 cusr  0.00 csys =  0.74 CPU) @ 13513.51/s (n=10000)
+                 Rate        single        lookup single_by_sql           dbi
+single         6369/s            --          -50%          -53%          -68%
+lookup        12821/s          101%            --           -5%          -35%
+single_by_sql 13514/s          112%            5%            --          -31%
+dbi           19608/s          208%           53%           45%            --
+||<
+
+* Pager / Pager::MySQLFoundRows
+
+どちらも、search_with_pagerメソッドを提供します。
+
+>||
+my ($rows, $pager) = $db->search_with_pager('user' => {type => 3}, {page => $page, rows => 5});
+||<
+
+このように第三引数においてpage, rowsを指定することによりそれに対応したPagerオブジェクトがrows(イテレータではなく配列リファレンス）とともに返されます。pagerオブジェクトはPagerにおいては<a href="http://search.cpan.org/dist/Data-Page-NoTotalEntries/">Data::Page::NoTotalEntries</a>でありPager::MySQLFoundRowsにおいては一般的な<a href="http://search.cpan.org/dist/Data-Page/">Data::Page</a>になっています。
+
+名前からもわかるとおり、Pager::MySQLFoundRowsはMySQL専用となっています。汎用的なData::Pageを返すPluginはまだありませんので作った方はTeng本体にpull reqするかCPANに上げてみるといいんじゃないでしょうか。
+
+
+明日はTengで提供されているPluginの紹介をしたいと思います
+
