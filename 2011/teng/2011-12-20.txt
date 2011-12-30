@@ -1,0 +1,40 @@
+#19 標準Plugin2
+
+今日は昨日に引き続き標準Pluginをします。
+
+* Count
+
+COUNT(column)を行いその結果を返すcountメソッドを提供します
+
+>||
+my $count = $teng->count('user', '*', {type => 2})
+# SELECT COUNT(*) FROM user WHERE type = 2;
+||<
+このように使います。簡単ですね。
+
+* FindOrCreate
+
+find_or_createメソッドを提供します。
+
+>||
+my $row = $teng->find_or_create('user',{name => 'lestrrat'});
+||<
+このようにするとname=lestrratなrowがすでにあればそれをDBからとってきて、なければinsertしてくれます。
+便利ですね！
+
+* Replace
+
+replaceメソッドを提供します。
+>||
+my $row = $teng->replace('user',{name => 'lestrrat'});
+||<
+<a href="http://dev.mysql.com/doc/refman/5.1/ja/replace.html">REPLACE INTO句</a>を用いてSQLを実行します。
+便利ですね！
+
+
+* まとめ
+以上でTengの標準プラグインのすべてです。実はBulkInsertというものもあるのですが、こちらは最近Teng本体にbulk_insertメソッドが付いたためにDeprecatedとなっています。このようにTengの標準プラグイン構成はまだまだ未完成ですので意見を#dbix-skinny@irc.perl.orgで出しあっていくとよいのではないでしょうか。
+
+
+明日の予定は未定です。
+
