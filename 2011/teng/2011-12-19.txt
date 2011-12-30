@@ -43,5 +43,5 @@ my ($rows, $pager) = $db->search_with_pager('user' => {type => 3}, {page => $pag
 名前からもわかるとおり、Pager::MySQLFoundRowsはMySQL専用となっています。汎用的なData::Pageを返すPluginはまだありませんので作った方はTeng本体にpull reqするかCPANに上げてみるといいんじゃないでしょうか。
 
 
-明日はTengで提供されているPluginの紹介をしたいと思います
+明日もTengで提供されているPluginの紹介をしたいと思います
 
