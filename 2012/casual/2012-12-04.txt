@@ -98,4 +98,4 @@ curl http://weather.yahoo.co.jp/weather/jp/expo/umbrella/13/4410.html 2> /dev/nu
 
 ** 明日は誰？
 
-明日はおそらく光の戦士の血を受け継ぐ勇者さんが登場します。お楽しみに。
+明日は yusukebe さんが登場します。お楽しみに。
