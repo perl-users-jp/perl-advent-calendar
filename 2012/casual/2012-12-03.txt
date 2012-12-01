@@ -1,28 +1,25 @@
-カジュアルにデータ確率で処理する
+カジュアルにデータを確率とか優先度で処理する
 meta-author: koba04
 meta-tags: perl
 
 
-こんにちは、こんにちは。
-[https://twitter.com/koba04:title=koba04] です。
-誰よりもカジュアルにPerlに使っているので誰よりもカジュアルに書きたいと思います!
+こんにちは、こんにちは。カジュアルにPerlに使っている[https://twitter.com/koba04:title=koba04] です。
 
 
 Webアプリを作っていて、確率で処理を分けたり複数の要素を重み付けて選びたいことってありませんか？
 
-真っ先に浮かぶのはガチャみたいなものですが、それ以外にもランダムでバナーを出し分けてみたり、
-接続するサーバーを重み付けて選んだり色々と使い道が思い浮かびます。
+真っ先に浮かぶのはガチャみたいなものですが、それ以外にもランダムでバナーを出し分けてみたり、接続するサーバーを重み付けて選んだり色々と使い道が思い浮かびます。
 
 
 そんな時に使える二つのモジュールをご紹介したいと思います。
-詳しくは作者の方のブログを見てください。以上！ でもいいのですが..
+詳しくは下記の作者の方のブログを見てください。
 -[http://unknownplace.org/memo/2012/07/17/1/:title=Sub::Rate]
 -[http://blog.livedoor.jp/xaicron/archives/53091000.html:title=Data::WeightedRoundRobin]
+以上！ でもいいのですが..順番に紹介してみたいと思います。
 
 
 ** モジュールなしで実装
-優先度を付けてデータを選びたい時は、randを使っての実装が思い浮かびますが、
-バグりそうな気もするし面倒だし出来れば書きたくないです。
+優先度を付けてデータを選びたい時はrandを使っての実装が思い浮かびますが、バグりそうな気もするし面倒だし出来れば書きたくないです。
 (書き方が悪いという説もある)
 >|perl|
 # 結果をdumpする関数
@@ -39,7 +36,8 @@ sub dump_total {
     }
     say Dumper $total;
 }
-
+||<
+>|perl|
 my $rate = [
     { rate => 40, value => "寿司" },
     { rate => 20, value => "ラーメン" },
@@ -81,6 +79,7 @@ $VAR1 = {
         };
 ||<
 
+
 ** Sub::Rate
 [http://search.cpan.org/~typester/Sub-Rate/]
 typesterさんによるモジュールでこんな感じでmax_rateを設定して、重み付けて関数を実行してくれます。
@@ -98,7 +97,6 @@ my $func = $rate->generate;
 say $func->();
 dump_total($func);
 ||<
--結果
 >||
 Sub::Rate
 焼肉
@@ -112,7 +110,7 @@ $VAR1 = {
 ||<
 
 
-またアタリ・ハズレの処理を作りたい場合も簡単に出来ます。
+またアタリ・ハズレの処理を作りたい場合もdefaultを使って簡単に出来ます。
 >|perl|
 my $rate = Sub::Rate->new;
 # 5%でよっちゃんイカがもう一個もらえる
@@ -149,7 +147,6 @@ my $func = $rate->generate;
 say $func->();
 dump_total($func);
 ||<
--結果
 >||
 コンビニ
 $VAR1 = {
@@ -161,8 +158,7 @@ $VAR1 = {
 ||<
 
 
-また、モジュールにはSub::Rate::NoMaxRateというのもあってこちらだと、
-max_rateを計算しなくても使うことが出来ます。
+また、モジュールにはSub::Rate::NoMaxRateというのもあってこちらだとmax_rateを計算しなくても使うことが出来ます。
 >|perl|
 my $rate = Sub::Rate::NoMaxRate->new(max_rate => 10000);
 $rate->add( 4000 => sub { "寿司" });
@@ -175,7 +171,6 @@ my $func = $rate->generate;
 say $func->();
 dump_total($func);
 ||<
--結果
 >||
 寿司
 $VAR1 = {
@@ -185,15 +180,14 @@ $VAR1 = {
           '寿司' => 943
         };
 ||<
-ただ、今のversion(0.04)だとrateの合計がmax_rate(default==100)を超えるとエラーになってしまうようなので、
-max_rate以上になるときは上記のようにmax_rateを予め大きくしておく必要があります。
+ただ、今のversion(0.04)だとrateの合計がmax_rate(default==100)を超えるとエラーになってしまうようなので、max_rate以上になるときは上記のようにmax_rateを予め大きくしておく必要があります。
 (NoMaxRateの場合はmax_rateを意識しなくてadd出来たほうが便利かなと思ったのでpull reqしてみました)
 
 
 
 ** Data::WeightedRoundRobin
 [http://search.cpan.org/~xaicron/Data-WeightedRoundRobin/]
-xaicronさんによるモジュールでこんな感じでmax_rateを設定して、重み付けて値を返してくれます。(もちろん関数も返せる)
+xaicronさんによるモジュールでこんな感じでmax_rateを設定して、重み付けて値を返してくれます。(もちろん関数も返せます)
 >|perl|
 my $dwr = Data::WeightedRoundRobin->new([
     { weight => 4, value => "寿司" },
@@ -206,7 +200,6 @@ my $dwr = Data::WeightedRoundRobin->new([
 say $dwr->next;
 dump_total(sub { $dwr->next });
 ||<
--結果
 >||
 寿司
 $VAR1 = {
@@ -220,9 +213,7 @@ $VAR1 = {
 こちらも簡単に書けていいですね!
 
 
-どちらもモジュールを選んでもでも同じことが出来るのでどう使い分けるのかは好みになってくるのかなと思いますが、
-単純に値を返したい場合はData::WeightedRoundRobin、実行する処理を分けたい場合やハズレを作りたい場合などはSub::Rateを使うと
-いいのかなぁとなんとなく思ったりしました。
+どちらのモジュールを選んでも同じことが出来るのでどう使い分けるのかは好みになってくるのかなと思いますが、単純に値を返したい場合はData::WeightedRoundRobin、実行する処理を分けたい場合やハズレを作りたい場合などはSub::Rateを使うといいのかなぁとなんとなく思ったりしました。
 あと名前が短いのでSub::Rateとか...。
 
 
