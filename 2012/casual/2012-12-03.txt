@@ -82,7 +82,7 @@ $VAR1 = {
 
 ** Sub::Rate
 [http://search.cpan.org/~typester/Sub-Rate/]
-typesterさんによるモジュールでこんな感じでmax_rateを設定して、重み付けて関数を実行してくれます。
+typesterさんのSub::Rateを使うと、こんな感じでmax_rateとそれぞれのrateによって関数を返してくれます。
 シンプルに書けてとてもいいですね。
 >|perl|
 # default max_rate  == 100
@@ -187,7 +187,7 @@ $VAR1 = {
 
 ** Data::WeightedRoundRobin
 [http://search.cpan.org/~xaicron/Data-WeightedRoundRobin/]
-xaicronさんによるモジュールでこんな感じでmax_rateを設定して、重み付けて値を返してくれます。(もちろん関数も返せます)
+xaicronさんのData::WeightedRoundRobinを使うとこんな感じでそれぞれのweightによってvalueを返してくれます。(もちろん関数も返せます)
 >|perl|
 my $dwr = Data::WeightedRoundRobin->new([
     { weight => 4, value => "寿司" },
