@@ -8,7 +8,7 @@ Perl Advent Calendar 4日目を担当しますokamuuuです。
 
 今住んでいるところはエレベーター付きなので、そんなことがあると下まで降りて、また昇って、傘取って来てまた降りるっていう無駄な作業が発生します。
 
-怠慢な皆さんはすでにお気づきだと思いますが、これは放っておくといつまでも「繰り返される無駄な作業」です。
+怠慢な皆さんはすでにお気づきだと思いますが、これは「いつまでも繰り返されるであろう無駄な作業」です。
 そんなのもうハックしちゃいましょう。
 
 ※Macユーザーを対象にしていいます。ご了承下さい。
@@ -36,7 +36,7 @@ curlコマンドで情報を取得します。
 ||<
 
 んが。curlコマンドがエラー出力になんかしゃべってます。黙ってもらいましょうか。
-2> /dev/null をエラー出力を亜空間に向けてしまいます。
+2> /dev/null を追記してエラー出力を亜空間に向けてしまいます。
 
 >|shell|
 % curl http://weather.yahoo.co.jp/weather/jp/expo/umbrella/13/4410.html 2> /dev/null  | grep '<b>指数'
@@ -63,7 +63,7 @@ curlコマンドで情報を取得します。
 インストール方法は省略しますが growl をコマンドラインから呼び出す事ができるので以下のように growl にパイプします。
 
 >|shell|
-curl http://weather.yahoo.co.jp/weather/jp/expo/umbrella/13/4410.html 2> /dev/null  | grep '<b>指数' | head -n 1 | perl -ne 'if(/<b>(.*)<\/b>/) { print "傘", $1, "\n"; }' | growlnotify --sticky -t '傘指数'
+% curl http://weather.yahoo.co.jp/weather/jp/expo/umbrella/13/4410.html 2> /dev/null  | grep '<b>指数' | head -n 1 | perl -ne 'if(/<b>(.*)<\/b>/) { print "傘", $1, "\n"; }' | growlnotify --sticky -t '傘指数'
 ||<
 
 オプションに --sticky を指定すると自動的に消えるのを防げます。
@@ -82,17 +82,19 @@ curl http://weather.yahoo.co.jp/weather/jp/expo/umbrella/13/4410.html 2> /dev/nu
 
 ** cron
 
-でcronに登録します。まあこんな感じでいいんじゃないですかね。
+さきほどのシェルスクリプトをcronに登録します。まあこんな感じでいいんじゃないですかね。
 
 >|shell|
-% crontab -l | weather.sh
-0 7 * * * /Users/okamura/script/weather.sh       >>/tmp/cron.log 2>>/tmp/cron-err.log
+% crontab -l | grep weather.sh
+0 7 * * * /Users/okamura/script/weather.sh >>/tmp/cron.log 2>>/tmp/cron-err.log
 ||<
+
+ということで毎朝7時にMacを見ると傘が必要かどうかを知ることができると思います。
 
 ** まとめ
 
 今回はPerlでガリガリとスクレイピングの処理を書かずにできるだけ既存のコマンドを活用してみました。
-まあエラーハンドリングが全く存在しないんですが、ある程度の事はこれで実現できると思います。目的は完璧なプログラムではなくハックなのでこれでいいでしょう。
+まあエラーハンドリングしてませんが、ある程度の事はこれで実現できると思います。目的は完璧なプログラムではなくハックなのでこれでいいでしょう。
 
 ** 明日は誰？
 
