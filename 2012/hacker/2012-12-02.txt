@@ -8,7 +8,7 @@ meta-tags: perl, option, CLI
 
 ** モジュール紹介
 
-今日は、拙作の[https://metacpan.org/module/Smart::Options:title=Smart::Options]というモジュールを紹介します。リリースされたのが今年の後半になってからで日の浅いモジュールですが、自分が過去に作った[https://metacpan.org/module/opts:title=opts]というCPANモジュールや、[https://github.com/substack/node-optimist:title=optimist]というnode.jsのライブラリの知見を生かして作られています。コンセプトは「直感的にざっくり使えて、使おうと思えば細かい設定も可能」という感じです。
+今日は、拙作の[https://metacpan.org/module/Smart&#x3a;&#x3a;Options:title=Smart::Options]というモジュールを紹介します。リリースされたのが今年の後半になってからで日の浅いモジュールですが、自分が過去に作った[https://metacpan.org/module/opts:title=opts]というCPANモジュールや、[https://github.com/substack/node-optimist:title=optimist]というnode.jsのライブラリの知見を生かして作られています。コンセプトは「直感的にざっくり使えて、使おうと思えば細かい設定も可能」という感じです。
 
 ** 使い方
 
@@ -78,7 +78,7 @@ $argv = $opt->parse;
 
 上のようにすると、 $argv->{command} に入力されたサブコマンドが入り、実際のオプションは $argv->{cmd_option}にハッシュリファレンスとして入ります。サブコマンドは複数の機能を持つスクリプトを作る際に非常に便利ですので、是非使ってみて下さい。
 
-DSLは、拙作のoptsのように、コマンドライン引数をメソッドの引数のように書くことが出来る機能です。Smart::Optionsでは[https://metacpan.org/module/Smart::Options::Declare:title=Smart::Options::Declare]というモジュールで、optsとほぼ同等の記述が出来るようになりました。このモジュールを使うと、冒頭の例は以下のように書き換えられます。
+DSLは、拙作のoptsのように、コマンドライン引数をメソッドの引数のように書くことが出来る機能です。Smart::Optionsでは[https://metacpan.org/module/Smart&#x3a;&#x3a;Options&#x3a;&#x3a;Declare:title=Smart::Options::Declare]というモジュールで、optsとほぼ同等の記述が出来るようになりました。このモジュールを使うと、冒頭の例は以下のように書き換えられます。
 
 >|perl|
 use Smart::Options::Declare;
