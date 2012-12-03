@@ -39,7 +39,7 @@ my @union        = $lc->get_union;
 my @left_only    = $lc->get_Lonly;
 my @right_only   = $lc->get_Ronly;
 
-warn Dumper \@intersection; # [1,2]
+warn Dumper \@intersection; # [3,4]
 warn Dumper \@union;        # [1,2,3,4,5,6,7,8,9]
 warn Dumper \@left_only;    # [1,2]
 warn Dumper \@right_only;   # [5,6,7,8,9]
