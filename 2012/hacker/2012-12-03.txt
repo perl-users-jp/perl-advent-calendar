@@ -4,9 +4,7 @@ meta-tags: perl
 
 こちらの画像でおたのしみください。
 <div id="sprite" class="n"></div>
-<script>
-// forked from tokuhirom's "forked: 2011-10-17 1st" http://jsdo.it/tokuhirom/8sZd
-// forked from moriyoshi's "2011-10-17 1st" http://jsdo.it/moriyoshi/syTt
+<script type="text/javascript">
 var n = document.getElementById('sprite');
 var r = 0, s = 1;
 setInterval(function() {
@@ -15,6 +13,7 @@ setInterval(function() {
             r += .5; s += .01;
             }, 100);
 </script>
+
 <style>
 body { background-color: #DDDDDD; font: 30px sans-serif; }
 
