@@ -3,7 +3,7 @@ meta-author: koba04
 meta-tags: perl
 
 
-こんにちは、こんにちは。カジュアルにPerlに使っている[https://twitter.com/koba04:title=koba04] です。
+こんにちは、こんにちは。カジュアルにPerl使っている[https://twitter.com/koba04:title=koba04] です。
 
 
 Webアプリを作っていて、確率で処理を分けたり複数の要素を重み付けて選びたいことってありませんか？
