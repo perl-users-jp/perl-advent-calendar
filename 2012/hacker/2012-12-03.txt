@@ -3,23 +3,4 @@ meta-author: kan
 meta-tags: perl
 
 こちらの画像でおたのしみください。
-<div id="sprite" class="n"></div>
-<script type="text/javascript">
-var n = document.getElementById('sprite');
-var r = 0, s = 1;
-setInterval(function() {
-    var trans = 'rotate(' + r + 'deg) scale(' + s + ',' + s + ')';
-        n.setAttribute('style', '-moz-transform:' + trans +'; -webkit-transform:' + trans + '; -ie-transform:' + trans + '; transform:' + trans);
-            r += .5; s += .01;
-            }, 100);
-</script>
-
-<style>
-body { background-color: #DDDDDD; font: 30px sans-serif; }
-
-.n {
-    background: url(http://a0.twimg.com/profile_images/2788742131/bd31d4c5ff720790ec8b8f24cc4f5eb1.jpeg) no-repeat center;
-    width: 100%;
-    height: 465px;
-}
-</style>
+<img src="http://a0.twimg.com/profile_images/2788742131/bd31d4c5ff720790ec8b8f24cc4f5eb1.jpeg">
