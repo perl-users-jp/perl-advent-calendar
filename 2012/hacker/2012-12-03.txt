@@ -3,24 +3,4 @@ meta-author: kan
 meta-tags: perl
 
 ここは @__gfx__ の記事建設予定地です。
-
-<div id="sprite" class="n"></div>
-
-<style>
-.n {
-    background: url(http://a0.twimg.com/profile_images/2788742131/bd31d4c5ff720790ec8b8f24cc4f5eb1.jpeg) no-repeat center;
-    width: 100%;
-    height: 465px;
-}
-</style>
-<script>
-window.onload = function() {
-  var n = document.getElementById('sprite');
-  var r = 0, s = 1;
-  setInterval(function() {
-    var trans = 'rotate(' + r + 'deg) scale(' + s + ',' + s + ')';
-    n.setAttribute('style', '-moz-transform:' + trans +'; -webkit-transform:' + trans + '; -ie-transform:' + trans + '; transform:' + trans);
-    r += .5; s += .01;
-  }, 100);
-}
-</script>
+<img src="http://a0.twimg.com/profile_images/2788742131/bd31d4c5ff720790ec8b8f24cc4f5eb1.jpeg">
