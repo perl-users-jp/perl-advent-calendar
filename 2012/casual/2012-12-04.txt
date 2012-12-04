@@ -11,7 +11,7 @@ Perl Advent Calendar 4日目を担当しますokamuuuです。
 怠慢な皆さんはすでにお気づきだと思いますが、これは「いつまでも繰り返されるであろう無駄な作業」です。
 そんなのもうハックしちゃいましょう。
 
-※Macユーザーを対象にしていいます。ご了承下さい。
+※ちなみにこの記事Macユーザーを対象にしています。ご了承下さい。
 
 ** 天気情報を取得する
 
@@ -74,7 +74,7 @@ curlコマンドで情報を取得します。
 curl http://weather.yahoo.co.jp/weather/jp/expo/umbrella/13/4410.html 2> /dev/null  | grep '<b>指数' | head -n 1 | perl -ne 'if(/<b>(.*)<\/b>/) { print "傘", $1, "\n"; }' | growlnotify --sticky -t '傘指数'
 ||<
 
-一応chmod +x で実行権限をつけておきましょう。
+一応言っておくと chmod +x で実行権限をつけておきましょう。
 
 >|shell|
 % chmod +x ~/script/weather.sh
