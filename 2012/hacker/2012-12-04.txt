@@ -8,6 +8,9 @@ hacker track の4日目ということで、なんか書かなきゃいけない
 
 あまりにも書くことがないので、O/R Mapper をかきました。
 
+https://github.com/tokuhirom/Karas/
+https://metacpan.org/release/TOKUHIROM/Karas-0.01
+
 Teng よりも簡素で、結構つかいやすいものになりました。
 
 - Teng みたいな connection handling
