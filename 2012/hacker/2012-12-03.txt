@@ -1,5 +1,5 @@
 @__gfx__ は病欠です。
-meta-author: kan
+meta-author: gfx
 meta-tags: perl
 
 ここは @__gfx__ の記事建設予定地です。

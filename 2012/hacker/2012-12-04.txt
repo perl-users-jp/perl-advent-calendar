@@ -1,5 +1,5 @@
 Karas - 漆黒の翼
-meta-author: kan
+meta-author: tokuhirom
 meta-tags: perl
 
 えーとこんにちは。tokuhirom です。
