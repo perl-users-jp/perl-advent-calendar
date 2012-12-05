@@ -73,20 +73,24 @@ function foo(){
 <div id="container">
     <div id="container-inner" class="pkg">
 
-        <div id="banner">
-            <div id="banner-inner" class="pkg">
-                <h1 id="banner-header">[% title %] - <a href="[% uri_for( year _ '/' ) %]">[% conf.title %]</a> <a href="[% uri_for( year _ '/' _ name _ '/') %]">[% name | ucfirst %] Track</a></h1>
-                <p id="banner-description">[% conf.description %]</p>
+        <div id="banner" class="navbar">
+            <div id="banner-inner" class="pkg navbar-inner">
+                <div id="banner-header">[% title %] - [% year %] advent calendar [% name %]</div>
+				<div class="nav-collapse">
+					<ul class="nav" id="main-menu-left">
+						<li>Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</li>
+					</ul>
+				</div>
             </div>
         </div>
     </div>
 
-    <div id="pagebody">
-        <div id="pagebody-inner">
-            <div id="alpha">
-                <div id="alpha-inner">
-
-
+    <div id="pagebody" class="container">
+		<div class="row">
+        	[% INCLUDE 'include/sidemenu.html' %]
+        	<div id="pagebody-inner" class="span8">
+				<div id="alpha">
+                	<div id="alpha-inner">
 <div class="entry">
     <h1 class="entry-header">[% title %]&nbsp;<a href="http://b.hatena.ne.jp/entry/[% uri_for(req.path_info) %]"><img src="http://b.hatena.ne.jp/entry/image/[% uri_for(req.path_info) %]" alt="B!" /></a></h1><br />
     <div class="entry-content">
@@ -143,10 +147,10 @@ function foo(){
 </div>
 
 
+                	</div>
                 </div>
             </div>
         </div>
-        [% INCLUDE 'include/sidemenu.html' %]
     </div>
 </div>
 
