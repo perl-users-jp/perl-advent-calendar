@@ -8,6 +8,12 @@
 <!--
     <link rel="alternate" type="application/rss+xml" title="RSS" href="http://perl-users.jp/articles/advent-calendar/2009/index.xml" /> 
 -->
+<style> 
+    .description {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+</style> 
 </head> 
 <body class="layout-two-column-right"> 
 <div id="container"> 
@@ -31,28 +37,18 @@
 			<div id="pagebody-inner" class="span8"> 
 				<div id="alpha"> 
 					<div id="alpha-inner"> 
- 
-<style> 
-    .description {
-        margin-left: 10px;
-        margin-right: 10px;
-    }
-</style> 
- 
-<div class="row">
-	<div class="span6">
-		[% INCLUDE 'track_list_' _ year _ '.html' %]
-	</div>
+						<div class="row">
+							<div class="span6">
+								[% INCLUDE 'track_list_' _ year _ '.html' %]
+							</div>
 
-	<div class="span6">
-		<h2>for writers</h2> 
-
-		<p> 
-		<a href="http://perl-users.jp/articles/advent-calendar/help.html">書き方はこちら</a>
-
-		</p> 
-	</div> 
-</div> 
+							<div class="span6">
+								<h2>for writers</h2> 
+								<p> 
+									<a href="http://perl-users.jp/articles/advent-calendar/help.html">書き方はこちら</a>
+								</p> 
+							</div> 
+						</div> 
 					</div> 
 				</div> 
 			</div> 
