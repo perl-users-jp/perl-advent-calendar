@@ -31,18 +31,24 @@
 <div id="container">
     <div id="container-inner" class="pkg">
 
-        <div id="banner">
-            <div id="banner-inner" class="pkg">
-                <h1 id="banner-header">[% title %] - [% year %] advent calendar [% name %]</h1>
-                <p id="banner-description">Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</p>
+        <div id="banner" class="navbar">
+            <div id="banner-inner" class="pkg navbar-inner">
+                <div id="banner-header" class="brand">[% title %] - [% year %] advent calendar [% name %]</div>
+				<div class="nav-collapse">
+					<ul class="nav" id="main-menu-left">
+						<li>Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</li>
+					</ul>
+				</div>
             </div>
         </div>
     </div>
 
-    <div id="pagebody">
-        <div id="pagebody-inner">
-            <div id="alpha">
-                <div id="alpha-inner">
+    <div id="pagebody" class="container">
+		<div class="row">
+        	[% INCLUDE 'include/sidemenu.html' %]
+			<div id="pagebody-inner" class="span8">
+				<div id="alpha">
+					<div id="alpha-inner">
 
 
 <div class="entry">
@@ -59,10 +65,10 @@
 </div>
 
 
+                	</div>
                 </div>
             </div>
         </div>
-        [% INCLUDE 'include/sidemenu.html' %]
     </div>
 </div>
 </body>
