@@ -1,0 +1,111 @@
+AxsLog - Yet Another AccessLog middleware
+meta-author: kazeburo
+meta-tags: perl plack
+
+「君のPSGIファイルを僕のミドルウェアでいっぱいにしたい」という台詞を思いついたけど、埋めれるほどPlack::Middlewareを書いてないkazeburo です。
+
+そんな僕が一番最近書いた Plack::Middleware がYet Anotherなアクセスログ記録ミドルウェア AxsLog です。某二人組は今年でデビュー20周年らしいですが、あんまり関係ありません。
+
+https://metacpan.org/module/Plack::Middleware::AxsLog
+
+Plackのコアパッケージの中に Plack::Middleware::AccessLog が含まれてますが、以前からこのミドルウェアが比較的「重い」ということが気になっていました。マイクロベンチマークですが、
+
+>||
+$ cat test.psgi
+sub {
+    [200,['Content-Type'=>'text/html'],['OK']];
+}
+$ plackup -E production -s Starlet -e 'enable AccessLog' test.psgi
+||<
+
+と、ミドルウェアを含めないで起動
+
+>||
+$ plackup -E production -s Starlet test.psgi
+||<
+
+を ApacheBench で比較すると割と大きな差がでます。
+
+>||
+# AccessLogあり
+Requests per second:    878.70 [#/sec] (mean)
+# AccessLogなし
+Requests per second:    1474.14 [#/sec] (mean)
+||<
+
+(ベンチマーク環境はMacBook Air)
+
+ApacheBenchの起動オプション
+
+>||
+ab -c 1 -n 1000 http://localhost:5000/
+||<
+
+マイクロベンチマークではない実際のアプリケーションにおいても、性能を出す為のチューニングを行っていけばいくほど、NYTProfで見た時のAccessLogの重さが気になってくるというのを何度か経験しています。
+
+AccessLog ミドルウェアが重いのは、様々な環境で動くように日付処理に工夫がしてある点と、ログフォーマットのカスタマイズが可能になっているためなので、そこを出来るだけ省いてもう少し軽いアクセスログ記録ミドルウェアができないかと書いたのが表題の AxsLog です。
+
+AxsLog の特徴は
+
+- サポートするフォーマットは2つ。combinedとcommonのみ
+- レスポンスにかかった時間をログの末尾に出力する機能
+- エラー時のみ、またレスポンスに指定した時間よりかかった時のみログを出力する機能
+
+となっています。
+
+使い方は以下のようになります。
+
+>|perl|
+use Plack::Builder;
+ 
+builder {
+    enable 'AxsLog',
+      combined => 1,
+      response_time => 1,
+      error_only => 1,
+    $app
+};
+||<
+
+上の設定では、combinedフォーマットを指定、末尾にリクエスト処理時間を付け、エラー(ステータスが400〜500番台)の時のみ実際にアクセスログを出力するようになっています。その他のオプションは POD で確認してくださいませ。
+
+最後に、上で行ったマイクロベンチマークを AxsLog でも実行してみます。
+
+起動はこんな感じ
+
+>||
+$ plackup -E production -s Starlet -e 'enable AxsLog' test.psgi
+||<
+
+結果は
+
+>||
+Requests per second:    1221.42 [#/sec] (mean)
+||<
+
+まぁまぁ高速になっているんじゃないでしょうか。サーバを介しないベンチマークでは3倍から4倍ほど高速になっています。
+
+アプリケーションサーバでアクセスログを出力する必要があるかどうかというのは議論があるところだと思うのですが、問題が起きた際の調査に役に立つ事があるというのも事実。AxsLog と拙作の File::RotateLogs を使うと負荷も少なくログファイルの世代管理もできるのでオススメです。
+
+>|perl|
+use File::RotateLogs;
+use Plack::Builder;
+ 
+my $rotatelogs = File::RotateLogs->new(
+    logfile => '/path/to/access_log.%Y%m%d%H%M',
+    linkname => '/path/to/access_log',
+    rotationtime => 3600,
+    maxage => 86400, #1day
+);
+ 
+builder {
+    enable 'AxsLog',
+      combined => 1,
+      response_time => 1,      
+      logger => sub { $rotatelogs->print(@_) };
+    $app;
+};
+||<
+
+以上、All your psgi are belong to me、kazeburoでした。
+
