@@ -42,13 +42,15 @@ function foo(){
 					<div id="alpha-inner">
 
 						<ul>
-							[% FOR entry IN entries %]
-								[% IF entry.exists %]
-									<li><a href="[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]">[% entry.date.strftime('%Y-%m-%d(%a)') %] [% entry.title %]</a></li>
-								[% ELSE %]
-									<li>[% entry.date.ymd %]</li>
+							<ul>
+								[% FOR entry IN entries %]
+									[% IF entry.exists %]
+										<li class="text-indent">[% format_date(entry.date) %] <a href="[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]">[% entry.title %]</a> <img src="http://b.hatena.ne.jp/entry/image/[% uri_for(year _ '/' _ name _ '/' _ entry.date.mday) %]" alt="B!" /></li>
+									[% ELSE %]
+										<li class="text-indent">[% format_date(entry.date) %]</li>
+									[% END %]
 								[% END %]
-							[% END %]
+							</ul>
 						</ul>
 
 						<style>
