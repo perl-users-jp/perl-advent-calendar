@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
 <head profile="http://purl.org/net/ns/metaprof">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" />
+    <link rel="stylesheet" href="http://bootswatch.com/cerulean/bootstrap.css" media="all" />
     <title>[% conf.title %] [% name | ucfirst %] Track</title>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="[% uri_for(year _ '/' _ name _ '/rss') %]" />
 <script type="text/javascript">
@@ -30,59 +30,65 @@ function foo(){
 <div id="container">
     <div id="container-inner" class="pkg">
 
-        <div id="banner">
-            <div id="banner-inner" class="pkg">
-                <h1 id="banner-header">[% title %] - <a href="[% uri_for( year _ '/' ) %]">[% conf.title %]</a> <a href="[% uri_for( year _ '/' _ name _ '/') %]">[% name | ucfirst %] Track</a></h1>
-                <p id="banner-description">[% conf.description %]</p>
+        <div id="banner" class="navbar">
+            <div id="banner-inner" class="pkg navbar-inner">
+                <div id="banner-header">[% title %] - <a href="[% uri_for( year _ '/' ) %]">[% conf.title %]</a> <a href="[% uri_for( year _ '/' _ name _ '/') %]">[% name | ucfirst %] Track</a></div>
+				<div class="nav-collapse">
+					<ul class="nav" id="main-menu-left">
+						<li>[% conf.description %]</li>
+					</ul>
+				</div>
             </div>
         </div>
     </div>
 
-    <div id="pagebody">
-        <div id="pagebody-inner">
-            <div id="alpha">
-                <div id="alpha-inner">
+    <div id="pagebody" class="container">
+		<div class="row">
+        	[% INCLUDE 'include/sidemenu.html' %]
+			<div id="pagebody-inner" class="span8">
+				<div id="alpha">
+					<div id="alpha-inner">
 
-                    <table border="1" class="calendar">
-                        <tr>[% FOR week IN ["日", "月", "火", "水", "木", "金", "土"] %]<th>[% week %]</th>[% END %]</tr>
-                    [% FOR row IN calendar.rows %]
-                        <tr>
-                        [% FOR col IN row.cols %]
-                            <td class="cell">
-                                [% IF col.exists %]
-                                    [% col.date.mday %]<br /><a class="article-title" href="[% uri_for(year _ '/' _ name _ '/' _ col.date.mday) %]" title="[% col.title %]">[% col.title %]</a><br />
-                                    <img src="http://b.hatena.ne.jp/entry/image/[% uri_for(year _ '/' _ name _ '/' _ col.date.mday) %]" alt="B!" />
-                                [% ELSE %]
-                                    [% col.date.mday %]
-                                [% END %]
-                            </td>
-                        [% END %]
-                        </tr>
-                    [% END %]
-                    </table>
+						<table border="1" class="calendar">
+							<tr>[% FOR week IN ["日", "月", "火", "水", "木", "金", "土"] %]<th>[% week %]</th>[% END %]</tr>
+                    	[% FOR row IN calendar.rows %]
+							<tr>
+							[% FOR col IN row.cols %]
+								<td class="cell">
+									[% IF col.exists %]
+										[% col.date.mday %]<br /><a class="article-title" href="[% uri_for(year _ '/' _ name _ '/' _ col.date.mday) %]" title="[% col.title %]">[% col.title %]</a><br />
+										<img src="http://b.hatena.ne.jp/entry/image/[% uri_for(year _ '/' _ name _ '/' _ col.date.mday) %]" alt="B!" />
+									[% ELSE %]
+										[% col.date.mday %]
+									[% END %]
+								</td>
+							[% END %]
+							</tr>
+						[% END %]
+						</table>
 
-                    <style>
-                        .article-title {
-                            overflow: hidden;
-                        }
-                        .calendar th {
-                            background-color: lightgray;
-                        }
-                        .cell {
-                            background-color: white;
-                            word-break: break-all;
-                            font-size: 8pt !important;
-                            width: 70px !important;
-                            height: 70px !important;
-                            vertical-align: top;
-                        }
-                    </style>
+						<style>
+							.article-title {
+								overflow: hidden;
+							}
+							.calendar th {
+								background-color: lightgray;
+							}
+							.cell {
+								background-color: white;
+								word-break: break-all;
+								font-size: 8pt !important;
+								width: 70px !important;
+								height: 70px !important;
+								vertical-align: top;
+							}
+						</style>
 
-                    <br />
-                    <a href=".">一覧で表示</a>
+						<br />
+						<a href=".">一覧で表示</a>
+                	</div>
                 </div>
             </div>
-        [% INCLUDE 'include/sidemenu.html' %]
         </div>
     </div>
 </div>
