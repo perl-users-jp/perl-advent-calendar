@@ -70,8 +70,7 @@ $(function() {
 			var year = tmp.pop();
 			var date = year + '/12/' + (day < 10 ? '0' + day : day);
 			var li = $('<li/>').appendTo(c);
-			$('<span/>').text(date).appendTo(li);
-			$('<a/>').text(title).attr('href', url).appendTo(li);
+			li.append($('<span/>').text(date)).append(' ').append($('<a/>').text(title).attr('href', url));
 		});
 	});
 });
