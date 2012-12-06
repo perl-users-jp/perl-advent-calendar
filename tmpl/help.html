@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
 <head profile="http://purl.org/net/ns/metaprof">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" />
+    <link rel="stylesheet" href="http://bootswatch.com/cerulean/bootstrap.css" media="all" />
     <title>[% title %] - [% year %] advent calendar [% name %]</title>
 <!--
     <link rel="alternate" type="application/rss+xml" title="RSS" href="http://perl-users.jp/articles/advent-calendar/2009/hacker/index.xml" />
@@ -12,6 +12,7 @@
 <meta http-equiv="Content-Script-Type" content="text/javascript" />
 <script type="text/javascript" src="http://google-code-prettify.googlecode.com/svn/trunk/src/prettify.js"></script>
 <script type="text/javascript" src="http://perl-users.jp/articles/advent-calendar/adventcal2009.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script type="text/javascript" src="http://s.hatena.ne.jp/js/HatenaStar.js"></script>
 <script type="text/javascript">
     Hatena.Star.SiteConfig = { entryNodes: { 'div.entry': { uri: 'document.location', title: 'document.title', container: 'h1.entry-header' } } };
@@ -31,18 +32,24 @@
 <div id="container">
     <div id="container-inner" class="pkg">
 
-        <div id="banner">
-            <div id="banner-inner" class="pkg">
-                <h1 id="banner-header">[% title %] - [% year %] advent calendar [% name %]</h1>
-                <p id="banner-description">Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</p>
+        <div id="banner" class="navbar">
+            <div id="banner-inner" class="pkg navbar-inner">
+                <div id="banner-header" class="brand">[% title %] - [% year %] advent calendar [% name %]</div>
+				<div class="nav-collapse">
+					<ul class="nav" id="main-menu-left">
+						<li>Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</li>
+					</ul>
+				</div>
             </div>
         </div>
     </div>
 
-    <div id="pagebody">
-        <div id="pagebody-inner">
-            <div id="alpha">
-                <div id="alpha-inner">
+    <div id="pagebody" class="container">
+		<div class="row">
+        	[% INCLUDE 'include/sidemenu.html' %]
+			<div id="pagebody-inner" class="span8">
+				<div id="alpha">
+					<div id="alpha-inner">
 
 
 <div class="entry">
@@ -59,10 +66,10 @@
 </div>
 
 
+                	</div>
                 </div>
             </div>
         </div>
-        [% INCLUDE 'include/sidemenu.html' %]
     </div>
 </div>
 </body>
