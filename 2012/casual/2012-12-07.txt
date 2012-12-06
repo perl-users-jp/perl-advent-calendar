@@ -259,7 +259,7 @@ insert into foo (id, name) values (3, 'kan');
 というテーブルを作成し、ブラウザからアクセスすると
 
 >>
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2012/casual/2011-12-07/image01.png" alt="alonesns1" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2012/casual/2012-12-07/image01.png" alt="alonesns1" />
 <<
 
 という風に表示されます。そしてシェルから curl で、拡張子 json を付けてアクセスして見ましょう。
@@ -463,7 +463,7 @@ update_statuses は発言一覧を取得し、コンテナに表示していま�
 適当な CSS を付ければ以下の様な画面が出来上がりました。
 
 >>
-<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2012/casual/2011-12-07/image02.png" alt="alonesns2" />
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2012/casual/2012-12-07/image02.png" alt="alonesns2" />
 <<
 
 いいですね！シュールですね！そして簡単ですね！
