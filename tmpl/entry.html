@@ -64,7 +64,13 @@ $(function() {
 		$("item", x).each(function(x) {
 			var title = $("title", this).text();
 			var url = $("link", this).text();
+			var tmp = url.split('/');
+			var day = tmp.pop();
+			var track = tmp.pop();
+			var year = tmp.pop();
+			var date = year + '/12/' + (day < 10 ? '0' + day : day);
 			var li = $('<li/>').appendTo(c);
+			$('<span/>').text(date).appendTo(li);
 			$('<a/>').text(title).attr('href', url).appendTo(li);
 		});
 	});
