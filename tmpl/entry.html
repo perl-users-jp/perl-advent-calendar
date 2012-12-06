@@ -58,8 +58,9 @@ $(function() {
 		}
 	})();
 
-	var c = $('<ul/>').appendTo('#beta');
 	$.get("rss", function(x) {
+		$('<h2/>').addClass('module-header').text('Entries').appendTo('#beta');
+		var c = $('<ul/>').appendTo('#beta');
 		$("item", x).each(function(x) {
 			var title = $("title", this).text();
 			var url = $("link", this).text();
