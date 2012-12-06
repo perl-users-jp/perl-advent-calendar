@@ -30,7 +30,7 @@
     Hatena.Star.SiteConfig = { entryNodes: { 'div.entry': { uri: 'a.permalink', title: 'h1.entry-header', container: 'h1.entry-header' } } };
 </script>
 <script type="text/javascript">
-function foo(){
+$(function() {
 	var node;
 	if( document.location.href.match( /\/sym\/\d*$/ ) ){
 		node = document.getElementById("banner-description");
@@ -57,7 +57,17 @@ function foo(){
 			}
 		}
 	})();
-}
+
+	var c = $('<ul/>').appendTo('#beta');
+	$.get("rss", function(x) {
+		$("item", x).each(function(x) {
+			var title = $("title", this).text();
+			var url = $("link", this).text();
+			var li = $('<li/>').appendTo(c);
+			$('<a/>').text(title).attr('href', url).appendTo(li);
+		});
+	});
+});
 </script>
 
 <style type="text/css">
@@ -70,7 +80,7 @@ function foo(){
 </style>
 
 </head>
-<body class="layout-two-column-right" onload="javascript:foo()">
+<body class="layout-two-column-right">
 <div id="container">
     <div id="container-inner" class="pkg">
 

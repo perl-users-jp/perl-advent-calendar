@@ -8,7 +8,7 @@
     <link rel="alternate" type="application/rss+xml" title="RSS" href="[% uri_for(year _ '/' _ name _ '/rss') %]" />
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script type="text/javascript">
-function foo(){
+$(function() {
     var node;
     if( document.location.href.match( /\/sym\// ) ){
         node = document.getElementById("banner-description");
@@ -24,10 +24,10 @@ function foo(){
                 elem.innerHTML = elem.innerHTML.split('').join('<wbr />');
         }
     }
-}
+});
 </script>
 </head>
-<body class="layout-two-column-right" onload="javascript:foo()">
+<body class="layout-two-column-right">
 <div id="container">
     <div id="container-inner" class="pkg">
 
