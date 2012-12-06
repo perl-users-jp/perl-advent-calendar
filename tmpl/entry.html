@@ -73,6 +73,15 @@ $(function() {
 			li.append($('<span/>').text(date)).append(' ').append($('<a/>').text(title).attr('href', url));
 		});
 	});
+    $(function () {
+        var n = document.getElementById('rolling');
+        var r = 0, s = 1;
+        setInterval(function() {
+                var trans = 'rotate(' + r + 'deg) scale(' + s + ',' + s + ')';
+                    n.setAttribute('style', '-moz-transform:' + trans +'; -webkit-transform:' + trans + '; -ie-transform:' + trans + '; transform:' + trans);
+                        r += .8; s += .01;
+        }, 100);
+    });
 });
 </script>
 
@@ -162,7 +171,6 @@ $(function() {
         <a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
     </div>
 </div>
-
 
                 	</div>
                 </div>

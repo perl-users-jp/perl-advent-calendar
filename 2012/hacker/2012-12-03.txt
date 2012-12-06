@@ -3,4 +3,4 @@ meta-author: gfx
 meta-tags: perl
 
 ここは @__gfx__ の記事建設予定地です。
-<img src="http://a0.twimg.com/profile_images/2788742131/bd31d4c5ff720790ec8b8f24cc4f5eb1.jpeg">
+<img src="http://a0.twimg.com/profile_images/2788742131/bd31d4c5ff720790ec8b8f24cc4f5eb1.jpeg" id="rolling">
