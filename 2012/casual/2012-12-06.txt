@@ -1,0 +1,100 @@
+CPANなにこれモジュール集
+meta-author: akiym
+meta-tags: perl
+
+みなさんこんにちは。[http://twitter.com/akiym:title=akiym]です。
+2012年に初めてリリースされたモジュールの中で思わず「なにこれ」と言ってしまうモジュールを独自の判断で選定しました。残念ながらこの記事はあなたの役に立たないものとなっています。
+
+**thanks - そのモジュール、お断りします（ ﾟωﾟ )
+
+https://metacpan.org/module/thanks
+
+ありがとうの感謝の気持ちを伝えるモジュールかと思いきや、 no thanks するために生まれたモジュール。
+以下のコードのように同じスクリプト内で宣言されたパッケージをuseすると Can't locate Foo.pm in @INC と怒られますね。
+これを可能にするのがthanksです。ちゃんとuseできるようになり、->importも呼ばれるようになっています。
+>|perl|
+package Foo;
+# no thanks;
+
+sub new { ... }
+
+package main;
+use Foo;
+||<
+このモジュールの作者はTOBYINK。ひときわ目立つモジュールをリリースし続けています。ぜひともチェックしておきたいですね。
+
+https://metacpan.org/author/TOBYINK
+
+** Keyword::Simple - オレオレキーワード
+
+https://metacpan.org/module/Keyword::Simple
+
+自分で新しいキーワードを追加することができるようになります。
+以下のコードはifと同じ機能を持つoopsキーワードを追加します。
+>|perl|
+BEGIN {
+    use Keyword::Simple;
+    Keyword::Simple::define 'oops' => sub {
+        my ($ref) = @_;
+        substr($$ref, 0, 0) = 'if';
+    };
+}
+
+oops (1) {
+    ...
+}
+||<
+
+** Perl::RunEND - __END__
+
+https://metacpan.org/module/Perl::RunEND
+
+付属のperl-run-endコマンドで__END__以降のコードが実行されるようになります。
+
+** JSONY - JSONにYAMLをちょこっと加えまして
+
+https://metacpan.org/module/JSONY
+
+JSONをYAMLっぽく書けるようにしたもので、Pegexで実装されています。
+>||
+plugin Server {
+  host example.com
+  port 8080
+}
+dsn "dbi:SQLite:filename=my.db"
+allow hosts [ jules sherlock kitty ]
+||<
+JSONに変換するとこんな感じ。
+>||
+[
+  "plugin", "Server", {
+    "host": "example.com",
+    "port": 8080
+  },
+  "dsn", "dbi:SQLite:filename=my.db",
+  "allow", "hosts", [ "jules", "sherlock", "kitty" ]
+]
+||<
+DJSONというものもあります。JSONYをちょっとシンプルにした感じです。
+
+https://metacpan.org/module/DJSON
+
+**コラム Mooseの大群
+
+ある人はMooseの重さに耐え切れなくなってMouseを作り、またある人はMouseよりも軽いものを求めてMooを作りました。
+その光景を見た人(特にINGY)は悪ノリを始め、Mo、Mを作ったそうな。そしてついにMousse、Moosまで登場する始末。
+
+***見分け方一覧表
+
+|*モジュール|*解説|
+|Moose|重い。依存モジュールが多く、モジュールのロードに時間がかかる。元祖。|
+|Mouse|軽い。Mooseとほぼ互換性がある。|
+|Moo|海外では割と好まれているようで、現在Mooに依存しているCPANモジュールは170近くある。|
+|Mo|MooからRoleを削って、よりシンプルに。|
+|M|非常に高速。しかし、何も機能がないためすべて自分で実装する必要がある。|
+|Mousse|チョコレートムースのように見えて、中身はMouseそのもの。Module::Installのプラグインとなっており、依存なしにMouseの機能を使うことができるようになる。|
+|Moos|モジュールに依存せず、ある程度のMooseの機能を実装したもの。perl -Moos すると…|
+
+
+いかがでしたか？本当はもっと解説するつもりでしたが、時間が足りませんでした :)
+明日は mattn さんです。お楽しみに。

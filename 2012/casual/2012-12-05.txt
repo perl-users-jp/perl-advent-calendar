@@ -1,0 +1,117 @@
+Dropbox上のMarkdownテキストをプレビューしちゃえ！
+meta-author: yusukebe
+meta-tags: perl
+
+こんにちは。先日、調べものをしてたらいつの間にかインナーに着ていたT-shirtsを破っていたyusukebeです。
+
+色んなところで書いているネタな気がしますが、イマイチ良さが伝わってないのでもう一度まとめます。まず、Dropbox便利ですよね^^ PCから手元のストレージ感覚で保存したものが、クラウド？に保存され、各々のデバイスで同期される。これは素晴らしい。次に、この記事は「はてな記法」で書かれていますが、僕は最近もっぱら「Markdown記法」で文章を書いていて、シンプルで見やすく素晴らしい。となると「Markdownの文章をDropboxに保存して共有」なんてユースケースは割とあるのではないでしょうかね？
+
+Markdownを使っていて気になるのはHTMLに変換した見た目だったりしますね。Markdownはプレーンな状態とレンダリング後の見た目の差異が少ない感じ... というのが売りの一つですが、どうせHTMLのメタ記法で書いたのであればレンダリングされた状態をブラウザなどで確認したいものです。
+
+さて、最終的にPerlで何をやるかが分かってきそうなところで、諸々解説していきます。
+
+* MarkdownをPerlで扱う
+
+Markdown文章をHTML化するといった処理をPerlで行うにはその名も「Text::Markdown」を使っています。
+
+>|perl|
+
+use Text::Markdown qw/markdown/;
+
+||<
+
+とすると、「markdown」メソッドが使えるようになるので、Markdown記法で書かれた文字列「$text」をHTML化して「$html」に入れるには
+
+>|perl|
+
+my $html = markdown($text);
+
+||<
+
+とすればOKです。
+
+* DropboxのAPIをプライベートで使用する
+
+DropboxにはAPIがあって、それを配布用のソフトウェアなどに組み込むことが出来ます。詳しくはこちらのページに載っています。
+
+- https://www.dropbox.com/developers
+
+で、これ、基本的にはユーザーがOAuthでログインして、ユーザーのDropbox領域をアプリケーションが覗けるんですが、Dropbox領域「全体」を対象にアクセスするためには特別に許可されたアプリケーションではないと難しそう... が、しかし、一般的に公開していない「Development」な状態のアプリケーションならば「5アカウント」まで利用可能なのです。つまり、非公開のアプリケーションが、許可する5人までならば各々のDropbox全体にアクセスすることが出来ちゃうってことです。
+
+ってことで僕はこの「Devepment」な状態のアプリを一つつくり、それを個人や少人数での情報共有、Markdownのプレビュー用に使っていたりします。
+
+* WebService::Dropboxが便利
+
+肝心のPerlからDropboxを扱う部分ですが、これにはaskaさん作の「WebService::Dropbox」がいい感じだと思います。OAuthの認証から、ファイルの取得までやってくれます。Furlサポートしているところがナウいですね。
+
+* サンプルアプリより抜粋
+
+で、上記の技術をまとめると「Dropbox上のMarkdownテキストをブラウザでプレビューする」アプリが出来ますね。元々紹介したかったのはこれだったわけです。
+
+例えば、「Dropdown」という名前を付けて、Mojoliciousでアプリを組む場合、Markdownを含むDropbox内のコンテンツを表示させるコントローラはこのような具合になります。
+
+>|perl|
+package Dropdown::Dropbox;
+use Mojo::Base 'Mojolicious::Controller';
+use Text::Markdown qw/markdown/;
+use Encode;
+use Plack::Session;
+
+sub dropbox {
+    my $self = shift;
+
+    # $nameにはDropboxファイルへのパスが入る
+    my $name = $self->stash->{name};
+    my $dropbox = $self->app->dropbox;
+
+    # sessionにはPlack::Sessionを使用
+    my $session = Plack::Session->new( $self->req->env );
+    my $access_token = $session->get('access_token');
+    my $access_secret = $session->get('access_secret');
+    return $self->render_not_found if ( !$access_token && !$access_secret );
+
+    $dropbox->access_token($access_token);
+    $dropbox->access_secret($access_secret);
+
+    my $list = $dropbox->metadata($name) or die $dropbox->error;
+    $self->stash->{list} = $list;
+
+    if ( !$list->{is_dir} ) {
+        my $content;
+        $dropbox->files(
+            $name, sub { $content .= $_[3]; } # using Furl.
+        );
+
+        # 拡張子がMarkdownのものだったら
+        if ( $name =~ m!\.(?:md|mkdn|markdown|mkd|mark|mdown)$! ) {
+            $content = decode_utf8($content);
+            $self->stash->{markdown_html} = markdown($content);
+            return $self->render(
+                template => 'dropbox/markdown',
+                format => 'html'
+            );
+        } else {
+            $self->res->headers->content_type( $list->{mime_type} );
+            return $self->render( data => $content );
+        }
+
+    }
+    return $self->render('dropbox/list');
+}
+
+1;
+||<
+
+こうしたコントローラとビュー部分を工夫すれば、Dropbox内のコンテンツをリスト表示したり、MarkdownのコンテンツをHTMLとしてプレビューできるアプリが完成します。
+
+* ほんとに便利なの？？
+
+自分でつくったプライベートなアプリの中で一番使ってるんじゃないかってほど、この「Dropdown」と呼んでいるアプリは使っています。上記の5アカウント制限の中でも、フォルダを共有した者同士が使えば同じように原稿などをプレビューした状態で見れるので非常に便利なのです。やりようによってはMarkdownだけではなく、はてな記法やWiki記法などにも対応しますし、HTMLのメタ言語以外にも応用は効くでしょう。
+
+Dropdownアプリ自体は以下のgithubページで公開しております。
+
+- https://github.com/yusukebe/Dropdown
+
+* まとめ
+
+MarkdownとDropbox、それぞれ便利な点を挙げつつ、さらに「はかどる」ちょっとしたアプリの片鱗を紹介しました。次回のAdvent Calendarは「akiym」さんです。

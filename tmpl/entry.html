@@ -7,7 +7,7 @@
 >
 <head profile="http://purl.org/net/ns/metaprof">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <link rel="stylesheet" href="http://bulknews.typepad.com/test/styles.css" media="all" />
+    <link rel="stylesheet" href="http://bootswatch.com/cerulean/bootstrap.css" media="all" />
     <title>[% title %] - [% conf.title %] [% name | ucfirst %] Track</title>
     <link rel="alternate" type="application/rss+xml" title="RSS" href="[% uri_for(year _ '/' _ name _ '/rss') %]" />
     <link rel="stylesheet" href="http://perl-users.jp/articles/advent-calendar/prettify.css" type="text/css" media="screen" />
@@ -18,18 +18,20 @@
     <meta property="og:url"   content="[% uri_for(req.path_info) %]" />
     <meta property="og:site_name" content="[% conf.title %]" />
     <meta property="og:image" content="http://perl-users.jp/articles/advent-calendar/img/adcal2010.jpg" />
+    <link rel="canonical" href="[% uri_for(req.path_info) %]" />
     <link rel="mixi-check-image" type="image/jpeg"
           href="http://perl-users.jp/articles/advent-calendar/img/adcal2010.jpg" />
 
 <meta http-equiv="Content-Script-Type" content="text/javascript" />
 <script type="text/javascript" src="http://google-code-prettify.googlecode.com/svn/trunk/src/prettify.js"></script>
 <script type="text/javascript" src="http://perl-users.jp/articles/advent-calendar/adventcal2009.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script type="text/javascript" src="http://s.hatena.ne.jp/js/HatenaStar.js"></script>
 <script type="text/javascript">
     Hatena.Star.SiteConfig = { entryNodes: { 'div.entry': { uri: 'a.permalink', title: 'h1.entry-header', container: 'h1.entry-header' } } };
 </script>
 <script type="text/javascript">
-function foo(){
+$(function() {
 	var node;
 	if( document.location.href.match( /\/sym\/\d*$/ ) ){
 		node = document.getElementById("banner-description");
@@ -56,7 +58,32 @@ function foo(){
 			}
 		}
 	})();
-}
+
+	$.get("rss", function(x) {
+		$('<h2/>').addClass('module-header').text('Entries').appendTo('#beta');
+		var c = $('<ul/>').appendTo('#beta');
+		$("item", x).each(function(x) {
+			var title = $("title", this).text();
+			var url = $("link", this).text();
+			var tmp = url.split('/');
+			var day = tmp.pop();
+			var track = tmp.pop();
+			var year = tmp.pop();
+			var date = year + '/12/' + (day < 10 ? '0' + day : day);
+			var li = $('<li/>').appendTo(c);
+			li.append($('<span/>').text(date)).append(' ').append($('<a/>').text(title).attr('href', url));
+		});
+	});
+    $(function () {
+        var n = document.getElementById('rolling');
+        var r = 0, s = 1;
+        setInterval(function() {
+                var trans = 'rotate(' + r + 'deg) scale(' + s + ',' + s + ')';
+                    n.setAttribute('style', '-moz-transform:' + trans +'; -webkit-transform:' + trans + '; -ie-transform:' + trans + '; transform:' + trans);
+                        r += .8; s += .01;
+        }, 100);
+    });
+});
 </script>
 
 <style type="text/css">
@@ -69,24 +96,28 @@ function foo(){
 </style>
 
 </head>
-<body class="layout-two-column-right" onload="javascript:foo()">
+<body class="layout-two-column-right">
 <div id="container">
     <div id="container-inner" class="pkg">
 
-        <div id="banner">
-            <div id="banner-inner" class="pkg">
-                <h1 id="banner-header">[% title %] - <a href="[% uri_for( year _ '/' ) %]">[% conf.title %]</a> <a href="[% uri_for( year _ '/' _ name _ '/') %]">[% name | ucfirst %] Track</a></h1>
-                <p id="banner-description">[% conf.description %]</p>
+        <div id="banner" class="navbar">
+            <div id="banner-inner" class="pkg navbar-inner">
+                <div id="banner-header" class="brand">[% title %] - [% year %] advent calendar [% name %]</div>
+				<div class="nav-collapse">
+					<ul class="nav" id="main-menu-left">
+						<li>Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</li>
+					</ul>
+				</div>
             </div>
         </div>
     </div>
 
-    <div id="pagebody">
-        <div id="pagebody-inner">
-            <div id="alpha">
-                <div id="alpha-inner">
-
-
+    <div id="pagebody" class="container">
+		<div class="row">
+        	[% INCLUDE 'include/sidemenu.html' %]
+        	<div id="pagebody-inner" class="span8">
+				<div id="alpha">
+                	<div id="alpha-inner">
 <div class="entry">
     <h1 class="entry-header">[% title %]&nbsp;<a href="http://b.hatena.ne.jp/entry/[% uri_for(req.path_info) %]"><img src="http://b.hatena.ne.jp/entry/image/[% uri_for(req.path_info) %]" alt="B!" /></a></h1><br />
     <div class="entry-content">
@@ -142,11 +173,10 @@ function foo(){
     </div>
 </div>
 
-
+                	</div>
                 </div>
             </div>
         </div>
-        [% INCLUDE 'include/sidemenu.html' %]
     </div>
 </div>
 

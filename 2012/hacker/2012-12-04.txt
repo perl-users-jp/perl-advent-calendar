@@ -1,0 +1,36 @@
+Karas - 漆黒の翼
+meta-author: tokuhirom
+meta-tags: perl
+
+えーとこんにちは。tokuhirom です。
+
+hacker track の4日目ということで、なんか書かなきゃいけないなあとおもっているんですが、最近あまりモジュールとかかいてなくて、今年だしたものといえば Test::Ika, Test::Base::Lite, Test::Pretty, Module::Build::Pluggable, LWPx::ParanoidHandler ぐらいのもの。。
+
+あまりにも書くことがないので、O/R Mapper をかきました。
+
+https://github.com/tokuhirom/Karas/
+https://metacpan.org/release/TOKUHIROM/Karas-0.01
+
+Teng よりも簡素で、結構つかいやすいものになりました。
+
+- Teng みたいな connection handling
+- schema つくらなくてもつかえる
+- 行オブジェクトが Teng のインスタンスをもたない
+
+とかまあそんなかんじです。
+
+inflate とかはありません。
+
+テストケースもありません。
+
+まあなんですね。O/R Mapper に必要だなーとおもうものとかをかんがえてなんかつくりなおしてみたってかんじです。
+
+なんか一晩でかきなおせました。まあ何度もかいてますからね。なんかそういうの、hacker track っぽいですよね。
+
+しかし、O/R Mapper みたいなものは1からつくりなおすということを何度もくりかえしていると、なんか毎回ちがうものができあがるのが面白いですね。
+
+Karas にかんするおといあわせは #dbix-skinny あたりで(てきとう)
+
+ところで、O/R Mapper といえば今一番あついのが Teng ですけども、Teng の解説をこちらにアップしてあります。こちらだいぶ内容がまとまってますのでこちらもご欄くださいね。
+https://github.com/tokuhirom/teng-handbook/
+

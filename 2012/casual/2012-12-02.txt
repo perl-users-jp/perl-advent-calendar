@@ -1,0 +1,56 @@
+List::Compareで二つの配列の集合を扱うの巻
+meta-author: hirobanex
+meta-tags: perl, array
+
+こんにちは！[http://twitter.com/hirobanex:title=hirobanex]です！本日はフランクに、２つの配列の集合を良い感じに取り扱える[http://search.cpan.org/~jkeenan/List-Compare-0.37/lib/List/Compare.pm:title=List::Compare] のご紹介です。podみると、いろいろなメソッドとかオプションがあるのですが今回ご紹介するのは、
+
+- get_intersection
+- get_union
+- get_Lonly
+- get_Ronly
+
+の基本的な4つのメソッドです。
+
+** 取り扱う集合とメソッドの関係
+それぞれのメソッドの機能をコトバで説明するよりも図で説明したほうがわかりやすいのですが、ベン図のあれっていえばだいたいの方はわかると思うので、図は出しませんwというわけで、それぞれ以下のようになります。
+
+- get_intersection : 2つの配列の共通部分を取り出す
+- get_union : 2つの配列で合わせた部分を取り出す（List::MoreUtilsのuniq関数と同じ）
+- get_Lonly : 2つの配列のうち、左側側だけの部分を取り出す
+- get_Ronly : 2つの配列のうち、右側だけの部分を取り出す
+
+** サンプルコード
+左？右？何それ？って感じですが、実際の以下のサンプルをご覧頂ければ一目瞭然です。
+
+>|vim|
+use strict;
+use warnings;
+use List::Compare;
+
+use Data::Dumper;
+
+my @left  = qw/1 2 3 4/;
+my @right = qw/3 4 5 6 7 8 9/;
+
+my $lc = List::Compare->new(\@left, \@right); #このコンストラクション時に、左に入れるのか、右に入れるかが重要
+
+my @intersection = $lc->get_intersection;
+my @union        = $lc->get_union;
+my @left_only    = $lc->get_Lonly;
+my @right_only   = $lc->get_Ronly;
+
+warn Dumper \@intersection; # [3,4]
+warn Dumper \@union;        # [1,2,3,4,5,6,7,8,9]
+warn Dumper \@left_only;    # [1,2]
+warn Dumper \@right_only;   # [5,6,7,8,9]
+||<
+
+** 使いどころ
+List::Compareの実際の使いどころは、
+
+- 2つの配列が用意されいる
+- List::Compareのメソッドを2回以上使う予定だ
+
+という状態です。このモジュールを使わなくても、grepを使えば簡単に同じことができてしまいますし、いちいちnewしないといけないので、意外とコードも長くなりますので、1回くらいしか使わないのなら、知らない人が見てキモいと思わないように使わないほうがいいと思います。とわいえ、複数回使用する場合は、grepで書くよりも、モジュール名やメソッド名がわかりやすいことから、このモジュールを使ったほうが可読性が高まるし、なんか集合の取り扱いことをやりたいのねっていうのが伝わりやすいかなーという印象です。
+
+以上、本日は小粒な使っても使わなくてもいいようなモジュールのご紹介でしたーw明日は、[https://twitter.com/koba04:title=koba04]さんです！See you again!
