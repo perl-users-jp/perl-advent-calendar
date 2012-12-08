@@ -1,0 +1,175 @@
+こんなマジック知らなかった。
+meta-author: kfly8 <kentafly88@gmail.com>
+meta-tags: perl, plack
+
+はじめまして。こんにちは。[http://twitter.com/kfly8:title=kfly8]です。
+なべこたつみかんみかんみかん!黄色になった手でコードを書きます。
+年が明けたら熱海に温泉はっかそん行きたいです。
+
+
+
+コードを読んでいると
+この処理やらなくていいんじゃないか？
+ってこと、よくあると思います。
+
+
+** あるMiddlewareが変な動きをしてました
+
+>|perl|
+
+# app.psgi
+
+use strict;
+use warnings;
+use utf8;
+
+use Plack::Builder;
+
+builder {
+
+    # XXX 今回問題になってしまったSession周りを
+    # よしなにやってくれてるMiddleware
+    enable Hoge::Session => (
+        session_store => Plack::Session::Store->new( ... ),
+    );
+
+    $app;
+}
+
+1;
+
+# Hoge::Session.pm
+
+package Hoge::Session
+use strict;
+use warnings;
+use utf8;
+
+sub call {
+    my ( $self, $env ) = @_;
+
+    my %options = (
+        store => $self->session_store,;
+    );
+
+    # XXX ほんとによしなにやってるの？動いてないんじゃないか？
+    if ( $VERY_COMPLEX_CONDITION ) {
+        $options{state} = Session::State->new;
+    }
+
+    $app = Plack::Middleware::Session->wrap($app, %options);
+
+    my $res = $app->($env);
+    return $res;
+}
+
+1;
+
+||<
+
+
+<pre>
+...
+$VERY_COMPLEX_CONDITION はあまりに複雑で人が追うには限界が超えていました。
+こんな(ニッチな)問題、、、
+解決しなければ、ぐっすり寝れません。
+</pre>
+
+
+** Variable::Magic で $env の書き込み、参照を補足
+
+というわけで、今回紹介するモジュールは、[http://search.cpan.org/~vpit/Variable-Magic-0.52/lib/Variable/Magic.pm:title=Variable::Magic]です。
+前置き長くてごめんなさい。
+(教えてくれた[http://twitter.com/karupanerura:title=karupanerura]++)
+
+
+$app を1枚 wrap します。
+
+>|perl|
+
+# app.psgi
+
+use strict;
+use warnings;
+use utf8;
+
+use Plack::Builder;
+
+builder {
+
+    # XXX 問題のだめな子
+    enable Hoge::Session => (
+        session_store => Plack::Session::Store->new( ... ),
+    );
+
+    # $env のpsgix.session への書き込みと参照を補足する
+    enable sub {
+        my $app = shift;
+        sub {
+            my $env = shift;
+            use Carp qw/cluck/;
+            use Variable::Magic qw/wizard cast/;
+
+            # どんなマジックを使ってやろうか定める
+            my $wiz = wizard(
+
+                # ハッシュから参照されたときに呼び出される
+                fetch => sub {
+                    cluck 'fetched!!';
+                },
+
+                # ハッシュに書き込まれたときに呼び出される
+                store => sub {
+                    cluck 'stored!!';
+                },
+            );
+
+            # マジックと関連づける
+            cast %{ $env->{'psgix.session'} }, $wiz, '_default';
+
+            return $app->($env);
+        };
+    };
+
+    $app;
+}
+
+||<
+
+これでエラーログを見れば、書き込みと参照があったのかのびのび観測できます
+
+<pre>
+...
+これで晴れて、いらんことが分かって、
+セッションにストアする処理が無くなりました。
+めでたしめでたし。
+</pre>
+
+
+>>
+ここで、Plack::Session が、$env の psgix.session に書き込まれているものを
+指定したsession store にstoreするシンプルな仕組みであることが効いてます。
+もっと言えば、Plack::Middleware の仕様のおかげです。
+<<
+
+
+** その他の手段は
+
+tie を使っても、同じことは実現できます。
+- http://blog.livedoor.jp/dankogai/archives/51076010.html
+今回、package を作るのが面倒だったので、Variable::Magic を使ってみました。
+
+
+
+** 蛇足
+ちょうどjsのadeventカレンダーでも同じような記事があったので共有します。
+こっちはアプリケーションで使おうって話です。
+- http://d.hatena.ne.jp/jovi0608/20121206/1354762082
+
+** まとめ
+
+$env変数への書き込み、参照を補足して、プリントデバッグしてみましたという話でした。
+
+明日は、Yak!さんです。お楽しみにー。
+
+
