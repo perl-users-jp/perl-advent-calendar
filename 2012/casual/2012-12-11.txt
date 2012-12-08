@@ -1,0 +1,262 @@
+PDLで数値計算
+meta-author: hiratara
+meta-tags: perl, pdl
+
+こんにちは、週末海でマンボウを獲っていたらラギアクルスに襲われた[http://twitter.com/hiratara:title=@hiratara]です。今回は[http://pdl.perl.org/:title=Perl Data Language]について紹介します。
+
+Perl Data LanguageとはMATLABやNumpy、Rなどと同様に、多次元配列を効率よく扱って数値計算を実現するためのライブラリです。cpanmで普通にインストールすれば使えますが、グラフを描画したり本格的な数値計算のライブラリである[http://www.gnu.org/software/gsl/:title=GSL]のバインディングを利用したりする場合はhomebrewでゴニョゴニョしたりする必要があるので、多少頑張って下さい。
+
+基本的にはpdl関数でオブジェクトに変更してから使います。
+
+>|perl|
+use PDL;
+my $pdl = pdl [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+print $pdl;
+【実行結果】
+[
+ [1 0 0]
+ [0 1 0]
+ [0 0 1]
+]
+||<
+
+pdlが得意なのは、多次元配列内の要素の一括処理です。
+
+>|perl|
+$pdl += 1;
+print $pdl;
+【実行結果】
+[
+ [2 1 1]
+ [1 2 1]
+ [1 1 2]
+]
+||<
+
+>|perl|
+$pdl = asin ($pdl / 2);
+print $pdl;
+【実行結果】
+[
+ [ 1.5707963 0.52359878 0.52359878]
+ [0.52359878  1.5707963 0.52359878]
+ [0.52359878 0.52359878  1.5707963]
+]
+||<
+
+様々な方法で多次元配列を作ることもできます。
+
+>|perl|
+my $zero = zero 4, 2, 3;
+my $iter = iterate 4, 2, 3;
+print $zero;
+print $iter;
+【実行結果】
+[
+ [
+  [0 0 0 0]
+  [0 0 0 0]
+ ]
+ [
+  [0 0 0 0]
+  [0 0 0 0]
+ ]
+ [
+  [0 0 0 0]
+  [0 0 0 0]
+ ]
+]
+
+[
+ [
+  [0 1 2 3]
+  [4 5 6 7]
+ ]
+ [
+  [ 8  9 10 11]
+  [12 13 14 15]
+ ]
+ [
+  [16 17 18 19]
+  [20 21 22 23]
+ ]
+]
+||<
+
+pdlコマンドというshellも着いてるので、結果を確認しながら計算を進めることもできます。
+
+>|perl|
+% pdl
+perlDL shell v1.354_001
+...
+pdl> $x = grandom 100000
+
+pdl> p avg $x
+-0.000427235348789782
+pdl> use PDL::Stats
+
+pdl> p $x->var
+0.998671207190908
+pdl> $h = histogram $x, 0.1, -4, 80
+||<
+
+グラフも出力できます。
+
+>|perl|
+pdl> use PDL::Graphics::PGPLOT
+ Graphics device/type (? to see list, default /NULL): ?
+ PGPLOT v5.2.2 Copyright 1997 California Institute of Technology
+ Interactive devices:
+    /XWINDOW   (X window window@node:display.screen/xw)
+    /XSERVE    (A /XWINDOW window that persists for re-use)
+ Non-interactive file formats:
+    /GIF       (Graphics Interchange Format file, landscape orientation)
+    /VGIF      (Graphics Interchange Format file, portrait orientation)
+    /LATEX     (LaTeX picture environment)
+    /NULL      (Null device, no output)
+    /PNG       (Portable Network Graphics file)
+    /TPNG      (Portable Network Graphics file - transparent background)
+    /PS        (PostScript file, landscape orientation)
+    /VPS       (PostScript file, portrait orientation)
+    /CPS       (Colour PostScript file, landscape orientation)
+    /VCPS      (Colour PostScript file, portrait orientation)
+ Graphics device/type (? to see list, default /NULL): /XWINDOW
+pdl> line $h->xlinvals(-4, 4), $h
+line: xmin=-4; xmax=; ymin=1; ymax=4034
+||<
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2012/casual/2012-12-11/graph.png" />
+
+**ベンチマークをとってみる
+
+PDLを使うと何が嬉しいかというと、高速でかつメモリをほとんど使わないことです。生のC配列のような振る舞いをするのだから当然ですね。
+
+では、一応比べてみましょう。grandomで正規分布に従う乱数を100万個用意し、その分散を求めて速度を比べてみます。
+
+>|perl|
+use strict;
+use warnings;
+use Benchmark qw(cmpthese);
+use PDL;
+use PDL::Stats;
+
+sub variance_pp($) {
+    my $ref = shift;
+
+    my $sum = 0;
+    $sum += $_ for @$ref;
+
+    my $sum2 = 0;
+    $sum2 += $_ ** 2 for @$ref;
+
+    $sum2 / @$ref - ($sum / @$ref) ** 2;
+}
+
+sub variance_pdl($) {
+    my $data = shift;
+    sum($data ** 2) / $data->getdim(0) - ((sum $data) / $data->getdim(0)) ** 2;
+}
+
+my $data = grandom 1_000_000;
+my @data = list $data;
+
+print variance_pp \@data , "\n";
+print variance_pdl $data , "\n";
+print $data->var, "\n";
+
+cmpthese(100, {
+    'pp'  => sub { variance_pp \@data },
+    'pdl' => sub { variance_pdl $data },
+    'pdl_v' => sub { $data->var },
+});
+【実行結果】
+            (warning: too few iterations for a reliable count)
+        Rate    pp   pdl pdl_v
+pp    5.29/s    --  -87%  -98%
+pdl   41.0/s  675%    --  -86%
+pdl_v  303/s 5630%  639%    --
+||<
+
+Pure Perlで書くと50ms超えでdieされて悲しい目に遭うことが予想されますが、PDLを使えば25msほどで処理できるので穏便に済みます。しかも、配列内の値を一度に操作できるので記述も非常に簡単です。PDL::Statsで用意されているvarメソッドに至っては、全ての計算をPDL内で済ませるので圧倒的速度になってますね。
+
+**さらに巨大な配列
+
+[http://qiita.com/items/f479744bed8633338fb5:title=Perlの配列の添字は32bitまでらしい]ですが、PDLではそれ以上でも使えます。デフォルトでは30bitまで扱えます。
+
+>|perl|
+% perl -MPDL -e 'my $x = zeroes byte, 2 ** 30; print $x->slice(2 ** 30 - 1), "\n";'
+[0]
+||<
+
+それ以上の大きさを扱いたい場合は、$PDL::BIGPDLをセットするとよいでしょう。
+
+>|perl|
+% perl -MPDL -e 'my $x = zeroes byte, 2 ** 30 + 1; print $x->slice(2 ** 30), "\n";'
+Probably false alloc of over 1Gb PDL! (set $PDL::BIGPDL = 1 to enable) at Basic/Core/Core.pm.PL (i.e. PDL::Core.pm) line 854.
+% perl -MPDL -e '$PDL::BIGPDL = 1; my $x = zeroes byte, 2 ** 30 + 1; print $x->slice(2 ** 30), "\n";'
+[0]
+||<
+
+**PDLで画像操作
+
+PDLはメモリ効率が非常によいので、画像を丸っと取り込んでピクセル単位で弄るという操作にも向いています。以下のプログラムは色のついた画像を読み込んで白黒の画像になるようピクセル変換をするものです。
+
+>|perl|
+use PDL;
+use PDL::IO::Pic qw(rpic wpic);
+
+my $pdl = rpic "bd31d4c5ff720790ec8b8f24cc4f5eb1.jpeg";
+
+# show 5x5 pixels
+print $pdl->slice(":,0:4,0:4"), "\n";
+
+# Grayscale
+$pdl = inner $pdl, pdl [1/3, 1/3, 1/3];
+wpic $pdl, "fujisan.jpeg";
+【実行結果】
+[
+ [
+  [20 14 18]
+  [22 16 20]
+  [22 16 20]
+  [20 14 18]
+  [20 14 18]
+ ]
+ [
+  [20 14 18]
+  [22 16 20]
+  [22 16 20]
+  [21 15 19]
+  [20 14 18]
+ ]
+ [
+  [19 13 17]
+  [22 16 20]
+  [23 17 21]
+  [21 15 19]
+  [20 14 18]
+ ]
+ [
+  [18 12 16]
+  [21 15 19]
+  [23 17 21]
+  [21 15 19]
+  [20 14 18]
+ ]
+ [
+  [17 11 15]
+  [19 13 17]
+  [21 15 19]
+  [22 16 20]
+  [21 15 19]
+ ]
+]
+||<
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2012/casual/2012-12-11/fujisan.jpeg" />
+
+非常に簡単ですね！
+
+**まとめ
+
+PDLを使えば、様々な数値計算をPerl上で実現することができます。自分ではまだ試してませんが、ドキュメントを見ると積分や各種検定を行う関数も実装されてそうです。この分野では近年PythonのNumPyとSciPyを使う方が非常に多いですが、Perlの方が得意であればPDLを使うというのもよい選択肢になるでしょう。
