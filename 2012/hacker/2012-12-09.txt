@@ -38,7 +38,7 @@ use strict;
 use Log::Minimal;
 use Scope::Guard ();
 
-mu $guard = Scope::Guard->new(sub {
+my $guard = Scope::Guard->new(sub {
     infof("$$ Scope guard fired!");
 });
 sleep 1;
