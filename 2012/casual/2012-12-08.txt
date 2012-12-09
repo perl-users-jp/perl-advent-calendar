@@ -147,8 +147,8 @@ builder {
 
 
 >>
-ここで、Plack::Session が、$env の psgix.session に書き込まれているものを
-指定したsession store にstoreするシンプルな仕組みであることが効いてます。
+Plack::Session が、$env->{'psgix.session'} をSession Storeに
+入れるシンプルな仕組みであることが効きます。
 もっと言えば、Plack::Middleware の仕様のおかげです。
 <<
 
