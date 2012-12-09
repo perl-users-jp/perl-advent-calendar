@@ -1,0 +1,184 @@
+Module::AnyEvent::Helper::Filter と filtered のご紹介
+meta-author: yak_ex <yakex@cpan.org>
+meta-tags: perl, AnyEvent, source filter
+
+多くの方には初めましてだと思います。数ヵ月前に [http://search.cpan.org/~yakex:title=CPAN Author] になりました [http://twitter.com/yak_ex:title=@yak_ex] と申します。
+
+非同期イベント処理フレームワークである [http://search.cpan.org/perldoc?AnyEvent:title=AnyEvent] に対して既存モジュールを AnyEvent 化するための支援モジュール [http://search.cpan.org/perldoc?Module%3A%3AAnyEvent%3A%3AHelper%3A%3AFilter:title=Module::AnyEvent::Helper::Filter] とそこで使用している [http://search.cpan.org/perldoc?filtered:title=filtered] モジュールについてご紹介したいと思います((偉そうに書いていますが AnyEvent 自体が初心者なので全く頓珍漢なことを書いている可能性があります))。まず、既存モジュールの AnyEvent 化について望ましいと考えるインタフェースについて述べ、その後、AnyEvent 化するためのコードの書き換えについて、さらに、これを大きく自動化するためのモジュールについて述べます。なお以下のコード断片では関数のように記述されていますが実際にはメソッドだと考えてください。
+
+*既存モジュールの AnyEvent 化について望ましいと思われるインタフェース
+
+新しく AnyEvent に対応したモジュールを作成するならば、通常はイベントドリブン形式、つまりあるイベントが発生した場合にコールバック関数が呼び出される、という形にするのが自然だと思われます。一方で、既存モジュールを AnyEvent に対応させたい、という場合にはできるだけ既存と同じインタフェースにしたい、というのは自然な要求だと思われます。しかし、全く同じインタフェース(だけ)にする、というのは大抵不可能です。多くのメソッドには処理が完了した結果として戻ってくる戻り値があります。AnyEvent は非同期処理なので普通は処理の完了を待ちません。完了したらコールバック関数を呼ぶ、が基本です。ということで同じインタフェースを実現するためには処理の完了を待つ必要があります。これは通常、condition variable に対する recv として行われます。
+
+>|perl|
+sub func
+{
+    my $cv = callee_async();
+    # Maybe some processing ...
+    $cv->recv; # Blocking wait
+    return $ret;
+}
+||<
+
+このコードそのものには問題はありません。しかしこんなコードを書くと、
+
+>|perl|
+use AnyEvent;
+
+sub callee_async
+{
+    my $cv = AE::cv;
+    my $w; $w = AE::timer 2, 0, sub { undef $w; $cv->send };
+    return $cv;
+}
+
+sub func
+{
+    my $cv = callee_async();
+    # Maybe some processing ...
+    $cv->recv;
+    return $ret;
+}
+
+my $w; $w = AE::timer 3, 0, sub { func(); undef $w; }; # called in callback
+
+AE::cv->recv;
+||<
+
+>|
+EV: error in callback (ignoring): AnyEvent::CondVar: recursive blocking wait attempted at ae.pl line 14.
+|<
+
+と怒られてしまいます。これは末尾の AE::cv->recv で blocking wait している最中に再度 recv で blocking wait しているためです。実質 func() をコールバック内で呼び出すことができない、ということになり AnyEvent 化した意味が薄くなります。解決策の一つとしては [http://search.cpan.org/perldoc?Coro:title=Coro] を使うことなのですが、Coro 無しに使えないなら AnyEvent::* じゃなくて Coro::* じゃね？、という気になるわけです。
+
+とはいえ、既存モジュールと同一のインタフェースを残しておきたい、というのもわかるので、既存モジュールを(インタフェースを保ったまま) AnyEvent 化するならば、以下のようにするべきではないか、と考えています。
+
+- 既存モジュールと同じ引数、戻り値のインタフェースは残す
+- 非同期処理させたいメソッドについては、condition variable を返すインタフェースを追加する
+
+>|perl|
+sub func       { ... return $ret; }
+sub func_async { my $cv = AE::cv; ... $cv->send($ret); return $cv; }
+||<
+
+後者には _async をメソッド名に付与し、async メソッドと勝手に呼んでいます。
+
+*AnyEvent 化するためのコードの書き換え
+
+さて、func() は func_async() で実装可能です。
+
+>|perl|
+sub func { return func_async(@_)->recv; }
+||<
+
+また、func() を呼び出していたメソッドは func_async() を呼び出すように書き換えることで async 化が可能です。
+
+>|perl|
+sub caller
+{
+    my $ret = func();
+    # some processing
+    return $ret;
+}
+
+sub caller_async
+{
+    my $cv = AE::cv;
+    func_async()->cb(sub {
+        my $ret = shift->recv;
+        # some processing
+        $cv->send($ret);
+    });
+    return $cv;
+}
+||<
+
+つまり、my $cv = AE::cv; と return $cv; で囲み、func() 呼び出し部分を shift->recv に置き換えた上で以降のコードを全てコールバックに押し込む。return は send に置き換え、という形です。いちいち return を send に置き換えるのが面倒なので次のようにすることもできます。渡された引数をそのまま渡し、返ってきた値を send する closure で包んでいるだけです。
+
+>|perl|
+sub caller_async
+{
+    my $cv = AE::cv;
+    func_async()->cb(sub { $cv->send(sub {
+        my $ret = shift->recv;
+        # some processing
+        return $ret;
+    }->(shift))});
+    return $cv;
+}
+||<
+
+さて、この方針(_async への書き換えと、_async からの _async 無しの生成)でモジュールを書き換えているとかなり機械的で「これって目の前の箱にやらせるべき処理なんじゃね？」という気になってきます。なんとかならないでしょうか？
+
+*書き換えの自動化
+
+Perl には source filter という機能があります。parser に渡る前の source に対して filter をかけられる機能です((Lisp のリーダーマクロみたいなもの、と言うと Lisper の方に怒られるかも))。例えば↓の例では use Rot13; の後は [http://ja.wikipedia.org/wiki/ROT13:title=ROT13] した結果が parser に渡されることになります。
+
+>|perl|
+# see perldoc perlfilter
+# print "hello fred\n"; is encrypted
+use Rot13;
+cevag "uryyb serq\a";
+||<
+
+filter では任意の変換を実施することができるのですが、普通、自分の書くコードに use して適用するものであって外部のコードに適用するものではありません。この外部コードに対する source filter の適用を実現したモジュールが拙作 filtered です。
+
+>|perl|
+use filtered by => 'YourFilter', as => 'FilteredTarget', on => 'Target';
+my $obj = FilteredTarget->new;
+||<
+
+これで Target というモジュールに対して YourFilter という source filter を適用した結果を FilteredTarget というモジュール名で使用することが出来ます。
+
+これは [http://perldoc.perl.org/functions/require.html:title=perldoc -f require] に書かれている @INC hook という機能を使用しています。@INC はモジュール検索パスを指定するものですが、実はこれに code reference 等を設定することができ、それによってモジュール読み込み時の挙動を変更することができるのです。実際には、Target.pm を読み込む際にファイル先頭に use YourFilter; を埋め込み、かつモジュール名を置き換える(Target -> FilteredTarget)ことで実現しています。
+
+さて、外部モジュールに対してコードの書き換えを行う手段ができましたので、既存モジュールの AnyEvent 化支援モジュールが書けるようになりました。これが Module::AnyEvent::Helper::Filter です((実際には上記コードだけではなくてネストした場合の対応や例外の処理なども追加しています))。実際に [http://search.cpan.org/perldoc?Net%3A%3AAmazon%3A%3AS3:title=Net::Amazon::S3] に対して適用したものが [http://search.cpan.org/perldoc?AnyEvent%3A%3ANet%3A%3AAmazon%3A%3AS3:title=AnyEvent::Net::Amazon::S3] で例えば以下のようなコードになっています(use strict; 等、一部省略していますが基本これだけです)。
+
+>|perl|
+package AnyEvent::Net::Amazon::S3;
+
+sub list_bucket_all_async { ... }
+
+use Module::AnyEvent::Helper::Filter -as => __PACKAGE__, -target => 'Net::Amazon::S3',
+        -transformer => 'Net::Amazon::S3',
+        -remove_func => [qw(list_bucket_all)],
+        -translate_func => [qw(buckets add_bucket delete_bucket list_bucket add_key get_key head_key delete_key _send_request _do_http _send_request_expect_nothing _send_request_expect_nothing_probed)],
+        -replace_func => [qw(request)]
+;
+
+1;
+||<
+
+Net::Amazon::S3 の filter 結果を AnyEvent::Net::Amazon::S3 として使うことを指定しています。
+自分のモジュール名だけではなく別のモジュール名も置き換える必要があるので、追加の変換モジュールを指定しています(-transformer => 'Net::Amazon::S3' とすると Module::AnyEvent::Helper::PPI::Transform::Net::Amazon::S3 が変換モジュールとして使用されます)。変換モジュールは [http://search.cpan.org/perldoc?PPI%3A%3ATransform:title=PPI::Transfrom] のサブクラスです。もともと Net::Amazon::S3 は [http://search.cpan.org/perldoc?LWP%3A%3AUserAgent:title=LWP::UserAgent] を使用していますので、これを [http://search.cpan.org/perldoc?AnyEvent%3A%3AHTTP%3A%3ALWP%3A%3AUserAgent:title=AnyEvent::HTTP::LWP::UserAgent] に置き換えることで AnyEvent 化の第一歩が実現できます。
+
+list_bucket_all については内部に単純に変換できないループがあるため list_bucket_all_async を別途記述した上でそこから list_bucket_all を生成しています。フィルタとしては元々の list_bucket_all の実装を削除すればよいので -remove_func で指定します。
+Net::Amazon::S3 内のメソッド定義に対して前述のような _async への書き換えを行うメソッドを -translate_func で指定します(実際の置き換え処理は [http://search.cpan.org/perldoc?PPI:title=PPI] を利用しています((回りくどい使い方になっていてもっといい使い方があると思うのですがどなたか参考情報でも良いので教えて欲しいです)))。
+
+ -replace_func は AnyEvent::Net::S3 内のメソッドではないけれどもその呼び出しを _async への呼び出しに置き換えるメソッドを指定します。実際にはこれで LWP::UserAgent::request が []AnyEvent::HTTP::LWP::UserAgent::request_async[] に置き換わることで AnyEvent 化の主要部分が完了しています。
+
+>|perl|
+package AnyEvent::Net::Amazon::S3::Client::Bucket;
+
+use Module::AnyEvent::Helper::Filter -as => __PACKAGE__, -target => 'Net::Amazon::S3::Client::Bucket',
+        -transformer => 'Net::Amazon::S3::Client::Bucket',
+        -translate_func => [qw(_create delete acl location_constraint)],
+        -replace_func => [qw(_send_request _send_request_content _send_request_xpc)],
+        -exclude_func => [qw(list)]
+;
+
+1;
+||<
+
+ -exclude_func では _async から _async 無しを生成しないメソッドを指定します。特に指定しなければ末尾が _async のメソッド全てから _async 無しのメソッドを生成します。list() は特殊な処理を含むため transformer の中で list() 自体も生成しています。
+
+他の AnyEvent::Net::Amazon::S3 以下のモジュールでは -translate_func, -replace_func の指定のみか、それらもなしです。結局、Net::Amazon::S3 の AnyEvent 化については Net::Amazon::S3::list_bucket_all() と Net::Amazon::S3::Client::Bucket::list() についてのみ手で特別な対応をし、他は Module::AnyEvent::Helper::Filter の変換だけで対応しています。
+たまたま非同期化したい処理が LWP::UserAgent の部分で []AnyEvent::HTTP::LWP::UserAgent[] に置き換えることで楽に AnyEvent 化できる形ではありましたが、元々のモジュールのコードには手を加えることなく、また、コピペによる重複コードをできるだけ避ける形で既存モジュールを AnyEvent 化できました。
+
+この方法の明白なデメリットとしては、変換処理が走るので起動時が重いこと、エラー発生時に何が何だか分からないことが多い、ところでしょうか。filtered のデバッグ機能でフィルタ結果を見ることができますし、これをキャッシュに応用することで起動時の重さを改善できるのではないかと考えてはいます。
+
+*まとめ
+
+さて、正直、他人に使用を勧められる状態とは言えないのですが、こんなこともできるんだ、という例として Module::AnyEvent::Helper::Filter と filtered を紹介してみました。filtered の方はモジュールに対するパッチ的なものでも利用できたりするのではないでしょうか。
+
+明日の担当は……どなたか参加しませんか？
