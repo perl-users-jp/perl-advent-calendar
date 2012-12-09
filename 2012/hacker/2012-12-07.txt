@@ -71,7 +71,7 @@ $ sudo cpan App::YG
 
 でも実は、ラベルを付けて縦表示というのはどんなログでもできるというわけじゃあないぞ！！できると思った？！できません！！テヘペロ！残念でした！！
 
-いまのところ、apache / apache combine / apache error / nginx main がう゛ぁーてぃかるぱみゅぱみゅできるぞ！もし他のログ形式に対応したい場合は App::YG::Foo::Bar のようなものを書いて、
+いまのところ、apache / apache combined / apache error / nginx main がう゛ぁーてぃかるぱみゅぱみゅできるぞ！もし他のログ形式に対応したい場合は App::YG::Foo::Bar のようなものを書いて、
 
 >|sh|
 $ yg -p foo-bar hoge.log
