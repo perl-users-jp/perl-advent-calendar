@@ -1,4 +1,4 @@
-CSS::LESS::Filter - Twitter Bootstrap をいい感じに改造しよう
+CSS::LESS::Filter で Twitter Bootstrap をいい感じに改造しよう
 meta-tags: perl css less bootstrap
 meta-author: charsbar
 
