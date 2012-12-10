@@ -2,13 +2,13 @@ PHPのアプリだけどperlでテストするんだぜ？（ワイルドだry
 meta-author: tomi-ru
 meta-tags: perl, PHP
 
-アドベントカレンダーをご覧のみなさん、こーんにーちわ！　トミールです (`･ω´･)ノ
+アドベントカレンダーをご覧のみなさん、こーんにーちわ！　[トミール](http://twitter.com/tomita)です (`･ω´･)ノ
 
 今年はずっと、Voyage Group 社内のいろんな子会社名義で、スマートフォン向けアプリのバックエンドAPIばっかり作てました。直近のやつはひさびさの PHP で書くことに (o_o)
 
 最終的に、複数の言語を使ってみることはエンジニア人生にとって有益とおもう。PHPでちゃんと書いてみてあらためてそう思った。始めは非効率だけど外国行ってカタコトでコミュニケーションする楽しさがあるし学ぶことがある。言語そのものだけじゃなく文化（コミュニティやエコサイクル）ごと見るの大事。ただ、何か慣れた “ホーム” ツールがあるとどこで何する上でもいい。ぼくの場合は perl にだいぶ助けられますた。
 
-たとえばテストね。クライアントアプリ開発側と API 仕様にぎったら、まず先に Bahavior のテストを書いてしまってから開発に入る。PHP の場合 Behat とかあるよーと教えてもらったのだけど、特定のPHPソースを temporary で動かすサーバーも欲しくて（残念ながら `php -S` が使えない環境だったので（お察しください））perl で php アプリをテストするの書いて使ったりした。
+たとえばテストね。クライアントアプリ開発側と API 仕様にぎったら、まず先に Bahavior のテストを書いてしまってから開発に入る。PHP の場合 Behat とかあるよーと教えてもらったのだけど、特定のPHPソースを temporary で動かすサーバーも欲しくて（残念ながら php -S が使えない環境だったので（お察しください））perl で php アプリをテストするの書いて使ったりした。
 
 >|perl|
 package tests::lib::APITest;
@@ -67,7 +67,7 @@ Include /etc/apache2/mods-enabled/php5.conf
 DocumentRoot ./public_html
 |<
 
-専用の Test::Httpd::Apache2 とかもあるのだけど、[https://metacpan.org/module/Test::TCP:title=Test::TCP] は覚えておけば memcached とかテストに要るサーバー temporary で起動する系全般につぶしがきいてイイ。愛用してます。サンプルコードの下の方にあるけど API のテストするときは Test::Base も未だに愛用してる。以下みたいなやつを並べる。
+専用の Test::Httpd::Apache2 とかもあるのだけど、[https://metacpan.org/module/Test%3A%3ATCP:title=Test::TCP] は覚えておけば memcached とかテストに要るサーバー temporary で起動する系全般につぶしがきいてイイ。愛用してます。サンプルコードの下の方にあるけど API のテストするときは Test::Base も未だに愛用してる。以下みたいなやつを並べる。
 
 >||
 === error: data missmatch
@@ -91,7 +91,7 @@ subtest 'foooooo' => sub {
 }
 ||<
 
-あとベンチマーク。「ユーザーつくって〜　ポストして〜　ポストして〜　」みたいな、ab 一発でできることをちょっと超えたシナリオをベンチマークしたいとき、不慣れな JMeter で作り込みせずとも [https://metacpan.org/module/Parallel::Benchmark:title=Parallel::Benchmark] は慣れた LWP/Mechanize/Furl で書けるのがいい。
+あとベンチマーク。「ユーザーつくって〜　ポストして〜　ポストして〜　」みたいな、ab 一発でできることをちょっと超えたシナリオをベンチマークしたいとき、不慣れな JMeter で作り込みせずとも [https://metacpan.org/module/Parallel%3A%3ABenchmark:title=Parallel::Benchmark] は慣れた LWP/Mechanize/Furl で書けるのがいい。
 
 >|perl|
 use strict;
@@ -147,6 +147,6 @@ my $bench = Parallel::Benchmark->new(
 $bench->run;
 ||<
 
-こんなふうで。さいきん [https://metacpan.org/module/Test::Base::Less:title=Test::Base::Less] が出たので、Test::Base ベースの構文で書いた Bahavior テスト読んでサクっとベンチマークするやつあったら便利そうなんで試す。
+こんなふうで。さいきん [https://metacpan.org/module/Test%3A%3ABase%3A%3ALess:title=Test::Base::Less] が出たので、Test::Base ベースの構文で書いた Bahavior テスト読んでサクっとベンチマークするやつあったら便利そうなんで試す。
 
 今年もいろんなモジュールにお世話になりました。ありがとうございます。あと[http://www.amazon.co.jp/gp/product/486267108X/:title=自分で書いた例の本]、超自分で未だつかってて、今でもだいぶ役立つ気がするんで最後に宣伝しておきます！
