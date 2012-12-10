@@ -2,7 +2,7 @@ PHPのアプリだけどperlでテストするんだぜ？（ワイルドだry
 meta-author: tomi-ru
 meta-tags: perl, PHP
 
-アドベントカレンダーをご覧のみなさん、こーんにーちわ！　[トミール](http://twitter.com/tomita)です (`･ω´･)ノ
+アドベントカレンダーをご覧のみなさん、こーんにーちわ！　[http://twitter.com/tomita:title=トミール] です (`･ω´･)ノ
 
 今年はずっと、Voyage Group 社内のいろんな子会社名義で、スマートフォン向けアプリのバックエンドAPIばっかり作てました。直近のやつはひさびさの PHP で書くことに (o_o)
 
