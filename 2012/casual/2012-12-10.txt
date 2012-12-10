@@ -1,0 +1,152 @@
+PHPのアプリだけどperlでテストするんだぜ？（ワイルドだry
+meta-author: tomi-ru
+meta-tags: perl, PHP
+
+アドベントカレンダーをご覧のみなさん、こーんにーちわ！　トミールです (`･ω´･)ノ
+
+今年はずっと、Voyage Group 社内のいろんな子会社名義で、スマートフォン向けアプリのバックエンドAPIばっかり作てました。直近のやつはひさびさの PHP で書くことに (o_o)
+
+最終的に、複数の言語を使ってみることはエンジニア人生にとって有益とおもう。PHPでちゃんと書いてみてあらためてそう思った。始めは非効率だけど外国行ってカタコトでコミュニケーションする楽しさがあるし学ぶことがある。言語そのものだけじゃなく文化（コミュニティやエコサイクル）ごと見るの大事。ただ、何か慣れた “ホーム” ツールがあるとどこで何する上でもいい。ぼくの場合は perl にだいぶ助けられますた。
+
+たとえばテストね。クライアントアプリ開発側と API 仕様にぎったら、まず先に Bahavior のテストを書いてしまってから開発に入る。PHP の場合 Behat とかあるよーと教えてもらったのだけど、特定のPHPソースを temporary で動かすサーバーも欲しくて（残念ながら `php -S` が使えない環境だったので（お察しください））perl で php アプリをテストするの書いて使ったりした。
+
+>|perl|
+package tests::lib::APITest;
+use strict;
+use warnings;
+use utf8;
+use open qw/:utf8 :std/;
+use Test::More;
+use Test::Base -base;
+use Test::TCP;
+use JSON -support_by_pp;
+use LWP::UserAgent;
+use Try::Tiny;
+
+our @EXPORT = qw( run_test );
+
+sub run_test_httpd {
+    my $temp   = File::Temp->newdir;
+    my $server = Test::TCP->new(
+        code => sub {
+            my $port = shift;
+            note("exec test apache port:$port, temp:$temp");
+            exec "/usr/sbin/apache2 -X -D FOREGROUND -C 'PidFile $temp/apache2.pid' -C 'Listen $port' -f tests/apache.conf";
+            die "Can not execute test apache: $!";
+        }
+    );
+}
+
+sub run_tests {
+    my $agent  = shift || LWP::UserAgent->new();
+    my $server = run_test_httpd();
+    
+    filters {
+        query_form => 'yaml',
+        headers    => 'yaml',
+        expected   => 'relaxed_json_decode',
+    };
+    
+    run {
+...
+||<
+
+tests/apache.conf はこんな風なの
+
+>|
+LogFormat "# %h %l %u %t \"%r\" %>s %b %D \"%{Referer}i\" \"%{User-Agent}i\"" combined
+ErrorLog  "| cat"
+CustomLog "| cat" combined
+
+Include /etc/apache2/mods-enabled/*.load
+Include /etc/apache2/mods-enabled/dir.conf
+Include /etc/apache2/mods-enabled/setenvif.conf
+Include /etc/apache2/mods-enabled/mime.conf
+Include /etc/apache2/mods-enabled/php5.conf
+
+DocumentRoot ./public_html
+|<
+
+専用の Test::Httpd::Apache2 とかもあるのだけど、[https://metacpan.org/module/Test::TCP:title=Test::TCP] は覚えておけば memcached とかテストに要るサーバー temporary で起動する系全般につぶしがきいてイイ。愛用してます。サンプルコードの下の方にあるけど API のテストするときは Test::Base も未だに愛用してる。以下みたいなやつを並べる。
+
+>||
+=== error: data missmatch
+--- method: POST
+--- path: /foo/bar
+--- headers
+X-FugaFuga-Agent: iOS 1.0.0
+X-HogeHoge: Hogege
+--- post_content
+{
+    "foo":"bar",
+}
+--- expected
+subtest 'foooooo' => sub {
+    ......
+};
+--- expected_json
+{
+    "error": {"code":999, "message":"Foobar failed"},
+    "result": null,
+}
+||<
+
+あとベンチマーク。「ユーザーつくって〜　ポストして〜　ポストして〜　」みたいな、ab 一発でできることをちょっと超えたシナリオをベンチマークしたいとき、不慣れな JMeter で作り込みせずとも [https://metacpan.org/module/Parallel::Benchmark:title=Parallel::Benchmark] は慣れた LWP/Mechanize/Furl で書けるのがいい。
+
+>|perl|
+use strict;
+use warnings;
+use utf8;
+use Data::Dump qw/dump/;
+use Furl;
+use Parallel::Benchmark;
+
+use App::Options (
+    option => {
+        task  => { default => 'get' },
+        child => { type => 'integer', default => 1 },
+        time  => { type => 'integer', default => 3 },
+        debug => { type => 'boolean', default => 0 },
+    }
+);
+
+{ # Storable trick to save Furl instance
+    no warnings 'once';
+    $Storable::Deparse = 1;
+    $Storable::Eval    = 1;
+}
+
+my $scenarios = {
+    renzoku_post => sub {
+        my ($self, $id) = @_;
+        check($self->stash->{ua}->post(...));
+        check($self->stash->{ua}->post(...));
+
+        return 1;
+    }
+};
+
+my $bench = Parallel::Benchmark->new(
+    setup => sub {
+        my ($self, $id) = @_;
+        $self->stash->{ua} = Furl->new(
+            agent   => "bench process #$id",
+            headers => [
+                'Accept-Encoding' => 'gzip',
+                ...
+            ],
+            timeout => 5,
+        );
+    },
+    benchmark   => $scenarios->{ $App::options{task} },
+    concurrency => $App::options{child},
+    time        => $App::options{time},
+    debug       => $App::options{debug},
+);
+
+$bench->run;
+||<
+
+こんなふうで。さいきん [https://metacpan.org/module/Test::Base::Less:title=Test::Base::Less] が出たので、Test::Base ベースの構文で書いた Bahavior テスト読んでサクっとベンチマークするやつあったら便利そうなんで試す。
+
+今年もいろんなモジュールにお世話になりました。ありがとうございます。あと[http://www.amazon.co.jp/gp/product/486267108X/:title=自分で書いた例の本]、超自分で未だつかってて、今でもだいぶ役立つ気がするんで最後に宣伝しておきます！
