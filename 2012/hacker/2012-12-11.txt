@@ -1,0 +1,61 @@
+すべてのデータベース接続を切断する - DBIx::DisconnectAll
+meta-tags: perl dbi
+meta-author: kazeburo
+
+息子のサンタクロース1号 kazeburo です。
+
+ウェブアプリケーションなどでデータベースとの接続をリクエスト終了後に切りたいんだけど、アプリケーションのどこかで循環参照してたりで $dbh が解放されないとデータベースに接続が溜まり、データベースの最大接続数に達して新規の接続ができなくなり、正常にサービスが続けられなくなったり、椅子が飛んできたりします。
+
+アプリケーションのバグがすぐに見つかり、接続の滞留が解消できればいいですが、そうではない時、このモジュールが役に立つかもしれません
+
+https://metacpan.org/module/DBIx::DisconnectAll
+https://github.com/kazeburo/DBIx-DisconnectAll
+
+使い方は簡単。
+
+>|perl|
+use DBIx::DisconnectAll;
+
+dbi_disconnect_all();
+||<
+
+dbi_disconnect_allを使うとその時点で接続している全ての$dbhに対してdisconnectを呼びます。
+
+PSGIのアプリケーションでリクエスト処理終了後にDBIx::DisconnectAllを呼び出すには
+
+>|perl|
+use Plack::Builder;
+use Plack::Util;
+use DBIx::DisconnectAll;
+
+builder {
+    enable sub {
+        my $app = shift;
+        sub {
+            my $env = shift;
+            my $res = $self->app->($env);
+            Plack::Util::response_cb($res, sub {
+                my $res = shift;
+                return sub {
+                    my $chunk = shift;
+                    if ( ! defined $chunk ) {
+                        dbi_disconnect_all();
+                        return;
+                    }
+                    return $chunk;
+                };
+            };
+        };
+    };
+    $app;
+};
+||<
+
+のようにすると良いかもしれせん。mod_perlの場合はcleanup_registerを使うと簡単ですね
+
+DBIのソースコードの中にはDBI->disconnect_all()というメソッドが用意されているのですが、2012年の年末時点ではサポートしているDBDモジュールが少ないようです。DBD::mysqlもサポートしていません。そのためDBI側でドキュメントも整備されていません。
+
+DBIx::DisconnectAllはDBIの公開されているAPIを利用して、全ての接続中のハンドラを探し出してdisconnectメソッドを呼ぶことでdisconnect_allを実現しています。
+
+
+
