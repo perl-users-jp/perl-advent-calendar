@@ -44,7 +44,7 @@ builder {
                     }
                     return $chunk;
                 };
-            };
+            });
         };
     };
     $app;
