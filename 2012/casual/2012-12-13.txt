@@ -1,0 +1,164 @@
+vim で Perl を書くときのための tips
+meta-author: tokuhirom
+meta-tags: perl, vim
+meta-format: markdown
+
+@tokuhirom です。Perlを書き始めて8年ほど経ち、Perlで何か作る際の効率化の手法がそれなりに確立してきたので、それを思いつくままに紹介しようと思います。主に多言語から来てPerlにほどんど慣れてない方などを想定しています。
+
+僕の秘伝のタレ的な .vimrc の中から perl に関係ある部分だけをぬきだしてお教えしましょう。すべて設定すればだいぶ快適になりそうです。とかかいてると教えるのもったいない気分になってきた。
+
+ぼくの環境
+----------
+
+僕は vim の環境として以下のようなものを指定しています。mattn さんからは DIS られがちです。
+
+  * neosnippet
+  * unite.vim
+  * pathogen
+
+vim-perl プロジェクトの成果物をつかう
+-------------------------------------
+
+https://github.com/vim-perl/vim-perl
+
+なんか最近、perl-vim から vim-perl にかわった気がする。。
+
+vim 本体についてる perl の syntax が古かったりとか、なんかそういうのがあるんで、ここにあるやついれておくとよいです。
+
+拡張子でのフォーマット設定をする
+--------------------------------
+
+以下のように設定すれば .t やら .psgi なファイルでもシンタックスハイライトがきいて便利だといわざるをえないのです。
+
+    augroup filetypedetect
+    autocmd! BufNewFile,BufRead *.t setf perl
+    autocmd! BufNewFile,BufRead *.psgi setf perl
+    autocmd! BufNewFile,BufRead *.tt setf tt2html
+    augroup END
+
+テンプレートの設定
+------------------
+
+*.pl や *.t のファイルをあたらしく開いたときに、イチから 'use strict' などとうっていては面倒です。
+
+ですから、以下のようにかいて、自動的にテンプレートファイルをひらくようにしています。
+
+    autocmd BufNewFile *.pl 0r $HOME/.vim/template/perl-script.txt
+    autocmd BufNewFile *.t  0r $HOME/.vim/template/perl-test.txt
+
+perl-script.txt は以下のようなものです。
+
+    #!/usr/bin/env perl
+    use strict;
+    use warnings;
+    use utf8;
+    use 5.010000;
+    use autodie;
+
+perl-test.txt は以下のようなものです。
+
+    use strict;
+    use warnings;
+    use utf8;
+    use Test::More;
+
+    done_testing;
+
+### *.pm なファイルのテンプレート
+
+package 名を自動で指定したいので単純なテンプレートファイルではなく vim の関数を定義してそれをフックでよぶようにしています。
+
+    function! s:pm_template()
+        let path = substitute(expand('%'), '.*lib/', '', 'g')
+        let path = substitute(path, '[\\/]', '::', 'g')
+        let path = substitute(path, '\.pm$', '', 'g')
+
+        call append(0, 'package ' . path . ';')
+        call append(1, 'use strict;')
+        call append(2, 'use warnings;')
+        call append(3, 'use utf8;')
+        call append(4, '')
+        call append(5, '')
+        call append(6, '')
+        call append(7, '1;')
+        call cursor(6, 0)
+        " echomsg path
+    endfunction
+    autocmd BufNewFile *.pm call s:pm_template()
+
+
+パッケージ名の自動チェック
+--------------------------
+
+Perl でかいているときに非常におこりがちかつ発生したときに発見が面倒なバグの一つが、package 名のまちがいです。
+package 名のまちがいは vim で検出してしまいましょう。以下の script は、mattn さんにかいてもらったものです。
+エラーメッセージから mattn 臭がします。
+
+この設定いれておくだけで、数ヶ月に一回の package 名まちがってはまる地獄からのがれられるのでぜひ設定すべき。
+
+    function! s:get_package_name()
+        let mx = '^\s*package\s\+\([^ ;]\+\)'
+        for line in getline(1, 5)
+            if line =~ mx
+            return substitute(matchstr(line, mx), mx, '\1', '')
+            endif
+        endfor
+        return ""
+    endfunction
+    
+    function! s:check_package_name()
+        let path = substitute(expand('%:p'), '\\', '/', 'g')
+        let name = substitute(s:get_package_name(), '::', '/', 'g') . '.pm'
+        if path[-len(name):] != name
+            echohl WarningMsg
+            echomsg "ぱっけーじめいと、ほぞんされているぱすが、ちがうきがします！"
+            echomsg "ちゃんとなおしてください＞＜"
+            echohl None
+        endif
+    endfunction
+    
+    au! BufWritePost *.pm call s:check_package_name()
+
+なお、他人が package 名まちがえてるケースの検出には perlcritic が便利なことはいうまでもありません。
+他人がバグのあるコードをもちこんできたときは perlcritic かけると意外と原因わかったりします。
+
+PerlTidy をかけられるようにする
+-------------------------------
+
+hashref の => の桁揃えを手でやるのはダルいんで、perltidy でやっちまいましょう。
+僕は以下の設定を愛用しています。`,pt` がファイル全体の perltidy。
+`,ptv` が選択範囲の perltidy です。
+
+    map ,pt <Esc>:%! perltidy -se<CR>
+    map ,ptv <Esc>:'<,'>! perltidy -se<CR>
+
+このテクニックは Perl Hacks にのってました。
+
+http://www.amazon.co.jp/dp/4873113148/tokuhirom-22/
+
+neosnippet を設定する
+---------------------
+
+neosnippet は vim 用のスニペット管理ライブラリです。なんか普通のスニペットライブラリは呪文をおぼえなきゃいけなくてダルくてつかってなかったんですが、neosnippet は、なんとなく neocomplcache で保管して C-k おすだけでつかえるんで、最近つかってます。
+
+色々設定してますが、ハードにつかってるのは以下の2つだけです。
+
+    snippet     dumper
+        use Data::Dumper; warn Dumper(${1:code});
+
+    snippet     querylog
+        require DBIx::QueryLog; my $guard = DBIx::QueryLog->guard();
+
+最近のバージョンの DBIx::QueryLog は、RAII な scope guard でログをはけるようになったんで、すぐよびだせるようにしておくとまじ便利。
+
+デバッグ時にやくだちまくりです。
+
+逆に、コントローラのコードとか、そういう近所からコピペしてきたほうがはやいわー、みたいな snippet はわりとコピペですませてしまって僕はあまりつかいませぬ。
+
+まとめ
+------
+
+なんか Cside_ さんの qiita にかいてある記事をみて、僕がつかってる .vimrc の解説をどっかにかこうとおもってたんだけど、すっかりめんどくさくなってたんだけど、ようやく書きました。
+
+ref: http://qiita.com/items/3d186671b361672f1e51 
+
