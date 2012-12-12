@@ -1,0 +1,170 @@
+CPAN Author になりました - Dist::Zilla のご紹介
+meta-author: yak_ex <yakex@cpan.org>
+meta-tags: perl, CPAN, Dist::Zilla
+
+Hacker track で[http://perl-users.jp/articles/advent-calendar/2012/hacker/8:title=記事]を読んで頂いた方はこんにちは。それ以外の方は初めましてだと思います。数ヵ月前に [http://search.cpan.org/~yakex:title=CPAN Author] になりました [http://twitter.com/yak_ex:title=yak_ex] と申します。
+
+Perl を使い始めてから既に 10 年以上経っておりモジュールもたまに書いたりはしていたのですが、CPAN Author となると色々と手順があって大変なんじゃないか、そんな思いもありずっと憧れの存在でありました((後はこんなモジュール上げちゃっていいんだろうか、という障壁))。同じように感じている人もいるんじゃないだろうかということで、そんな自分が CPAN Author となるハードルを下げてもらった [http://search.cpan.org/perldoc?Dist%3A%3AZilla:title=Dist::Zilla] についてご紹介させて頂きます。なお、Dist::Zilla で CPAN Author になった、なので他の CPAN Author 向けモジュールとの比較はできません。ご了承ください。
+
+Perl モジュールと言えば Makefile.PL か Build。そんな認識だったのですが、自分が github で fork したモジュールにはいずれも存在していませんでした。そして存在する謎のファイル dist.ini。実はこれらのモジュールは Dist::Zilla を使って管理されていたものだったのです。Dist::Zilla は dist.ini だけ書けば他のもろもろの面倒を見てくれるツールです。極論すれば release するときの手順はこれだけです。
+
+>|
+> dzil release
+(テストとか色々実行)
+Do you want to continue the release process? [y/N]: Y
+|<
+
+これだけでモジュールのアップロードまで完了します。
+
+Dist::Zilla 自体のインストールは cpanm なりなんなりでやってもらうとして((結構時間がかかる可能性が高いです))、その後初期設定が必要です。Dist::Zilla を使う場合には dzil コマンドで各種作業を行います。初期設定は dzil setup です。
+
+>|
+> dzil setup
+What's your name? Yasutaka ATARASHI
+What's your email address? yakex@cpan.org
+Who, by default, holds the copyright on your code?  [Yasutaka ATARASHI]:
+What license will you use by default (Perl_5, BSD, etc.)?  [Perl_5]:
+Do you want to enter your PAUSE account details?  [y/N]: Y
+What is your PAUSE id?  [YAKEX]:
+What is your PAUSE password? (パスワード見えるのは頂けない)
+config.ini file created!
+|<
+
+実際には ~/.dzil/config.ini を作成しているだけなので直接作成しても構いません。
+
+>|
+[%User]
+name  = Yasutaka ATARASHI
+email = yakex@cpan.org
+
+[%Rights]
+license_class    = Perl_5
+copyright_holder = Yasutaka ATARASHI
+
+[%PAUSE]
+username = YAKEX
+password = ひみつ
+|<
+
+[http://pause.perl.org/pause/query:title=PAUSE] は [Perl programming] Authors Upload Server の略でモジュールをアップロードするためのサーバです。アカウントの作成は [http://pause.perl.org/pause/query?ACTION=request_id] からできます。自分のアカウント要求は http://www.nntp.perl.org/group/perl.modules/2012/10/msg82598.html ですがこんな感じで全世界に公開されますので気をつけましょう。
+
+ライセンスの名前は [http://search.cpan.org/dist/Software-License/:title=Software::License] の名前で指定します。
+
+初期設定を済ました後、新たにモジュールを作成したい時は dzil new です。
+
+>|
+>dzil new Acme::DZ::Sample
+[DZ] making target dir /your/current/directory/Acme-DZ-Sample
+[DZ] writing files to /your/current/directory/Acme-DZ-Sample
+[DZ] dist minted in ./Acme-DZ-Sample
+|<
+
+他に何も設定していない状態だと、Acme-DZ-Sample/lib/Acme/DZ/Sample.pm として
+
+>|perl|
+use strict;
+use warnings;
+package Acme::DZ::Sample;
+
+1;
+||<
+
+Acme-DZ-Sample/dist.ini として
+
+>|
+name    = Acme-DZ-Sample
+author  = Yasutaka ATARASHI <yakex@cpan.org>
+license = Perl_5
+copyright_holder = Yasutaka ATARASHI
+copyright_year   = 2012
+
+version = 0.001
+
+[@Basic]
+|<
+
+というファイルができます。ini ファイル中 @ が付いている [@Basic] の部分は PluginBundle と呼ばれるもので複数のプラグインを一括して有効にできるものです。この場合、実体は [http://search.cpan.org/perldoc?Dist%3A%3AZilla%3A%3APluginBundle%3A%3ABasic:title=Dist::Zilla::PluginBundle::Basic] です。この指定で、LICENSE, MANIFEST, README, META.yml, Makefile.PL といったファイルが作成され、存在していれば MANIFEST.SKIP (除外ファイル指定)を尊重し、リリース(dzil release)時には、テスト実行、リリースするかの確認、CPAN へのアップロードが実行されます。これで大体のことは可能ですが他に必須のプラグインとして、Prereqs (あるいは AutoPrereqs) があります。
+
+>|
+[Prereqs / TestRequires]
+Test::More = 0
+
+[Prereqs / RuntimeRequires]
+version = 0.77
+|<
+
+dist.ini では ini ファイル形式でセクション([] の中)をプラグイン名、他は key = value 形式で設定を記述します。コメントは ; 開始です。
+
+Prereqs プラグインは依存モジュールを指定します。module = version の形式です。プラグイン名での / の後はどういう依存の仕方かを指定します((正確にはプラグインのインスタンス名ですし別に指定する方法もあるのですがこう思っていてもまず問題はないはずです))。TestRequires だとテスト時に必須、RuntimeRequires だと実行時に必須です。この 2 種類で大抵まかなえると思います。
+
+AutoPrereqs プラグインはそれだけ書いておくと [http://search.cpan.org/perldoc?Perl%3A%3APrereqScanner:title=Perl::PrereqScanner] を使って依存モジュールを自動で抽出してくます。普通に use, require, use base, use parent してるだけなら大丈夫ですが、もちろん完璧ではないので注意しましょう。AutoPrereqs を指定した上で、自前で Prereqs を追加することもできます。
+
+>|
+[AutoPrereqs]
+|<
+
+良く使う dzil コマン ドとして以下のようなものがあります。
+
+-authordeps: dist.ini に記述されたプラグインが出力されます。dzil authordeps | cpanm みたいにして他の dzil コマンドを実行する際に必要なプラグインをインストールできます。
+-build: パッケージ(tar.gz)が作成されます
+-clean: 作業ファイル等が削除されます
+-install: モジュールをローカルマシンにインストールします
+-release: モジュールをリリース(公開)します
+-test: パッケージを作成、展開した後テストが実行されます。--release, --automated, --author を指定するとそれぞれ環境変数 RELEASE_TESTING, AUTOMATED_TESTING, AUTHOR_TESTING が設定された状態でテストが実行されます。--all を指定すると全て有効になります。
+
+~/.dzil 以下に設定を書くことで dzil new した時の挙動を制御することができますので慣れてきたら http://dzil.org/tutorial/minting-profile.html 辺りを参照して設定すると良いでしょう。
+
+実際に私が使っている dist.ini のテンプレは以下の通りです。
+
+>|
+[@Git]
+commit_msg = Released as %v%n%n%c
+tag_format = %v
+tag_message = Released as %v
+allow_dirty = Changes
+allow_dirty = README.md
+allow_dirty = dist.ini
+
+[@Basic]
+
+[ReadmeAnyFromPod]
+type = markdown
+filename = README.md
+location = root
+
+[NextRelease]
+filename = Changes
+
+[PodWeaver]
+[OurPkgVersion]
+[CheckVersionIncrement]
+[PodSyntaxTests]
+[PodCoverageTests]
+[Test::Perl::Critic]
+[Test::Kwalitee::Extra]
+arg = !has_example
+
+[Twitter]
+url_shortener = none
+hash_tags = #perl
+
+[MinimumPerl]
+|<
+
+-@Git: Git 連携用プラグインバンドル。release 時に dirty なファイルをチェックしたり、tag 付けできたりします。
+-@Basic: 基本的なプラグイン詰め合わせ
+-ReadmeAnyFromPod: POD から markdown 形式の README.md を作成します。
+-NextRelease: Changes ファイル中の {{$NEXT}} をバージョン、日時に置き換えます。
+-PodWeaver: Pod::Weaver を使用。POD を書きやすく、かつ、書かなければならない量を減らしてくれるツールです。Dist::Zilla のような形((というか作者同じです))でプラグインで色々できます。これだけで 1 本ネタができるかと。
+-OurPkgVersion: ソース中 # VERSION となっている部分を our $VERSION = dist.iniで指定したバージョン; に置き換えてくれます。
+-CheckVersionIncrement: 既存バージョンと重複しないか確認してくれます。
+-PodSyntaxTests: [http://search.cpan.org/perldoc?Test%3A%3APod:title=Test::Pod] による POD 記述のテストを実施します。
+-PodCoverageTests: [http://search.cpan.org/perldoc?Test%3A%3APod%3A%3ACoverage:title=Test::Pod::Coverage] による POD のカバレッジのテストを実施します。
+-Test::Perl::Critic: [http://search.cpan.org/perldoc?Test%3A%3APerl%3A%3ACritic:title=Test::Perl::Critic] による Perl Best Practices のテストを実施します。
+-Test::Kwalitee::Extra: 拙作のプラグインで CPANTS の Kwalitee のテストを実施します。
+-Twitter: リリース時に tweet します。
+-MinimumPerl: [http://search.cpan.org/perldoc?Perl%3A%3AMinimumVersion:title=Perl::MinimumVersion] を使って perl の要求バージョンを指定します。
+
+駆け足になりましたが、CPAN Author 向けツール Dist::Zilla の紹介をしました。CPAN Author になってみて [http://www.cpantesters.org/:title=CPAN Testers Reports], [http://cpants.charsbar.org/index.html:title=CPANTS] など Author を支援するための仕組みが整っている、これが CPAN にたくさんモジュールがある理由なんだ、と思いました。後は様々な環境でテストを全 Pass させることの難しさも実感できたと思います。皆さんも CPAN Author になってみませんか？
+
+明日の担当はトミール([https://twitter.com/tomita:title=@tomita])さんです。

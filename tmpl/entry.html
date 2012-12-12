@@ -18,6 +18,7 @@
     <meta property="og:url"   content="[% uri_for(req.path_info) %]" />
     <meta property="og:site_name" content="[% conf.title %]" />
     <meta property="og:image" content="http://perl-users.jp/articles/advent-calendar/img/adcal2010.jpg" />
+    <link rel="canonical" href="[% uri_for(req.path_info) %]" />
     <link rel="mixi-check-image" type="image/jpeg"
           href="http://perl-users.jp/articles/advent-calendar/img/adcal2010.jpg" />
 
@@ -31,48 +32,48 @@
 </script>
 <script type="text/javascript">
 $(function() {
-	var node;
-	if( document.location.href.match( /\/sym\/\d*$/ ) ){
-		node = document.getElementById("banner-description");
-		if( node ){
-			node.innerHTML = node.innerHTML.replace( /Perl\s*/gi, "記号プログラミング" );
-		}
-	}
-	/* fix twitter links */
-	(function(){
-		var i, elms, href;
-		var twid, hid;
-		var re1 = /^https?:\/\/twitter\.com\/(#!\/)?(\w+)$/, re2 = /^id:(\w+)$/;
-		var m;
+    var node;
+    if( document.location.href.match( /\/sym\/\d*$/ ) ){
+        node = document.getElementById("banner-description");
+        if( node ){
+            node.innerHTML = node.innerHTML.replace( /Perl\s*/gi, "記号プログラミング" );
+        }
+    }
+    /* fix twitter links */
+    (function(){
+        var i, elms, href;
+        var twid, hid;
+        var re1 = /^https?:\/\/twitter\.com\/(#!\/)?(\w+)$/, re2 = /^id:(\w+)$/;
+        var m;
 
-		elms = document.getElementsByTagName( "a" );
-		for( var i = 0; i < elms.length; i++ ){
-			href = elms[ i ].getAttribute( "href" ) || "";
-			if( !( m = re1.exec( href ) ) ) continue;
-			twid = m[ 2 ]; 
-			if( !( m = re2.exec( elms[ i ].innerHTML ) ) ) continue;
-			hid = m[ 1 ];
-			if( twid == hid ){
-				elms[ i ].innerHTML = "@" + twid;
-			}
-		}
-	})();
+        elms = document.getElementsByTagName( "a" );
+        for( var i = 0; i < elms.length; i++ ){
+            href = elms[ i ].getAttribute( "href" ) || "";
+            if( !( m = re1.exec( href ) ) ) continue;
+            twid = m[ 2 ]; 
+            if( !( m = re2.exec( elms[ i ].innerHTML ) ) ) continue;
+            hid = m[ 1 ];
+            if( twid == hid ){
+                elms[ i ].innerHTML = "@" + twid;
+            }
+        }
+    })();
 
-	$.get("rss", function(x) {
-		$('<h2/>').addClass('module-header').text('Entries').appendTo('#beta');
-		var c = $('<ul/>').appendTo('#beta');
-		$("item", x).each(function(x) {
-			var title = $("title", this).text();
-			var url = $("link", this).text();
-			var tmp = url.split('/');
-			var day = tmp.pop();
-			var track = tmp.pop();
-			var year = tmp.pop();
-			var date = year + '/12/' + (day < 10 ? '0' + day : day);
-			var li = $('<li/>').appendTo(c);
-			li.append($('<span/>').text(date)).append(' ').append($('<a/>').text(title).attr('href', url));
-		});
-	});
+    $.get("rss", function(x) {
+        $('<h2/>').addClass('module-header').text('Entries').appendTo('#beta');
+        var c = $('<ul/>').appendTo('#beta');
+        $("item", x).each(function(x) {
+            var title = $("title", this).text();
+            var url = $("link", this).text();
+            var tmp = url.split('/');
+            var day = tmp.pop();
+            var track = tmp.pop();
+            var year = tmp.pop();
+            var date = year + '/12/' + (day < 10 ? '0' + day : day);
+            var li = $('<li/>').appendTo(c);
+            li.append($('<span/>').text(date)).append(' ').append($('<a/>').text(title).attr('href', url));
+        });
+    });
     $(function () {
         var n = document.getElementById('rolling');
         var r = 0, s = 1;
@@ -102,23 +103,25 @@ $(function() {
         <div id="banner" class="navbar">
             <div id="banner-inner" class="pkg navbar-inner">
                 <div id="banner-header" class="brand">[% title %] - [% year %] advent calendar [% name %]</div>
-				<div class="nav-collapse">
-					<ul class="nav" id="main-menu-left">
-						<li>Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</li>
-					</ul>
-				</div>
+                <div class="nav-collapse">
+                    <ul class="nav" id="main-menu-left">
+                        <li>Perl に関するちょっとした Tips をのっけてみるよ。ちゃんと続くかな？</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="pagebody" class="container">
-		<div class="row">
-        	[% INCLUDE 'include/sidemenu.html' %]
-        	<div id="pagebody-inner" class="span8">
-				<div id="alpha">
-                	<div id="alpha-inner">
+        <div class="row">
+            [% INCLUDE 'include/sidemenu.html' %]
+            <div id="pagebody-inner" class="span8">
+                <div id="alpha">
+                    <div id="alpha-inner">
 <div class="entry">
     <h1 class="entry-header">[% title %]&nbsp;<a href="http://b.hatena.ne.jp/entry/[% uri_for(req.path_info) %]"><img src="http://b.hatena.ne.jp/entry/image/[% uri_for(req.path_info) %]" alt="B!" /></a></h1><br />
+    <p class="pull-right">[% author %]</p>
+    <br style="clear: both;" />
     <div class="entry-content">
       [% text %]
     </div>
@@ -172,7 +175,7 @@ $(function() {
     </div>
 </div>
 
-                	</div>
+                    </div>
                 </div>
             </div>
         </div>

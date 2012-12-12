@@ -1,0 +1,90 @@
+Net::APNs::Extended - あなたに通知を送りたい
+meta-author: xaicron
+meta-tags: perl iphone apns
+
+やぁみんな！！今というライフをエンジョイしているかーい！？私は普通です。
+
+今日は、みんなにとってもクールでハッピーなモジュールを紹介してやるぜ！あ、こんにちは xaicron です。
+
+それはこいつだ！ iOS に通知を送るためのモジュール、その名も Net::APNs::Extended っつーんだ。よろしくな！！昔、typester さんが AnyEvent::Net::APNS って言うモジュールを出してますけど、できることは大体一緒です。
+
+使い方はベリィイージー！！まずは、にっくき Apple に諸々とアプリの申請をだしたりして紆余曲折の末にクライアント証明書を手に入れてくれ！！もちろんそのためにはプッシュ通知を受け取る iOS アプリが必要なので頑張って書いてください。
+
+証明書とアプリができたらあとは送るだけ！！！と見せかけて、まずは端末から device token っつーのを取得する必要があるんだ！！ちゃんとアプリをつくればできてるはずですね。
+
+これで準備は完了だ。慣れてる人なら1時間ぐらいで出来るはずだぜ！！私はできません。
+
+そしたらおもむろに以下のような感じで使うんだ！！
+
+>||
+use Net::APNs::Extended;
+
+my $apns = Net::APNs::Extended->new(
+    is_sandbox => 1,
+    cert_file  => 'apns.pem',
+);
+
+$apns->send($device_token, {
+    aps => {
+        alert => "Hello, APNs!",
+        badge => 1,
+        sound => "default",
+    },
+    foo => [qw/bar baz/],
+});
+
+if (my $error = $apns->retrieve_error) {
+    die Dumper $error;
+}
+||<
+
+このモジュールの利点は、retrieve_error っつーメソッドでエラー情報を取得できることなんだぜ！
+
+実際に、使うときはインスタンスを生成してそれを使いまわすので、以下の様な感じにするとモアベターですね。
+
+>||
+use Cache::Memory::Simple;
+use Net::APNs::Extended;
+
+my $cache = Cache::Memory::Simple->new;
+
+my $apns = Net::APNs::Extended->new(
+    is_sandbox   => 1,
+    cert_file    => 'apns.pem',
+    read_timeout => 0.1,
+);
+
+my $id = 0;
+while (...) {
+    # 何かしらの方法で送信するデータを取得
+    my ($device_token, $send_data) = fetch_send_data(...);
+
+    # 先にエラーチェックしとく
+    if (my $error = $apns->retrieve_error) {
+        # APNs からのエラーには送信したデータとかないのでキャッシュから復元して log に出すなど
+        my $original = $cache->get($error->{identifier});
+        die Dumper [ $error, $original ];
+    }
+
+    # ユニークな ID のせいせい (ここではインクリしてるだけ)
+    $id++;
+
+    # 送信するデータとかを 10 秒ぐらい保存しておく
+    $cache->set($id, [$device_token, $send_data], 10);
+    $apns->send($device_token, $send_data, { identifier => $id });
+}
+||<
+
+コードは超適当ですよ。
+
+APNs の拡張形式っていうのを使っているときにエラーが発生すると、送信できなくなります。でもコネクション自体は残っていて、エラーを返してくれます。それを取得するのが retrieve_error() で、値が返ってくるとコネクションが切断されます。
+ただし、エラーが発生したのがどんな device token でどんなデータを送ったかがわかりません。
+identifier というのを指定すると、エラーの内容にその数値が入っているので、これを key にしたキャッシュとか作っておくことで、どの device_token でどんなデータを送ったのかを log に吐くとかができますね。
+
+retrieve_error() でコネクションは切れますが、また send() した時に勝手に reconnect をするのでその辺は安心です。
+
+複数の device に対して一気に送りたい時は send_multi() とかが使えます。
+
+しかし、生ソケット通信めんどくさい。APNs 爆発しろ！！！！！
+
+以上、週末のダークサイドヘブン、xaicron でした。

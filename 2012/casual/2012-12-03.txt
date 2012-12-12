@@ -160,7 +160,8 @@ $VAR1 = {
 
 また、モジュールにはSub::Rate::NoMaxRateというのもあってこちらだとmax_rateを計算しなくても使うことが出来ます。
 >|perl|
-my $rate = Sub::Rate::NoMaxRate->new(max_rate => 10000);
+# my $rate = Sub::Rate::NoMaxRate->new(max_rate => 10000);
+my $rate = Sub::Rate::NoMaxRate->new;
 $rate->add( 4000 => sub { "寿司" });
 $rate->add( 200 => sub { "ラーメン" });
 $rate->add( 20 => sub { "焼肉" });
@@ -180,8 +181,10 @@ $VAR1 = {
           '寿司' => 943
         };
 ||<
-ただ、今のversion(0.04)だとrateの合計がmax_rate(default==100)を超えるとエラーになってしまうようなので、max_rate以上になるときは上記のようにmax_rateを予め大きくしておく必要があります。
-(NoMaxRateの場合はmax_rateを意識しなくてadd出来たほうが便利かなと思ったのでpull reqしてみました)
+<del>ただ、今のversion(0.04)だとrateの合計がmax_rate(default==100)を超えるとエラーになってしまうようなので、max_rate以上になるときは上記のようにmax_rateを予め大きくしておく必要があります。</del>
+-NoMaxRateの場合はmax_rateを意識しなくてadd出来たほうが便利かなと思ったのでpull reqしてみました。
+--これは0.05で修正されているのでNoMaxRateを使いたい場合は0.05以上を使うといいと思います。typesterさんありがとうございました!
+
 
 
 
