@@ -156,18 +156,24 @@ redis-cli でのぞいてみると、次のようなキーがあることがわ�
 
 格納されている Resque に関連するデータは全てテキストデータです。キュー本体も JSON でシリアライズされたジョブが リスト型で格納されているだけですので、簡単にチェックすることができます。
 
-- 共通
--- "resque:queues" --- [set型] キューのリスト
--- "resque:workers" --- [set型] ワーカープロセスのリスト
--- "resque:failed" --- [list型] 失敗したジョブの結果 (JSON) のリスト
--- "resque:stat:processed" --- [string型] 取り出した (dequeue) ジョブの総数
--- "resque:stat:failed" --- [string型] 処理に失敗したジョブの総数
-- キュー
--- "resque:queue:<キュー名>" --- [list型] ジョブ (JSON) のリストが格納されているキュー本体、
-- ワーカープロセス
--- "resque:worker:<ホスト名>:<ポート番号>:<キュー名>:started" --- [string型] ワーカープロセスの開始時刻
--- "resque:stat:processed:<ホスト名>:<ポート番号>:<キュー名>" --- [string型] ワーカーが取り出した (dequeue) ジョブの数
--- "resque:stat:failed:<ホスト名>:<ポート番号>:<キュー名>" --- [string型] ワーカーが処理に失敗したジョブの数
+*** 共通
+<dl>
+<dt>resque:queues</dt><dd>[set型] キューのリスト</dd>
+<dt>resque:workers</dt><dd>[set型] ワーカープロセスのリスト</dd>
+<dt>resque:failed</dt><dd>[list型] 失敗したジョブの結果 (JSON) のリスト</dd>
+<dt>resque:stat:processed</dt><dd>[string型] 取り出した (dequeue) ジョブの総数</dd>
+<dt>resque:stat:failed</dt><dd>[string型] 処理に失敗したジョブの総数</dd>
+</dl>
+*** キュー
+<dl>
+<dt>resque:queue:<キュー名></dt><dd>[list型] ジョブ (JSON) のリストが格納されているキュー本体、</dd>
+</dl>
+*** ワーカープロセス
+<dl>
+<dt>resque:worker:<ホスト名>:<ポート番号>:<キュー名>:started</dt><dd>[string型] ワーカープロセスの開始時刻</dd>
+<dt>resque:stat:processed:<ホスト名>:<ポート番号>:<キュー名></dt><dd>[string型] ワーカーが取り出した (dequeue) ジョブの数</dd>
+<dt>resque:stat:failed:<ホスト名>:<ポート番号>:<キュー名></dt><dd>[string型] ワーカーが処理に失敗したジョブの数</dd>
+</dl>
 
 ワーカーは "resque:queue:<キュー名>" からジョブを取り出し、処理します。processed のカウントは取り出した時点で処理の成否にかかわらずインクリメントされます。
 処理が失敗した場合は "resque:failed" のリストに JSON シリアライズされて追加され、failed のカウントがインクリメントされます。
