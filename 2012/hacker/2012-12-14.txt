@@ -16,13 +16,17 @@ meta-tags: perl, plack
 
 使い方はこんなんです！！
 
-    plackup -MPlack::App::Gateway -e 'Plack::App::Gateway->new->to_app'
+>|perl|
+plackup -MPlack::App::Gateway -e 'Plack::App::Gateway->new->to_app'
+||<
 
 たったの 1 行！！！ これだけで web アプリが起動しちゃうぞ！！
 
 あとは、以下のように、plackup したサーバにブラウザでアクセスするだけ！！
 
-    http://127.0.0.1:5000/?url=http://t.co/C4CkxAaD
+>||
+http://127.0.0.1:5000/?url=http://t.co/C4CkxAaD
+||<
 
 url を好きに変えれば画像をいろいろ集めて見放題だ！！
 
