@@ -6,9 +6,9 @@ meta-tags: perl, integer
 今日は、計算をちょっちゅ速く方法を紹介します。
 
 
-** integerモジュール
+** integerプラグマ
 
-コアモジュールのintegerを知ってますか？知らない方は<a href="http://perldoc.jp/docs/modules/integer-1.00/integer.pod">こちら</a>をどうぞ。そのリンク先では、こんな風に紹介されています。
+integerというプラグマを知ってますか？知らない方は<a href="http://perldoc.jp/docs/modules/integer-1.00/integer.pod">こちら</a>をどうぞ。そのリンク先では、こんな風に紹介されています。
 >>
 これは、BLOCK 内で整数演算を使うようにコンパイラに知らせます。多くのマシンで、これはほとんどの計算に対して大きな意味はありませんが、 浮動小数点演算ハードウェアを持たないマシンにとっては、性能上 大きな差となります。
 <<
