@@ -2,7 +2,7 @@ integerでちょっちゅ速くするお話
 meta-author: techno-cat
 meta-tags: perl, integer
 
-みなさん元気ですね！ぼくも無理すれば元気です。お寿司が食べたいtechno-cat(@techno_neko)デス！
+みなさん元気ですね！ぼくも無理すれば元気です。
 今日は、計算をちょっちゅ速く方法を紹介します。
 
 
