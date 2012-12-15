@@ -82,14 +82,22 @@ timethese(1000, {
 });
 
 # 念のため、比較してみる
-my $ret_a = with_use_integer();
-my $ret_b = without_use_integer();
+my $a = with_use_integer();
+my $b = without_use_integer();
 
-if ( @{$ret_a} == @{$ret_b} ) {
+my $result = 1;
+for (my $i=0; $i<scalar(@{$a}); $i++) {
+    if ( $a->[$i] != $b->[$i] ) {
+        $result = 0;
+        last;
+    }
+}
+
+if ( $result ) {
     print "OK!\n";
 }
 else {
-    print "NG!\n";
+    print "NG!\n"
 }
 ||<
 
