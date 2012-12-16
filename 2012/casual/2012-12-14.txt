@@ -42,7 +42,17 @@ carton をつかわないことについて
 
 まず、依存関係を `cpanfile` というファイルに記述します。依存関係をこまかく指定することもできますが、今回のスタイルでは requires でバージョンを指定するだけの用途にしかつかいません。
 
-    requires 'Plack', '1';
+    requires('Amon2'                           => '3.66');
+    requires('Amon2::Lite'                     => '0.09');
+    requires('Text::Xslate'                    => '1.5006');
+    requires('Plack::Session'                  => '0.14');
+    requires('Lingua::KO::Romanize::Hangul'    => 0);
+    requires('JSON' => 2);
+
+    # current version of Module::CPANfile does not supports 'osname'
+    if ($^O eq 'darwin') {
+        requires('Mac::FSEvents');
+    }
 
 次に、*install-deps.sh* というファイル名で以下のファイルを作成します。このシェルスクリプトを実行すると、依存ライブラリが local/ 以下にインストールされます。carton とおなじかんじですね。
 
