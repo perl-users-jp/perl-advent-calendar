@@ -1,0 +1,74 @@
+Script::Ichigeki - 相手は死ぬ
+meta-author: songmu
+meta-tags: perl
+meta-format: markdown
+
+![相手は死ぬ](http://perl-users.jp/articles/advent-calendar/img/aitehashinu.png)
+
+@songmuです。Hackerではありませんが、僭越ながら書かせていただきます。
+
+運用とは戦いであり、オペレーションエンジニアたちは日々殺す殺されるの戦いを繰り広げています。
+殺る前に殺るしかない。可能なら一撃で。そこでScript::Ichigekiの出番です。
+
+Script::Ichigekiは一撃こっきりしか実行しないスクリプトを安全に実行するために作られたモジュールです。
+
+具体的には以下の要件を満たしてくれます。
+
+- クリティカルな一発スクリプト(ゲームの報酬付与処理、データ修正処理等)を
+- 実行前に実行確認プロンプトを表示して
+- 実行ログを残しつつ
+- 再実行を防ぎたい(特にシェル履歴からの誤爆とか)
+- 後々の参照のために、スクリプト自体は残しておきたい
+
+使い方は簡単で、あなたが実行するplファイルに `use Script::Ichigeki;` と書くだけ。以下使用例。
+
+    % ls -A
+    ichigeki.pl
+
+    % cat ichigeki.pl
+    #!/usr/bin/env perl
+    use 5.014;
+    use warnings;
+    use utf8;
+
+    use Script::Ichigeki;
+    say 'run!';
+
+    % perl ichigeki.pl                              # 実行
+    Do you really execute `ichigeki.pl` ? (y/n) : y # 確認プロンプト表示
+    run!
+
+    % ls -A
+    .ichigeki.pl.log        ichigeki.pl             # ログファイルが作成されている
+
+    % cat .ichigeki.pl.log
+    # This file is generated dy Script::Icigeki.
+    start: 2012-12-13T21:35:50
+    ---
+    run!
+
+    ---
+    end: 2012-12-13T21:35:50
+
+    % perl ichigeki.pl                              # ログファイルがあると再実行できない
+    execute log file [./.ichigeki.pl.log] alredy exists!
+
+なかなか便利なんじゃないかと思います。
+
+useにいくつか引数を渡すことも可能です。
+
+    #!/usr/bin/env perl
+    use 5.014;
+    use warnigns;
+    use utf8;
+    use Script::Ichigeki (
+        exec_date      => '2012-12-24', # 実行日を指定
+        confirm_dialog => 0,            # 確認プロンプトなど不要!
+    );
+
+    say 'リア充爆発しろ！';
+    die 'ウッ、一撃';
+
+このようにすれば、 *12月24日にしか実行されません* 。事前や事後の暴発を防げるので安心ですね。
+
+リモートで時間のかかる重要なスクリプトを流すときはscreenやnohupを使うのが定石ですが、デフォルトだとpromptを出すのでnohupで実行すると入力待ちで止まってしまいます。その場合は`confirm_dialog => 0,` としてpromptの表示をやめるか、screenやtmuxを使って実行するようにすると良いでしょう。

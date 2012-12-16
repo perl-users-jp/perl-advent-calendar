@@ -1,0 +1,116 @@
+integerでちょっちゅ速くするお話
+meta-author: techno-cat
+meta-tags: perl, integer
+
+みなさん元気ですね！ぼくも無理すれば元気です。
+今日は、計算をちょっちゅ速く方法を紹介します。
+
+
+** integerプラグマ
+
+integerというプラグマを知ってますか？知らない方は<a href="http://perldoc.jp/docs/modules/integer-1.00/integer.pod">こちら</a>をどうぞ。そのリンク先では、こんな風に説明されています。
+>>
+これは、BLOCK 内で整数演算を使うようにコンパイラに知らせます。多くのマシンで、これはほとんどの計算に対して大きな意味はありませんが、 浮動小数点演算ハードウェアを持たないマシンにとっては、性能上 大きな差となります。
+<<
+
+私個人としては、浮動小数点演算ユニットを持たない実行環境での挙動を確認するのに愛用しています。
+そんなintegerですが、先ほど紹介したページにも載っているように、use integerしたブロック内の整数は符号付きとして扱われるので、算術シフトを利用したい場合に使います。
+
+
+** 算術シフト
+
+ところで、<strong>算術シフト</strong>ってなんでしょう？
+ざっくり説明すると、一番左のビットを維持したまま右にビットシフトすることを言います。
+
+>|perl|
+# use integerした場合
+{
+    use integer;
+
+    my $x = -1;
+    printf( "%d\n", ($x >> 1) );   # -1
+
+    printf( "0x%X\n", $x );        # 0xFFFFFFFFFFFFFFFF
+    printf( "0x%X\n", ($x >> 1) ); # 0xFFFFFFFFFFFFFFFF
+}
+
+# use integerしない場合
+{
+    #use integer;
+
+    my $x = -1;
+    printf( "%d\n", ($x >> 1) );   # 9223372036854775807
+
+    printf( "0x%X\n", $x );        # 0xFFFFFFFFFFFFFFFF
+    printf( "0x%X\n", ($x >> 1) ); # 0x7FFFFFFFFFFFFFFF
+}
+||<
+
+コメントにある結果の通り、use integerしない場合は、右シフトによって一番左側のビットが0になってしまい、値が変化しています。負の数をビットシフトする場合は、このことを思い出して頂ければと思います。
+
+ちなみに、"9223372036854775807"という数字を検索すると、64bit符号付き整数で扱える最大の数ということで見つかります。つまり、私の実行環境では64bitアーキテクチャでPerlが実行されていることが分かります。
+
+
+** 最後に
+
+このintegerを使ってちょっちゅ速くなる例を紹介します。
+
+>|perl|
+use Benchmark qw( timethese );
+
+sub with_use_integer {
+    use integer;
+
+    my @ret = map {
+        ($_ / 2) + ($_ / 4) + ($_ / 8) + ($_ / 16);
+    } (1..10000);
+    
+    return \@ret;
+}
+
+sub without_use_integer {
+    my @ret = map {
+        int($_ / 2) + int($_ / 4) + int($_ / 8) + int($_ / 16);
+    } (1..10000);
+
+    return \@ret;
+}
+
+timethese(
+    1000, {
+        'with use integer'    => 'with_use_integer',
+        'without use integer' => 'without_use_integer'
+    }
+);
+
+# 念のため、比較してみる
+my $a = with_use_integer();
+my $b = without_use_integer();
+
+my $result = 1;
+for (my $i=0; $i<scalar(@{$a}); $i++) {
+    if ( $a->[$i] != $b->[$i] ) {
+        $result = 0;
+        last;
+    }
+}
+
+if ( $result ) {
+    print "OK!\n";
+}
+else {
+    print "NG!\n"
+}
+||<
+
+*** 実行結果
+Benchmark: timing 1000 iterations of with use integer, without use integer...
+with use integer:  6 wallclock secs ( 5.95 usr +  0.01 sys =  5.96 CPU) @ 167.79/s (n=1000)
+without use integer:  8 wallclock secs ( 8.09 usr +  0.01 sys =  8.10 CPU) @ 123.46/s (n=1000)
+OK!
+
+*** 実行環境
+:ハードウェア:CPU: Intel Core 2 Duo (1.86GHz), Memory: 4G
+:Perl -v:This is perl 5, version 16, subversion 2 (v5.16.2) built for darwin-2level
+
+最初から最後まで整数しか使わないなら、use integerでちょっちゅ速くなるよ！っていうお話でした。（お寿司食べたいなー！！）
