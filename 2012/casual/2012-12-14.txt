@@ -1,0 +1,71 @@
+Web アプリケーションのデプロイについての考察
+meta-author: tokuhirom
+meta-tags: perl, vim
+meta-format: markdown
+
+Web Application をデプロイする際に、carton をつかうという方法もありますが、もっとゆるふわでいいんじゃないかなーとおもうので、もっとゆるふわにやる方法について考えてみました。
+
+carton について
+---------------
+
+carton は以下のようなことをやってくれます。
+
+    * バージョンの固定
+    * インストール
+    * モジュールパスのロード
+
+carton は carton.lock というファイルにインストールしたバージョンを記録することによって、いいかんじにバージョンを固定できて、複数の環境でアプリをうごかすときに便利です。
+
+が、しかし carton.lock は JSON ファイルなので、複数人が同時に作業しているときに conflict したりしてメンドイ! という噂もききます。実際、carton.lock をつかうと conflict がダルすぎるので carton.lock を .gitignore に追加している人もいるとききます(意味ない!!)
+
+carton の仕組み
+---------------
+
+`carton install` 実行すると
+
+    cpanm -L local --installdeps .
+
+されて、`carton exec -- foo` すると
+
+    perl -Mlib::core::only foo
+
+される、みたいなかんじだと思っておけばだいたいあってる。
+
+carton をつかわないことについて
+-------------------------------
+
+さて、実際ウェブアプリケーションの開発においては、*ターゲットの環境の Perl のバージョンと architecture を固定できるケースも多いでしょう*。そのような場合には carton をつかわなくてもいいのでは??
+
+とおもったので、carton をつかわないですむときに carton をつかわない方策について考えました。
+
+### carton をつかわない方法の実践
+
+まず、依存関係を `cpanfile` というファイルに記述します。依存関係をこまかく指定することもできますが、今回のスタイルでは requires でバージョンを指定するだけの用途にしかつかいません。
+
+    requires 'Plack', '1';
+
+次に、*install-deps.sh* というファイル名で以下のファイルを作成します。このシェルスクリプトを実行すると、依存ライブラリが local/ 以下にインストールされます。carton とおなじかんじですね。
+
+    #!/bin/sh
+    cpanm --installdeps --no-man-pages --verbose --no-interactive -L extlib .
+
+最後に `run.sh` をおきます。これは carton exec とおなじかんじの効果です。
+
+    #!/bin/sh
+    BASEDIR=$(dirname $(readlink -f $0))
+    perl -Mlib::core::only "-Mlib=$BASEDIR/extlib/lib/perl5/" "$@"
+
+あとは、local/ にはいってきた依存モジュール群はたんに git add しておけばいいです。本体に関係ないファイルが大量にコミットされることが気になるようならば submodule にしておいておくのがいいでしょう。
+
+### 実例
+
+適当なウェブアプリケーションをセットアップしておいてみました。
+
+https://github.com/tokuhirom/Hangul2Roman
+
+まとめ
+------
+
+以上。簡単なシェルスクリプト2つで、簡易的に carton っぽい雰囲気を醸してみました。
+
+だいぶカジュアルですね!
