@@ -8,7 +8,7 @@ meta-tags: perl, integer
 
 ** integerプラグマ
 
-integerというプラグマを知ってますか？知らない方は<a href="http://perldoc.jp/docs/modules/integer-1.00/integer.pod">こちら</a>をどうぞ。そのリンク先では、こんな風に紹介されています。
+integerというプラグマを知ってますか？知らない方は<a href="http://perldoc.jp/docs/modules/integer-1.00/integer.pod">こちら</a>をどうぞ。そのリンク先では、こんな風に説明されています。
 >>
 これは、BLOCK 内で整数演算を使うようにコンパイラに知らせます。多くのマシンで、これはほとんどの計算に対して大きな意味はありませんが、 浮動小数点演算ハードウェアを持たないマシンにとっては、性能上 大きな差となります。
 <<
@@ -56,6 +56,8 @@ integerというプラグマを知ってますか？知らない方は<a href="h
 このintegerを使ってちょっちゅ速くなる例を紹介します。
 
 >|perl|
+use Benchmark qw( timethese );
+
 sub with_use_integer {
     use integer;
 
@@ -74,12 +76,12 @@ sub without_use_integer {
     return \@ret;
 }
 
-use Benchmark qw(:all) ;
-
-timethese(1000, {
-    'with use integer' => 'with_use_integer',
-    'without use integer' => 'without_use_integer'
-});
+timethese(
+    1000, {
+        'with use integer'    => 'with_use_integer',
+        'without use integer' => 'without_use_integer'
+    }
+);
 
 # 念のため、比較してみる
 my $a = with_use_integer();
