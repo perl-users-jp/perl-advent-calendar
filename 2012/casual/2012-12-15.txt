@@ -46,10 +46,17 @@ SET で作った変数はブロックスコープである
     [% chin -%]
     TMPL
     is $ret, "kiranaikiru"; # kiranaikiranai が帰って来て失敗する                                                                                                                                       
+あと関係無いけどこれの ELSIF の中での chin の定義で Text::Xslate::Compiler: Cannot modify chin, which is not a lexical variable って言われるんだけど(1.6001現在)これはバグなんで gfx が直してくれるはず！
+
+    [% IF 1 -%]
+    [%   SET chin = 'kiru' -%]
+    [% ELSIF 0 -%]
+    [%   SET chin = 'kiranai' -%]
+    [% END -%]                                                                                                                                                                                              
+
 SET つかったら負け
 ------------
 
 基本的にはテンプレートでは複雑な事したら負けだし SET とかで頑張ってロジック組んじゃうとか愚か者なんだって！
-
 
 ってことで hacker track も casual track も誰か書いてくれないかなー！？
