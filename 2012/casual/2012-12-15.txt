@@ -59,4 +59,7 @@ SET つかったら負け
 
 基本的にはテンプレートでは複雑な事したら負けだし SET とかで頑張ってロジック組んじゃうとか愚か者なんだって！
 
+<blockquote class="twitter-tweet tw-align-center" lang="ja"><p>要はSETをエイリアス以外の用途で使うなってことです！ / “Text::Xslate TTerse の深淵なる罠 - Perl Advent Calendar Japan 2012 Casual Track” <a href="http://t.co/7LI2R782" title="http://htn.to/F4WZ3j">htn.to/F4WZ3j</a></p>&mdash; Fuji, Goroさん (@__gfx__) <a href="https://twitter.com/__gfx__/status/281392871024754690" data-datetime="2012-12-19T13:37:43+00:00">12月 19, 2012</a></blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 ってことで hacker track も casual track も誰か書いてくれないかなー！？
