@@ -1,0 +1,55 @@
+Text::Xslate TTerse の深淵なる罠
+meta-author: yappo
+meta-tags: perl, template, xslate
+meta-format: markdown
+
+みなさんこんにちわ！みなさんはテンプレート使ってますね！ Xslate つかってますね！ TTerse 使ってますね！今回はうっかりハマってしまう罠を教えます！
+
+SET で作った変数はブロックスコープである
+--------------
+
+ブロックスコープなんだけど SET したスコープの中にあるブロックはスコープの対象外なので以下のテストは動かなかったりするんだ。
+
+    my $tx = Text::Xslate->new({
+        syntax => 'TTerse'
+    });
+    my $ret = $tx->render_string(<<TMPL,);
+    [% SET chin = 'kiru' -%]
+    [% MACRO xaicron BLOCK -%]
+    [%   chin = 'kiranai' -%]
+    [%   chin -%]
+    [% END -%]
+    [% xaicron() -%]
+    [% chin -%]
+    TMPL
+    is $ret, "kiranaikiranai"; # kiranaikiru が帰って来て失敗する                                                                                                                                       
+
+実は SET は飾り
+-------------
+
+変数の定義しなくても最初に出て来た時に SET したのと同等っぽいね。だから上のコードの xaicron マクロの中の最初の chin ってのは SET したのと同等ってわけさ。
+
+深遠な理由で例外がある
+-------------
+
+色々あって次のようなケースはブロックスコープになってないんだけど、これ直しちゃうと影響範囲でかすぎるからきっとこのままっぽいね。
+
+    my $tx = Text::Xslate->new({
+        syntax => 'TTerse'
+    });
+    my $ret = $tx->render_string(<<TMPL,);
+    [% SET chin = 'kiru' -%]
+    [% IF 1 -%]
+    [%   SET chin = 'kiranai' -%]
+    [%   chin -%]
+    [% END -%]
+    [% chin -%]
+    TMPL
+    is $ret, "kiranaikiru"; # kiranaikiranai が帰って来て失敗する                                                                                                                                       
+SET つかったら負け
+------------
+
+基本的にはテンプレートでは複雑な事したら負けだし SET とかで頑張ってロジック組んじゃうとか愚か者なんだって！
+
+
+ってことで hacker track も casual track も誰か書いてくれないかなー！？
