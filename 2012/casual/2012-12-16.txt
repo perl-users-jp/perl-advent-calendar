@@ -1,0 +1,202 @@
+Scalar::Util::blessedでblessされちゃった判定しするよ！
+meta-author: techno-cat
+meta-tags: perl, hokkaido.pm
+
+カジュアルと言えば、Hokkaido.pm Casual#8が開催されたばっかりなので、どんな感じのことをやってるか少しだけ紹介しますね！
+
+** bless
+
+#8で扱ったのは「モジュール定義入門」ということで、Perlでクラス定義とかオブジェクトの生成とかどうするの？って内容で開催しました。
+
+>|perl|
+package Foo;
+use strict;
+use warnings;
+
+sub new {
+    my $class = shift;
+    return bless {}, $class;
+}
+
+package Bar;
+use strict;
+use warnings;
+
+sub new {
+    my $class = shift;
+    return bless {}, 'NotBar';
+}
+
+package main;
+use strict;
+use warnings;
+use feature 'say';
+
+my $foo = Foo->new();
+say ref $foo;   # Foo
+
+my $bar = Bar->new();
+say ref $bar;   # NotBar
+
+my $hoge = bless {};
+say ref $hoge;  # main
+||<
+
+こんな感じの結果が得られる訳ですが、newの第1引数にパッケージ名が入っているので、blessの第2引数に使うのが良く見られると思います。でも、第2引数に任意の文字列を与えたり、省略することも出来て、省略した場合は現在のパッケージ名が入るようです。
+
+** オブジェクトは単なるリファレンス
+
+[http://perldoc.jp/docs/perl/5.14.1/perlobj.pod:title=Perl のオブジェクト]からタイトルを拝借した訳ですが、blessの第1引数にはリファレンスを渡します。なので、オブジェクトに他の言語でいうメンバ変数を持たせたい場合は、以下のように書きます。
+
+>|perl|
+package Foo;
+use strict;
+use warnings;
+
+use feature 'say';
+sub new {
+    my $class = shift;
+    return bless { a => 5 }, $class;
+}
+
+package main;
+use feature 'say';
+
+my $foo = Foo->new();
+say $foo->{a}; # 5
+||<
+
+ちなみにメソッドを定義して呼び出す手順はこんな感じ。
+
+>|perl|
+package Bar;
+use strict;
+use warnings;
+
+use feature 'say';
+sub new {
+    my $class = shift;
+    return bless {}, $class;
+}
+
+sub hoge {
+    return 'hello.';
+}
+
+package main;
+use feature 'say';
+
+my $bar = Bar->new();
+say $bar->hoge(); # hello.
+||<
+
+** メソッドからメンバ変数を参照する
+
+newを呼び出したときの引数をメンバ変数として確保して、それをメソッドから参照するにはこんな感じ。
+
+>|perl|
+package Foo;
+use strict;
+use warnings;
+
+use feature 'say';
+sub new {
+    my $class = shift;
+    return bless { a => shift }, $class;
+}
+
+sub hoge {
+    my $self = shift;
+    return $self->{a};
+}
+
+package main;
+use feature 'say';
+
+my $foo = Foo->new( 'hello.' );
+say $foo->{a}; # hello.
+||<
+
+->演算子（アロー演算子）で呼び出すと第1引数にはオブジェクトが入っているので、そのオブジェクトを使ってメンバ変数に参照してるのがポイント。
+
+** refを使って正体を確かめる
+
+組み込み関数のrefを使うとこんなことが出来る。
+
+>|perl|
+use strict;
+use warnings;
+use feature 'say';
+
+my $array_ref = [ 0, 1, 2 ];
+my $hash_ref = { a => 1, b => 2 };
+my $obj = bless {}, 'MyClass';
+
+say ref $array_ref; # HASH
+say ref $hash_ref;  # ARRAY
+say ref $obj;       # MyClass
+||<
+
+ちなみに、リファレンスじゃないもの（数字, 文字列, 配列, ハッシュとか）を渡すと空文字列が返ってくる。（[http://perldoc.jp/func/ref]参照）
+
+** blessされたものとリファレンスを区別するには？
+
+Scalar::Utilの出番ですね！
+
+>|perl|
+use strict;
+use warnings;
+use feature 'say';
+
+use Scalar::Util 'blessed';
+
+my $array_ref = [ 0, 1, 2 ];
+my $hash_ref = { a => 1, b => 2 };
+my $obj = bless {}, 'MyClass';
+
+say blessed($array_ref) ? blessed($array_ref) : 'undef'; # undef
+say blessed($hash_ref)  ? blessed($hash_ref)  : 'undef'; # undef
+say blessed($obj)       ? blessed($obj)       : 'undef'; # MyClass
+||<
+
+blessされたものじゃない場合はundefが返ってくるので、undefをそのままsayする訳にはいかず、undefの場合は'undef'という文字列を出力しています。これでblessされたものか判別できますね！
+
+** おまけ
+
+*** blessできるものはハッシュリファレンスだけじゃない
+
+blessの第1引数はリファレンスを渡すことになっていますが、ハッシュリファレンス以外も渡せます。（Thanks akiymさん！）
+
+>|perl|
+use strict;
+use warnings;
+use feature 'say';
+
+my $foo = bless [ 100, 101, 102 ], 'Foo';
+say $foo->[0];  # 100
+say $foo->[1];  # 101
+say $foo->[2];  # 102
+
+my $str = 'hello.';
+my $bar = bless \$str, 'Bar';
+say ${$bar};    # hello.
+||<
+
+*** Module::CoreList
+
+Scalar::Utilってコアモジュールなの？っていうときに便利なのが、corelistコマンド。Module::CoreListを入れると使えるそうです。（Thanks aloelightさん！）
+
+>|shell|
+$ corelist Scalar::Util
+
+Scalar::Util was first released with perl v5.7.3
+$ corelist Module::CoreList
+
+Module::CoreList was first released with perl v5.8.9
+||<
+
+という訳で、v5.8.9からcorelistコマンドが使えるようですね！
+
+** 最後に
+
+毎月第3水曜日に、こんな感じの内容をみんなでわいわいやっております。もし興味があれば、ぜひ遊びに来てください！
