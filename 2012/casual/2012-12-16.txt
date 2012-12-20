@@ -60,6 +60,8 @@ sub new {
 }
 
 package main;
+use strict;
+use warnings;
 use feature 'say';
 
 my $foo = Foo->new();
@@ -84,6 +86,8 @@ sub hoge {
 }
 
 package main;
+use strict;
+use warnings;
 use feature 'say';
 
 my $bar = Bar->new();
@@ -111,6 +115,8 @@ sub hoge {
 }
 
 package main;
+use strict;
+use warnings;
 use feature 'say';
 
 my $foo = Foo->new( 'hello.' );
