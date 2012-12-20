@@ -1,4 +1,4 @@
-Scalar::Util::blessedでblessされちゃった判定しするよ！
+Scalar::Util::blessedでblessされちゃった判定するよ！
 meta-author: techno-cat
 meta-tags: perl, hokkaido.pm
 
