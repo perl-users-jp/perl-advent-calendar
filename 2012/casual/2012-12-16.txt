@@ -53,7 +53,6 @@ package Foo;
 use strict;
 use warnings;
 
-use feature 'say';
 sub new {
     my $class = shift;
     return bless { a => 5 }, $class;
@@ -75,7 +74,6 @@ package Bar;
 use strict;
 use warnings;
 
-use feature 'say';
 sub new {
     my $class = shift;
     return bless {}, $class;
@@ -103,7 +101,6 @@ package Foo;
 use strict;
 use warnings;
 
-use feature 'say';
 sub new {
     my $class = shift;
     return bless { a => shift }, $class;
