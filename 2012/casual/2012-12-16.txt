@@ -182,7 +182,7 @@ my $bar = bless \$str, 'Bar';
 say ${$bar};    # hello.
 ||<
 
-*** Module::CoreList
+*** corelistコマンド
 
 Scalar::Utilってコアモジュールなの？っていうときに便利なのが、corelistコマンド。Module::CoreListを入れると使えるそうです。（Thanks aloelightさん！）
 
