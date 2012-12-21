@@ -117,7 +117,7 @@ use warnings;
 use feature 'say';
 
 my $foo = Foo->new( 'hello.' );
-say $foo->{a}; # hello.
+say $foo->hoge(); # hello.
 ||<
 
  ->演算子（アロー演算子）で呼び出すと第1引数にはオブジェクトが入っているので、そのオブジェクトを使ってメンバ変数を参照してるのがポイントです。
