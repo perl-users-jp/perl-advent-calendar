@@ -135,8 +135,8 @@ my $array_ref = [ 0, 1, 2 ];
 my $hash_ref = { a => 1, b => 2 };
 my $obj = bless {}, 'MyClass';
 
-say ref $array_ref; # HASH
-say ref $hash_ref;  # ARRAY
+say ref $array_ref; # ARRAY
+say ref $hash_ref;  # HASH
 say ref $obj;       # MyClass
 ||<
 
