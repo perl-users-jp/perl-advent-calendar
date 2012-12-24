@@ -1,0 +1,211 @@
+HTMLのバリデーションをよしなにやりたくてHTML::Lint::Pluggable書いた
+meta-author: karupanerura
+meta-tags: perl, html
+
+今日はクリスマスイブ？お前は何を言っているんだ。
+今日はまだ12月16日じゃないか。イチャ付くにはまだ早いぜ。
+チキンうめええええええええええええええええええええええええええええ！！！１１１１
+ｍｇｍｇ、ｍｇｍｇ、あ、かるぱなんとかこと、かるぱねるらです。ｍｇｍｇ
+
+
+今日はぼくがてきとーに開発しながらカジュアルにHTMLのsyntaxをチェックするために、
+モジュールをでっちあげた話をするよ！
+
+** HTMLバリデーションをするCPANモジュール
+
+ぼくが調べてみたところによると、HTML::TidyとHTML::Lintというやつがあるようです。
+しかし、HTML::Tidyは2010年から更新されておらず、実質HTML::Lintだけという雰囲気でした。
+
+
+ところで、HTML::Tidyですが、HTML4のsyntaxにしか対応していません。
+つまり、HTML5で新しく追加されたタグや属性を使っていると大量にエラーが出てしまいます。
+
+
+また、日本のガラケー向けに用意したHTMLなんかは各キャリアが独自で作った属性とかがあったりして、
+「こんな属性しらないよ！」って怒られてしまいます。
+
+更に、マルチバイト文字など、適切にエンコードさえしていればHTMLエスケープが不要な文字も、
+HTMLエスケープしろと怒られてしまいます。
+これでは日本語のサイトではなかなか使い物になりません。
+
+そのため、このようなケースに対応すべく、HTML::Lint::Pluggableというものをでっちあげました！
+
+** HTML::Lint::Pluggable
+
+HTML::Lintですが、メソッド単位で見ると割とhookしやすい構成になっており、
+IFは用意されていませんが、構造的にはParserを差し替えられるようになっていたりもします。
+
+標準で添付されているHTML::Lint::Pluggable::WhiteListでは、
+エラーが見つかった際に呼ばれるcallbackであるgripeにhookする事により、
+一部のエラーのみを無視させています。
+これによって非常にカジュアルにHTMLのバリデーションをさせる事が出来ます。
+
+
+これはdocomoが提供しているistyle属性を許可する例です。((ドキュメンテーションするのを忘れていましたが、各エラーで$paramに渡ってくる値は、現状%HTML::Lint::Error::errorsの値を見て書くというワイルドな仕様になっております。))
+>|perl|
+use HTML::Lint::Pluggable;
+
+my $lint = HTML::Lint::Pluggable->new;
+$lint->load_plugin(WhiteList => +{
+    rule => +{
+        'attr-unknown' => sub {
+            my $param = shift;
+            if ($param->{tag} =~ /input|textarea/ && $param->{attr} eq 'istyle') {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        },
+    },
+});
+$lint->parse($text);
+||<
+こんな具合でカジュアルに特定のエラーを無視する事が出来ます。
+
+
+他にも、HTML5で追加された属性やタグを許可するHTML::Lint::Pluggable::HTML5や、((HTML5の場合、HTML5用のパーサーを作って、標準のパーサーをそれに挿げ替えるほうがベターな策ですが、ホワイトリスト式の方が実装コストが圧倒的に低く、実用上はこれでほぼ問題無い為こうなっています。))
+HTML::Entitiesでエスケープされない文字を許可するHTML::Lint::Pluggable::TinyEntitesEscapeRuleを標準で付けています。
+
+*** Plugin機構について
+
+上のコードをみてもらったらちらっと分かると思うのですが、instance単位でプラグインを読み込めるようになっています。
+プラグインはinstance単位でメソッドをoverride出来るようになっています。
+これはinside-outと呼ばれるテクニックを使って実現しています。
+inside-outについては、id:dan さんの記事が分かりやすいです。( http://blog.livedoor.jp/dankogai/archives/50783623.html )
+HTML::Lint::PluggableではFieldHashというものを用いてinside-outを実現しています。
+FieldHashはinstanceをHashにキーとすると、instanceが破棄されたタイミングでそのinstanceをキーにしたハッシュの中身も破棄してくれる特殊なHashです。
+FieldHashについては、id:gfx さんの記事に詳しく書かれています。( http://d.hatena.ne.jp/gfx/20090202/1233550724 )
+
+instance単位のoverrideの実装としては、メソッドを実際にoverrideするのは1度だけで、
+FieldHashにメソッドの実体を保持しつつ、それを呼ぶような作りになっています。
+文章で説明するのがむずかしいのでコードこぴぺします。日本語むずかしい！
+
+>|perl|
+fieldhash my %OVERRIDED_CODES;
+my %ROOTCODE;
+sub override {
+    my($self, $method, $code) = @_;
+    my $class = ref($self) or croak('this method can called by instance only.');
+
+    $OVERRIDED_CODES{$self}          ||= +{};
+    $ROOTCODE{$class}                ||= +{};
+    $OVERRIDED_CODES{$self}{$method} ||= $ROOTCODE{$class}{$method} || $class->can($method);
+    $OVERRIDED_CODES{$self}{$method}   = $code->($OVERRIDED_CODES{$self}{$method});
+
+    unless ($ROOTCODE{$class}{$method}) {
+        my $orig = $ROOTCODE{$class}{$method} = $class->can($method);
+        my $method_code = sub {
+            my $self = shift;
+
+            if (exists $OVERRIDED_CODES{$self}) {
+                my $super = $OVERRIDED_CODES{$self}{$method};
+                return $self->$super(@_) if $super;
+            }
+
+            return $self->$orig(@_);
+        };
+
+        no strict 'refs';
+        *{"${class}::${method}"} = $method_code;
+    }
+}
+||<
+
+instance単位でメソッドのオーバーライドを行う方法としては、他にはANONクラスを使う方法などがあります。(MooseはANONクラスを使っています)
+たぶんANONクラスを使う方法の方が一般的です。
+興味がある方はMooseやClass::MOPなどのソースを読んでみると良いでしょう。
+
+** Plack::Middleware::HTMLLint(::Pluggable)?
+
+こんなHTML::Lint(::Pluggable)ですが、いちいちワンライナーやらスクリプトを書き捨てて使うのはめんどくさいです。
+また、コンソールを触る事が出来ない人には使う事ができません。
+
+そこで、このチェックをPlack::Middlewareでやる事によってエラーを常に可視化出来るようにしました。
+これを使うとこんな具合でどのようなエラーがあるのかを表示させる事が出来ます。
+
+>|perl|
+use Plack::Builder;
+
+my $error_html = q{
+<!DOCTYPE html>
+<html>
+<head><title>hoge</title></head>
+<body bgcolor="#000" style="color: #FFF><header><h1>fuga</h1></header><hoge></hoge></body>
+</html>
+};
+
+builder {
+    enable_if { $ENV{PLACK_ENV} eq 'development' } 'HTMLLint::Pluggable', plugins => +{
+        html5 => [qw/HTML5/],
+    };
+
+    sub {
+        my $env = shift;
+        # ...
+        return [
+            200,
+            ['Content-Type' => 'text/html'],
+            [$error_html]
+        ];
+    };
+};
+||<
+
+istyle属性のエラーうぜー！！ってなったときは以下のように無視させる事も出来ます。
+
+>|perl|
+use Plack::Builder;
+
+my $error_html = q{
+<!DOCTYPE html>
+<html>
+<head><title>hoge</title></head>
+<body bgcolor="#000" style="color: #FFF><header><h1>fuga</h1></header><hoge></hoge></body>
+</html>
+};
+
+builder {
+    enable_if { $ENV{PLACK_ENV} eq 'development' } 'HTMLLint::Pluggable', plugins => +{
+        html5 => [qw/HTML5/, WhiteList => +{
+            rule => +{
+                'attr-unknown' => sub {
+                    my $param = shift;
+                    if ($param->{tag} =~ /input|textarea/ && $param->{attr} eq 'istyle') {
+                        return 1;
+                    }
+                    else {
+                        return 0;
+                    }
+                },
+            },
+        }],
+    };
+
+    sub {
+        my $env = shift;
+        # ...
+        return [
+            200,
+            ['Content-Type' => 'text/html'],
+            [$error_html]
+        ];
+    };
+};
+||<
+
+デザインがダサい事もこのモジュールの特徴で((わざとではないです))、こんなものを表示させっぱなしにしたい人も居ないはずなので、
+HTMLの構文エラーが出たままコミットされる事が減り、消えるのも早くなります。（ぼくが実際に弊社内で運用してみた体感です）
+
+<img src="https://github.com/perl-users-jp/perl-advent-calendar/raw/master/2012/hacker/2012-12-16/error.png" alt="sample_image" />
+
+こんな具合でカジュアルにHTMLの構文チェックが出来るといろいろと捗るのではないでしょうか！
+
+** まとめ
+
+今回はHTML::Lint(::Pluggable)とPlack::Middleware::HTMLLint(::Pluggable)を使ってカジュアルにHTMLの構文チェックを行う方法を紹介しました。
+また、FieldHashを使ったinside-outテクニックによるinstance単位のメソッドのoverrideの方法を紹介しました。
+instance単位でプラグイン読み込める機構が嬉しい場面は稀ですが、こういう原理で作る事ができるという事は覚えておいて損は無いかと思います。
+また、instance単位でこういう事をやる場合、こうやって自作するよりMo[ou]seのRoleを使って作った方が断然楽なのでオススメです。
+
+次回はサンタさんですかね？イエス・キリストですかね？お楽しみに！！
